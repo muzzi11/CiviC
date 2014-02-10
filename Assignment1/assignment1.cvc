@@ -1,0 +1,247 @@
+#import "civic.h"
+
+extern void printInt( int val);
+extern void printFloat( float val);
+extern int scanInt( );
+extern float scanFloat( );
+extern void printSpaces( int num);
+extern void printNewlines( int num);
+
+int Gcd(int a, int b)
+{
+	int t;
+	
+	while(b != 0)
+	{
+		t = b;
+		b = a % b;
+		a = t;
+	}
+
+	return a;
+}
+
+int Factorial(int num)
+{
+	int f = 1;
+	
+	while(num > 1)
+	{
+		f = f * num;
+		num = num - 1;
+	}
+
+	return f;
+}
+
+void Fibonacci(int count)
+{
+	int a = 0;
+	int b = 1;
+	int c;
+
+	for(int i = 0, count + 1)
+	{
+		printInt(a);
+		printSpaces(1);
+
+		c = a + b;
+		a = b;
+		b = c;
+	}
+}
+
+void Primes(int count)
+{
+	int n = 2;
+
+	bool IsPrime(int number)
+	{
+		int i = 2;
+		bool isPrime = true;
+		
+		while(i < number && isPrime)
+		{
+			if(number % i == 0) isPrime = false;
+			i = i + 1;
+		}
+
+		return isPrime;
+	}
+	
+	for(int i = 0, count)
+	{
+		while(!IsPrime(n))
+		{
+			n = n + 1;
+		}
+
+		printInt(n);
+		printSpaces(1);
+		
+		n = n + 1;
+	}
+}
+
+void PrintMatrix(float[m, n] mat)
+{
+	for(int i = 0, m)
+	{
+		for(int k = 0, n)
+		{
+			printFloat(mat[i, k]);
+			printSpaces(1);
+		}
+		
+		printNewlines(1);
+	}
+}
+
+void ScanMatrix(float[m, n] mat)
+{
+	for(int i = 0, m)
+	{
+		for(int k = 0, n)
+		{
+			mat[i, k] = scanFloat();
+		}
+	}
+}
+
+void MatrixMul(float[Am, An] A, float[Bm, Bn] B, float[Cm, Cn] C)
+{
+	if(An == Bm && Am == Cm && Bn == Cn)
+	{
+		for(int i = 0, Cm)
+		{
+			for(int k = 0, Cn)
+			{
+				C[i, k] = 0.0;
+				
+				for(int l = 0, An)
+				{
+					C[i, k] = C[i, k] + A[i, l] * B[l, k];
+				}
+			}
+		}
+	}
+}
+
+void PrintVector(int[n] vec)
+{
+	for(int i = 0, n)
+	{
+		printInt(vec[i]);
+		printSpaces(1);
+	}
+	printNewlines(1);
+}
+
+void ScanVector(int[n] vec)
+{
+	for(int i = 0, n)
+	{
+		vec[i] = scanInt();
+	}
+}
+
+void Quicksort(int[n] vec)
+{
+	int Lesseq(int index, int[n] in, int size, int[m] out)
+	{
+		int count = 0;
+		
+		for(int i = 0, size)
+		{
+			if(i != index && in[i] <= in[index])
+			{
+				out[count] = in[i];
+				count = count + 1;
+			}
+		}
+		
+		return count;
+	}
+	
+	int Greater(int index, int[n] in, int size, int[m] out)
+	{
+		int count = 0;
+		
+		for(int i = 0, size)
+		{
+			if(i != index && in[i] > in[index])
+			{
+				out[count] = in[i];
+				count = count + 1;
+			}
+		}
+		
+		return count;
+	}
+	
+	void Concatenate(int[n] a, int sizeA, int[m] b, int sizeB, int[o] out)
+	{
+		for(int i = 0, sizeA)
+		{
+			out[i] = a[i];
+		}
+		
+		for(int i = 0, sizeB)
+		{
+			out[sizeA + i] = b[i];
+		}
+	}
+	
+	void Recursion(int[n] vec, int size)
+	{
+		int lc;
+		int gc;
+		int pivot;
+		int[n] less;
+		int[n] greater;
+		
+		if(size > 1)
+		{
+			pivot = size / 2;
+			lc = Lesseq(pivot, vec, size, less);
+			gc = Greater(pivot, vec, size, greater);
+			
+			Recursion(less, lc);
+			Recursion(greater, gc);
+			
+			less[lc] = vec[pivot];
+			Concatenate(less, lc + 1, greater, gc, vec);
+		}
+	}
+	
+	Recursion(vec, n);
+}
+
+export int main()
+{
+	int[5] vec;
+	float[2, 2] A;
+	float[2, 2] B;
+	float[2, 2] C;
+	
+	//PrintInt(Gcd(16, 12));
+	//PrintInt(Factorial(3));
+	//Fibonacci(12);
+	//Primes(12);
+	
+	/*
+	ScanMatrix(A);
+	ScanMatrix(B);
+	MatrixMul(A, B, C);
+	PrintMatrix(C);
+	*/
+	
+	ScanVector(vec);
+	Quicksort(vec);
+	PrintVector(vec);
+	
+	printNewlines(1);
+	
+	return 0;
+}
+
