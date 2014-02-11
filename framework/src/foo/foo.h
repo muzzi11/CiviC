@@ -1,3 +1,7 @@
+/*
+Created by Jos Bonsink & Mustafa Karaalioglu
+*/
+
 #ifndef _FOO_H_
 #define _FOO_H_
 

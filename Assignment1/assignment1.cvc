@@ -1,3 +1,10 @@
+/*
+Created by Jos Bonsink & Mustafa Karaalioglu
+
+The main function contains commented tests that can be used to 
+test the assignments.
+*/
+
 #import "civic.h"
 
 extern void printInt( int val);
@@ -7,6 +14,9 @@ extern float scanFloat( );
 extern void printSpaces( int num);
 extern void printNewlines( int num);
 
+// Asignment 1 and 2
+
+// Local function definition left out, see Primes and Quicksort
 int Gcd(int a, int b)
 {
 	int t;
@@ -21,6 +31,7 @@ int Gcd(int a, int b)
 	return a;
 }
 
+// Local function definition left out, see Primes and Quicksort
 int Factorial(int num)
 {
 	int f = 1;
@@ -33,6 +44,7 @@ int Factorial(int num)
 	return f;
 }
 
+// Local function definition left out, see Primes and Quicksort
 void Fibonacci(int count)
 {
 	int a = 0;
@@ -81,6 +93,8 @@ void Primes(int count)
 		n = n + 1;
 	}
 }
+
+// Assignment 3
 
 void PrintMatrix(float[m, n] mat)
 {
