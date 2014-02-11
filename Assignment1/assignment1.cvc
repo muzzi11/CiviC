@@ -24,11 +24,10 @@ int Gcd(int a, int b)
 int Factorial(int num)
 {
 	int f = 1;
-	
-	while(num > 1)
+
+	for(int i = 1, num + 1)
 	{
-		f = f * num;
-		num = num - 1;
+		f = f * i;
 	}
 
 	return f;
@@ -55,14 +54,14 @@ void Primes(int count)
 {
 	int n = 2;
 
-	bool IsPrime(int number)
+	bool IsPrime()
 	{
 		int i = 2;
 		bool isPrime = true;
 		
-		while(i < number && isPrime)
+		while(i < n && isPrime)
 		{
-			if(number % i == 0) isPrime = false;
+			if(n % i == 0) isPrime = false;
 			i = i + 1;
 		}
 
@@ -71,7 +70,7 @@ void Primes(int count)
 	
 	for(int i = 0, count)
 	{
-		while(!IsPrime(n))
+		while(!IsPrime())
 		{
 			n = n + 1;
 		}
@@ -224,8 +223,8 @@ export int main()
 	float[2, 2] B;
 	float[2, 2] C;
 	
-	//PrintInt(Gcd(16, 12));
-	//PrintInt(Factorial(3));
+	//printInt(Gcd(16, 12));
+	//printInt(Factorial(5));
 	//Fibonacci(12);
 	//Primes(12);
 	
@@ -236,9 +235,11 @@ export int main()
 	PrintMatrix(C);
 	*/
 	
+	/*
 	ScanVector(vec);
 	Quicksort(vec);
 	PrintVector(vec);
+	*/
 	
 	printNewlines(1);
 	

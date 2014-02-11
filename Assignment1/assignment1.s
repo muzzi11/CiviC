@@ -19,22 +19,28 @@ Gcd:
 	ireturn
 
 Factorial:
-	esr 1
+	esr 3
 	iloadc 1
 	istore 1
-3:
+	iloadc 1
+	istore 2
 	iload 0
 	iloadc 1
-	igt
+	iadd
+	istore 3
+3:
+	iload 2
+	iload 3
+	ilt
 	branch_f 4
 	iload 1
-	iload 0
+	iload 2
 	imul
 	istore 1
-	iload 0
+	iload 2
 	iloadc 1
-	isub
-	istore 0
+	iadd
+	istore 2
 	jump 3
 4:
 	iload 1
@@ -94,8 +100,7 @@ Primes:
 	branch_f 8
 9:
 	isrl
-	iload 1
-	jsr 1 Primes$IsPrime
+	jsr 0 Primes$IsPrime
 	bnot
 	branch_f 10
 	iload 1
@@ -125,38 +130,38 @@ Primes:
 Primes$IsPrime:
 	esr 2
 	iloadc 2
-	istore 1
+	istore 0
 	bloadc 3
-	bstore 2
+	bstore 1
 11:
-	iload 1
 	iload 0
+	iloadn 1 1
 	ilt
 	branch_f 13
-	bload 2
+	bload 1
 	jump 14
 13:
 	bloadc 4
 14:
 	branch_f 12
+	iloadn 1 1
 	iload 0
-	iload 1
 	irem
 	iloadc 0
 	ieq
 	branch_f 15
 	bloadc 4
-	bstore 2
+	bstore 1
 	jump 16
 15:
 16:
-	iload 1
+	iload 0
 	iloadc 1
 	iadd
-	istore 1
+	istore 0
 	jump 11
 12:
-	bload 2
+	bload 1
 	breturn
 
 PrintMatrix:
@@ -690,15 +695,6 @@ main:
 	iloadc 2
 	fnewa 2
 	astore 3
-	isrg
-	aload 0
-	jsr 1 ScanVector
-	isrg
-	aload 0
-	jsr 1 Quicksort
-	isrg
-	aload 0
-	jsr 1 PrintVector
 	isrg
 	iloadc 1
 	jsre 5
