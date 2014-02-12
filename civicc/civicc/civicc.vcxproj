@@ -84,6 +84,9 @@
     <ClInclude Include="token.h" />
     <ClInclude Include="tokenizer.h" />
   </ItemGroup>
+  <ItemGroup>
+    <None Include="test.cvc" />
+  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>

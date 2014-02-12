@@ -28,6 +28,8 @@ int main(int argc, char* argv[])
 				std::cout << token.readString << "\n";
 			}
 
+			std::cout << "\nToken count: " << tokens.size() << "\n";
+
 			file.close();
 		}
 	}
