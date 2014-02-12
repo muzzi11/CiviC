@@ -27,13 +27,13 @@ int Gcd(int a, int b)
 		b = a % b;
 		a = t;
 	}
-
+	
 	return a;
 }
 
 // Local function definition left out, see Primes and Quicksort
 int Factorial(int num)
-{
+{	
 	int f = 1;
 
 	for(int i = 1, num + 1)
@@ -232,15 +232,17 @@ void Quicksort(int[n] vec)
 
 export int main()
 {
-	int[5] vec;
 	float[2, 2] A;
 	float[2, 2] B;
 	float[2, 2] C;
+	int[5] vec;	
+	//int a = scanInt();
+	//int b = scanInt();
 	
-	//printInt(Gcd(16, 12));
-	//printInt(Factorial(5));
-	//Fibonacci(12);
-	//Primes(12);
+	//printInt(Gcd(a, b));
+	//printInt(Factorial(a));
+	//Fibonacci(a);
+	//Primes(a);
 	
 	/*
 	ScanMatrix(A);
