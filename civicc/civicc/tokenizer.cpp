@@ -50,8 +50,8 @@ bool Tokenizer::GetNextToken(Token& token)
 		}
 		else if(line.find("/*", linePos, 2) == linePos)
 		{
-			ignore = true;
 			linePos += 2;
+			ignore = true;
 		}
 		else
 		{
