@@ -20,7 +20,6 @@ bool Tokenizer::GetNextToken(Token& token)
 	if(!istream.good()) return false;
 
 	bool ignore = false;
-
 	for(;;)
 	{
 		linePos = line.find_first_not_of(" \t", linePos);
