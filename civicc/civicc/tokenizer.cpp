@@ -32,20 +32,9 @@ bool Tokenizer::GetNextToken(Token& token)
 			linePos = 0;
 			lineNumber++;
 			std::getline(istream, line);
-
-			continue;
 		}
 
-		if(line.find("//", linePos, 2) == linePos)
-		{
-			linePos = std::string::npos;
-		}
-		else if(line.find("/*", linePos, 2) == linePos)
-		{
-			ignore = true;
-			linePos += 2;
-		}
-		else if(ignore)
+		if(ignore)
 		{
 			linePos = line.find("*/", linePos);
 			if(linePos != std::string::npos)
@@ -53,6 +42,15 @@ bool Tokenizer::GetNextToken(Token& token)
 				linePos += 2;
 				ignore = false;
 			}
+		}
+		else if(line.find("//", linePos, 2) == linePos)
+		{
+			linePos = std::string::npos;
+		}
+		else if(line.find("/*", linePos, 2) == linePos)
+		{
+			ignore = true;
+			linePos += 2;
 		}
 		else
 		{
