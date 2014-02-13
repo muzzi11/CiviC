@@ -19,26 +19,27 @@ bool Tokenizer::GetNextToken(Token& token)
 {
 	if(!istream.good()) return false;
 
-	bool ignore = false, extraPass;
+	bool ignore = false;
 
-	do
+	for(;;)
 	{
-		extraPass = false;
 		linePos = line.find_first_not_of(" \t", linePos);
 
 		if(linePos >= line.length())
 		{
-			do
-			{
-				std::getline(istream, line);
-				linePos = line.find_first_not_of(" \t");
-				lineNumber++;
-			} while(istream.good() && linePos == std::string::npos);
+			if(!istream.good()) return false;
 
-			if(linePos == std::string::npos) return false;
+			linePos = 0;
+			lineNumber++;
+			std::getline(istream, line);
+
+			continue;
 		}
 
-		if(line.find("//", linePos, 2) == linePos) linePos = std::string::npos;
+		if(line.find("//", linePos, 2) == linePos)
+		{
+			linePos = std::string::npos;
+		}
 		else if(line.find("/*", linePos, 2) == linePos)
 		{
 			ignore = true;
@@ -51,10 +52,13 @@ bool Tokenizer::GetNextToken(Token& token)
 			{
 				linePos += 2;
 				ignore = false;
-				extraPass = true;
 			}
 		}
-	} while(ignore || linePos == std::string::npos || extraPass);
+		else
+		{
+			break;
+		}
+	}
 
 	token.type = TokenType::Unknown;
 	token.line = lineNumber;
