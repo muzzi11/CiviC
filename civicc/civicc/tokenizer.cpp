@@ -31,6 +31,8 @@ bool Tokenizer::GetNextToken(Token& token)
 			linePos = 0;
 			lineNumber++;
 			std::getline(istream, line);
+
+			continue;
 		}
 
 		if(ignore)

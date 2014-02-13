@@ -70,9 +70,16 @@ struct Token
 	int line, pos;
 	std::string readString;
 
-	bool boolValue;
-	int intValue;
-	float floatValue;
-	ReservedWord reservedWord;
-	ReservedSymbol reservedSymbol;
+	union
+	{
+		bool boolValue;
+		int intValue;
+		float floatValue;
+	};
+
+	union
+	{
+		ReservedWord reservedWord;
+		ReservedSymbol reservedSymbol;
+	};
 };
