@@ -1,6 +1,38 @@
 #include "token.h"
 
 
+Token::Token(ReservedWord word) :
+	type(TokenType::ReservedWord),
+	reservedWord(word)
+{
+}
+
+Token::Token(ReservedSymbol symbol) :
+	type(TokenType::ReservedSymbol),
+	reservedSymbol(symbol)
+{
+}
+
+bool Token::operator==(ReservedWord word) const
+{
+	return type == TokenType::ReservedWord && reservedWord == word;
+}
+
+bool Token::operator!=(ReservedWord word) const
+{
+	return !operator==(word);
+}
+
+bool Token::operator==(ReservedSymbol symbol) const
+{
+	return type == TokenType::ReservedSymbol && reservedSymbol == symbol;
+}
+
+bool Token::operator!=(ReservedSymbol symbol) const
+{
+	return !operator==(symbol);
+}
+
 ReservedWord GetReservedWord(const std::string& str)
 {
 	ReservedWord word;
@@ -50,6 +82,7 @@ ReservedSymbol GetReservedSymbol(const std::string& str, size_t pos)
 	else if(str.compare(pos, 1, "*") == 0) symbol = ReservedSymbol::Multiply;
 	else if(str.compare(pos, 1, "/") == 0) symbol = ReservedSymbol::Divide;
 	else if(str.compare(pos, 1, "%") == 0) symbol = ReservedSymbol::Modulo;
+	else if(str.compare(pos, 1, ",") == 0) symbol = ReservedSymbol::Comma;
 	else if(str.compare(pos, 1, ";") == 0) symbol = ReservedSymbol::Semicolon;
 	else symbol = ReservedSymbol::Undefined;
 

@@ -19,6 +19,10 @@ private:
 
 public:
 	Tokenizer(std::istream& istream);
+	Tokenizer(const Tokenizer&) = delete;
+	Tokenizer(Tokenizer&&) = delete;
+	Tokenizer& operator=(const Tokenizer&) = delete;
+	Tokenizer& operator=(Tokenizer&&) = delete;
 
 	bool GetNextToken(Token& token);
 };

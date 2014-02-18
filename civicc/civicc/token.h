@@ -58,6 +58,7 @@ enum class ReservedSymbol
 	Multiply,
 	Divide,
 	Modulo,
+	Comma,
 	Semicolon
 };
 
@@ -82,4 +83,13 @@ struct Token
 		ReservedWord reservedWord;
 		ReservedSymbol reservedSymbol;
 	};
+
+	Token() {};
+	Token(ReservedWord reservedWord);
+	Token(ReservedSymbol reservedSymbol);
+
+	bool operator==(ReservedWord reservedWord) const;
+	bool operator!=(ReservedWord reservedWord) const;
+	bool operator==(ReservedSymbol reservedSymbol) const;
+	bool operator!=(ReservedSymbol reservedSymbol) const;
 };
