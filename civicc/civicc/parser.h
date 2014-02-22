@@ -9,7 +9,7 @@ class Parser
 {
 private:
 	size_t t;
-	std::vector<Token>& tokens;
+	const std::vector<Token>& tokens;
 	
 	void ParseDeclaration();
 	void ParseFunDec();
@@ -19,8 +19,11 @@ private:
 	void ParseFunDef();
 	void ParseGlobalDef();
 
+	void ParseArray();
+	void ParseParameter();
+
 public:
-	Parser(std::vector<Token>& tokens);
+	Parser(const std::vector<Token>& tokens);
 
 	void ParseProgram();
 };

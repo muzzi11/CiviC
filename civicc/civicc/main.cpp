@@ -4,6 +4,7 @@
 
 #include "tokenizer.h"
 
+bool scanner(const char* str);
 
 int main(int argc, char* argv[])
 {
@@ -34,5 +35,43 @@ int main(int argc, char* argv[])
 		}
 	}
 
+	std::string word;
+	for(;;)
+	{
+		std::cin >> word;
+		std::cout << scanner(word.c_str()) << "\n";
+	}
 	return 0;
+}
+
+bool scanner(const char* word)
+{
+	int pos = 0;
+	int len = strlen(word);
+
+state_a:
+	if(len == 0) return true;
+	if(word[pos] == 'a' || word[pos] == 'b')
+	{
+		pos++;
+		goto state_b;
+	}
+	else
+	{
+		return false;
+	}
+
+state_b:
+	if(word[pos++] == 'c') goto state_c;
+	else return false;
+state_c:
+	if(pos == len) return true;
+	
+	if(word[pos] == 'a' || word[pos] == 'b')
+	{
+		pos++;
+		goto state_b;
+	}
+
+	return false;
 }
