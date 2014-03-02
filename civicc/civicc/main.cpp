@@ -43,6 +43,74 @@ int main(int argc, char* argv[])
 	}
 	return 0;
 }
+/*
+Assignment 12
+
+bool Start()
+{
+	return Expr() && NextToken() == eof();
+}
+
+bool Expr()
+{
+	return Term() && ExprP();
+}
+
+bool ExprP()
+{
+	token = nextToken();
+	
+	if(token == plus) return Term() && ExprP();
+	
+	ungetToken(token);
+	return true;
+}
+
+bool Term()
+{
+	token = nextToken();
+	
+	if(token == minus) return Term();
+	else return Suffix();
+}
+
+bool Suffix()
+{
+	return Identifier() && SuffixP();
+}
+
+bool SuffixP()
+{
+	token = nextToken();
+
+	switch(token)
+	{
+	case minus:
+		return SuffixPM();
+	case plus:
+		return SuffixPP();
+	default:
+		ungetToken(token);
+		return true;
+	}
+}
+
+bool SuffixPM()
+{
+	token = nextToken();
+	if(token == minus) return SuffixP();
+	
+	return false;
+}
+
+bool SuffixPP()
+{
+	token = nextToken();
+	if(token == plus) return SuffixP();
+
+	return false;
+}
+*/
 
 bool scanner(const char* word)
 {
