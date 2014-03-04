@@ -2,7 +2,9 @@ Program		=>	[Declaration]+
 
 Declaration	=>	extern Dec | export Def | Def
 
-Dec			=> 	Type Id FunHeader FunDec | void Id FunHeader FunDec | Type ArrayId Id GlobalDec
+Dec			=> 	Type Id FunHeader FunDec
+			| 	Type ArrayId Id GlobalDec
+			|	void Id FunHeader FunDec
 
 FunHeader	=>	( Param Params )
 
@@ -15,8 +17,8 @@ FunDec		=>	;
 GlobalDec	=>	;
 
 Def			=>	Export Type Id FunHeader FunDef
-			|	Export void FunHeader FunDef
 			| 	Export Type ArrayExpr ID AssignOpt GlobalDef
+			|	Export void FunHeader FunDef
 
 Export		=>	export | $
 
@@ -57,12 +59,14 @@ Assign		=> 	= Expr
 
 AssignOpt	=> 	Assign | $
 
-Expr		=>	( Expr )
-			|	Term ExprB
+Expr		=>	( Expr ) ExprRest
+			|	MonOp Expr ExprRest
+			|	( Type ) Expr ExprRest
+			|	Id ArrayExpr ExprRest
+			|	Id ExprRest
+			|	Literal ExprRest
 			
-ExprB		=>	BinOp Term ExprB | $
-
-Term		=> 	MonOp Id TermA | Literal TermA
+ExprRest	=>	BinOp Expr ExprRest | $
 
 BinOp		=>	ArithOp | LogicOp | RelOp
 
