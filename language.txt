@@ -62,9 +62,12 @@ AssignOpt	=> 	Assign | $
 Expr		=>	( Expr ) ExprRest
 			|	MonOp Expr ExprRest
 			|	( Type ) Expr ExprRest
+			|	Id ( ArrayExpr ) ExprRest
 			|	Id ArrayExpr ExprRest
-			|	Id ExprRest
 			|	Literal ExprRest
+			|	[ Expr Exprs ] ExprRest
+			
+Exprs		=>	, Expr Exprs | $
 			
 ExprRest	=>	BinOp Expr ExprRest | $
 
@@ -88,9 +91,9 @@ LogicOp1	=>	||
 
 LogicOp2	=>	&&
 
-MonOp		=>	- | ! | $
+MonOp		=>	- | !
 
-
+2 * 3 + 6
 
 fun Declaration()
 {
