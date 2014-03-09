@@ -1,0 +1,96 @@
+/*
+Created by Jos Bonsink & Mustafa Karaalioglu
+*/
+
+#import "civic.h"
+
+extern void printInt( int val);
+extern void printFloat( float val);
+extern int scanInt( );
+extern float scanFloat( );
+extern void printSpaces( int num);
+extern void printNewlines( int num);
+
+// 14.2, the reference compiler doesn seem to support this
+//export int escaped = 1;
+
+export int main()
+{
+	// 14.1
+	int localNonEscaped;
+	
+	int varShadowedByArg = 0;
+	int sameName = 0;
+	
+	// 14.3, prints the value of the argument instead of the variable
+	void ShadowVar(int varShadowedByArg)
+	{
+		printInt(varShadowedByArg);
+		printNewlines(1);
+	}
+	
+	// 14.4, first prints 1, then the argument
+	void ShadowArgWithVar(int argShadowedByVar)
+	{
+		for(int argShadowedByVar = 1, 2)
+		{
+			printInt(argShadowedByVar);
+		}
+		
+		printInt(argShadowedByVar);
+		printNewlines(1);
+	}
+	
+	// 14.5, argShadowedByFun is a function inside test() and an integer argument outside
+	void ShadowArgWithFun(int argShadowedByFun)
+	{
+		void Test()
+		{
+			void argShadowedByFun()
+			{
+				printInt(1);
+			}
+			
+			argShadowedByFun();
+		}
+		
+		Test();
+		printInt(argShadowedByFun);
+		printNewlines(1);
+	}
+	
+	// 14.6, sameName is initialized by a variable of the same name, value is increased only locally
+	void SameName()
+	{
+		int sameName = sameName;
+		sameName = sameName + 1;
+		printInt(sameName);
+	}
+	
+	// 14.7
+	void ShadowedFunction()
+	{
+		printInt(1);
+	}
+	// ShadowedFunction is a variable inside TestShadowedFunction()
+	void TestShadowedFunction()
+	{
+		int ShadowedFunction = 0;
+		printInt(ShadowedFunction);
+		printNewlines(1);
+	}
+	
+	ShadowVar(1);
+	ShadowArgWithVar(0);
+	ShadowArgWithFun(0);
+	
+	SameName();
+	printInt(sameName);
+	printNewlines(1);
+	
+	ShadowedFunction();
+	TestShadowedFunction();
+		
+	return 0;
+}
+
