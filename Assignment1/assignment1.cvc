@@ -234,20 +234,20 @@ export int main()
 {
 	int[5] vec;
 	float[2, 2] A;
-	float[2, 2] B;
-	float[2, 2] C;
+	float[2, 3] B;
+	float[2, 3] C;
 	
 	//printInt(Gcd(16, 12));
 	//printInt(Factorial(5));
 	//Fibonacci(12);
 	//Primes(12);
 	
-	/*
+	
 	ScanMatrix(A);
 	ScanMatrix(B);
 	MatrixMul(A, B, C);
 	PrintMatrix(C);
-	*/
+	
 	
 	/*
 	ScanVector(vec);
