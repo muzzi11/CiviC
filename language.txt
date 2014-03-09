@@ -1,0 +1,118 @@
+Program		=>	[Declaration]+
+
+Declaration	=>	extern Dec | export Def | Def
+
+Dec			=> 	Type Id FunHeader FunDec
+			| 	Type ArrayId Id GlobalDec
+			|	void Id FunHeader FunDec
+
+FunHeader	=>	( Param Params )
+
+Param		=>	Type ArrayId Id | $
+
+Params		=>	, Type ArrayId Id Params | $
+
+FunDec		=>	;
+
+GlobalDec	=>	;
+
+Def			=>	Export Type Id FunHeader FunDef
+			| 	Export Type ArrayExpr ID AssignOpt GlobalDef
+			|	Export void FunHeader FunDef
+
+Export		=>	export | $
+
+GlobalDef	=>	;
+
+FunDef		=>	{ FunBody }
+
+Type		=>	bool | int | float
+
+FunBody		=>	VarDecs LocalFunDef Statement Return
+
+LocalFunDef	=>	Type Id FunHeader { FunBody } LocalFunDef | $
+
+VarDecs		=>	Type ArrayExpr Id AssignOpts ; VarDecs | $
+
+ArrayExpr	=>	[ Expr Exprs ] | $
+
+ArrayId		=>	[ Id Ids ] | $
+
+Ids			=>	, Id | $
+
+Statement	=>	Id ArrayExpr Assign ;	
+			|	Id ( ArrayExpr ) ;
+			|	if ( Expr ) Block ElseBlock
+			|	while ( Expr ) Block
+			|	do Block while ( Expr ) ;
+			|	for ( int Id Assign, Expr Step ) Block
+
+Step		=>	, Expr | $
+
+Block		=>	{ Statements } | Statement
+
+Statements	=>	Statement Statements | $
+
+Return		=> 	return Expr ; | $
+
+Assign		=> 	= Expr
+
+AssignOpt	=> 	Assign | $
+
+Expr		=>	( Expr ) ExprRest
+			|	MonOp Expr ExprRest
+			|	( Type ) Expr ExprRest
+			|	Id ( ArrayExpr ) ExprRest
+			|	Id ArrayExpr ExprRest
+			|	Literal ExprRest
+			|	[ Expr Exprs ] ExprRest
+			
+Exprs		=>	, Expr Exprs | $
+			
+ExprRest	=>	BinOp Expr ExprRest | $
+
+BinOp		=>	ArithOp | LogicOp | RelOp
+
+ArithOp		=>	ArithOp1 | ArithOp2
+
+Arith1		=>	+ | -
+
+Arith2		=>	* | / | %
+
+RelOp		=>	RelOp1 | RelOp2
+
+RelOp1		=>	== | !=
+
+RelOp2		=>	< | <= | > | >=
+
+LogicOp		=>	LogicOp1 | LogicOp2
+
+LogicOp1	=>	||
+
+LogicOp2	=>	&&
+
+MonOp		=>	- | !
+
+2 * 3 + 6
+
+fun Declaration()
+{
+	return Extern() && Dec() || Export() && Def() || Def();
+}
+
+bool Extern()
+{
+	if(tokens[t] == Keyword::Extern)
+	{
+		t++;
+		return true;
+	}
+	
+	return false;
+}
+
+bool Dec()
+{
+	return Type() && Id() && (FunDec() || Semicolon()) || 
+			Void() && Id && FunDec();
+}
