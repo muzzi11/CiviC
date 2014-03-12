@@ -61,17 +61,18 @@ Assign		=> 	= Expr
 
 AssignOpt	=> 	Assign | $
 
-Expr		=>	( Expr ) ExprRest
-			|	MonOp Expr ExprRest
-			|	( Type ) Expr ExprRest
-			|	Id ( ArrayExpr ) ExprRest
-			|	Id ArrayExpr ExprRest
-			|	Literal ExprRest
-			|	[ Expr Exprs ] ExprRest
+Expr		=>	( Expr )
+			|	Expr BinOp Expr
+			|	MonOp Expr
+			|	( Type ) Expr
+			|	Id ( Args )
+			|	Id ArrayExpr
+			|	Literal
+			|	[ Expr Exprs ]
 			
 Exprs		=>	, Expr Exprs | $
-			
-ExprRest	=>	BinOp Expr ExprRest | $
+
+Args		=>	Expr Exprs | $
 
 BinOp		=>	ArithOp | LogicOp | RelOp
 

@@ -14,6 +14,7 @@ public:
 
 private:
 	size_t t;
+	const int unaryPresedence = 500;
 	const std::vector<Token>& tokens;
 	
 	bool Declaration();
@@ -44,6 +45,10 @@ private:
 	bool AssignOpt();
 	bool Expr();
 	bool Exprs();
+	bool Args();
+
+	int Presedence(size_t tokenIndex);
+	bool RightAssociative(size_t tokenIndex);
 
 	bool Word(ReservedWord word);
 	bool Symbol(ReservedSymbol symbol);

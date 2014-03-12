@@ -192,6 +192,18 @@ bool Parser::AssignOpt()
 
 bool Parser::Expr()
 {
+	std::vector<const Token*> output, stack;
+
+	for(;;)
+	{
+		const Token& token = tokens[t];
+
+		if(token.type == TokenType::BoolType || token.type == TokenType::IntType || token.type == TokenType::FloatType)
+		{
+			output.push_back(&token);
+		}
+	}
+
 	return false;
 }
 
@@ -200,6 +212,48 @@ bool Parser::Exprs()
 	size_t tOld = t;
 	return (Comma() && Expr() && Exprs()) || (tOld == t);
 }
+
+int Parser::Presedence(size_t tokenIndex)
+{
+	if(tokenIndex == 0) return -1;
+
+	const Token& token = tokens[tokenIndex];
+	const int addPresedence = 300, minusPresedence = addPresedence;
+
+	if(token == ReservedSymbol::And || token == ReservedSymbol::Or) return 100;
+	else if(token == ReservedSymbol::Equals || token == ReservedSymbol::Unequals || token == ReservedSymbol::Less ||
+		token == ReservedSymbol::LessEqual || token == ReservedSymbol::More || token == ReservedSymbol::MoreEqual) return 200;
+	else if(token == ReservedSymbol::Plus) return addPresedence;
+	else if(token == ReservedSymbol::Multiply || token == ReservedSymbol::Divide || token == ReservedSymbol::Modulo) return 400;
+	else if(token == ReservedSymbol::Not) return unaryPresedence;
+	else if(token == ReservedSymbol::Minus)
+	{
+		const Token& prev = tokens[tokenIndex - 1];
+
+		if(prev.type == TokenType::BoolType || prev.type == TokenType::IntType || prev.type == TokenType::FloatType ||
+			prev.type == TokenType::Identifier || prev == ReservedSymbol::ParenthesesR || prev == ReservedSymbol::BracketR)
+		{
+			return minusPresedence;
+		}
+		else
+		{
+			return unaryPresedence;
+		}
+	}
+
+	return -1;
+}
+
+bool Parser::RightAssociative(size_t tokenIndex)
+{
+	const Token& token = tokens[tokenIndex];
+
+	if(token == ReservedSymbol::Not) return true;
+	else if(token == ReservedSymbol::Minus) return Presedence(tokenIndex) == unaryPresedence;
+
+	return false;
+}
+
 
 bool Parser::Word(ReservedWord word)
 {
