@@ -7,23 +7,62 @@
 
 class Parser
 {
-private:
-	size_t t;
-	const std::vector<Token>& tokens;
-	
-	void ParseDeclaration();
-	void ParseFunDec();
-	void ParseGlobalDec();
-
-	void ParseDefinition();
-	void ParseFunDef();
-	void ParseGlobalDef();
-
-	void ParseArray();
-	void ParseParameter();
-
 public:
 	Parser(const std::vector<Token>& tokens);
 
 	void ParseProgram();
+
+private:
+	size_t t;
+	const std::vector<Token>& tokens;
+	
+	bool Declaration();
+	bool Dec();
+	bool FunHeader();
+	bool Param();
+	bool Params();
+	bool FunDec();
+	bool GlobalDec();
+	bool Def();
+	bool Export();
+	bool GlobalDef();
+	bool FunDef();
+	bool Type();
+	bool FunBody();
+	bool LocalFunDef();
+	bool VarDecs();
+	bool ArrayExpr();
+	bool ArrayId();
+	bool Ids();
+	bool Statement();
+	bool Statements();
+	bool Step();
+	bool Block();
+	bool ElseBlock();
+	bool Return();
+	bool Assign();
+	bool AssignOpt();
+	bool Expr();
+	bool Exprs();
+
+	bool Word(ReservedWord word);
+	bool Symbol(ReservedSymbol symbol);
+
+	bool Id();
+	bool Void();
+	bool ParenthesesL();
+	bool ParenthesesR();
+	bool BraceL();
+	bool BraceR();
+	bool BracketL();
+	bool BracketR();
+	bool Comma();
+	bool Semicolon();
+	bool Extern();
+	bool If();
+	bool Else();
+	bool While();
+	bool Do();
+	bool For();
+	bool Int();
 };

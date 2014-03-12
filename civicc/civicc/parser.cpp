@@ -11,242 +11,305 @@ void Parser::ParseProgram()
 {
 	while(t < tokens.size())
 	{
-		ParseDeclaration();
-	}
-}
-
-void Parser::ParseDeclaration()
-{
-	if(tokens[t] == ReservedWord::Extern)
-	{
-		if(t + 3 < tokens.size())
+		if(!Declaration())
 		{
-			const Token& type = tokens[t + 1];
-
-			if(type == ReservedWord::Void)
-			{
-				ParseFunDec();
-			}
-			else if(type == ReservedWord::Bool || type == ReservedWord::Int || type == ReservedWord::Float)
-			{
-				if(tokens[t + 3] == ReservedSymbol::ParenthesesL) ParseFunDec();
-				else ParseGlobalDec();
-			}
-		}
-		else
-		{
-			// Unexpected end of file
-		}
-	}
-	else
-	{
-		ParseDefinition();
-	}
-}
-
-void Parser::ParseFunDec()
-{
-	if(t + 4 >= tokens.size())
-	{
-		// Unexpected end of file
-		return;
-	}
-
-	const Token& type = tokens[t + 1];
-	const Token& identifier = tokens[t + 2];
-
-	if(identifier.type != TokenType::Identifier)
-	{
-		// Expected identifier
-	}
-
-	if(tokens[t + 3] != ReservedSymbol::ParenthesesL)
-	{
-		// Expected left parentheses
-	}
-
-	t += 4;
-
-	while(tokens[t] != ReservedSymbol::ParenthesesR)
-	{
-		ParseParameter();
-		if(tokens[t] == ReservedSymbol::Comma) t++;
-
-		if(t >= tokens.size())
-		{
-			// Unexpected end of file
-			return;
-		}
-	}
-
-	if(tokens[++t] == ReservedSymbol::Semicolon)
-	{
-		// Do stuff
-	}
-	else
-	{
-		// Expected a semicolon
-	}
-}
-
-void Parser::ParseGlobalDec()
-{
-	if(t + 3 >= tokens.size())
-	{
-		// Unexpected end of file
-		return;
-	}
-
-	const Token& identifier = tokens[t + 2];
-	const Token& semicolon = tokens[t + 3];
-
-	t += 4;
-
-	if(identifier.type == TokenType::Identifier)
-	{
-		if(semicolon == ReservedSymbol::Semicolon)
-		{
-			// Do stuff
-		}
-		else
-		{
-			// Expected a semicolon
-		}
-	}
-	else
-	{
-		// Expected identifier
-	}
-}
-
-void Parser::ParseDefinition()
-{
-	size_t i = (tokens[t] == ReservedWord::Export) ? t + 1 : t;
-
-	if(i + 2 >= tokens.size())
-	{
-		// Unexpected end of file
-		return;
-	}
-
-	const Token& type = tokens[i];
-
-	if(type == ReservedWord::Void)
-	{
-		ParseFunDef();
-	}
-	else if(type == ReservedWord::Bool || type == ReservedWord::Int || type == ReservedWord::Float)
-	{
-		if(tokens[i + 2] == ReservedSymbol::ParenthesesL) ParseFunDef();
-		else ParseGlobalDef();
-	}
-	else
-	{
-		// Unexpected token
-	}
-}
-
-void Parser::ParseFunDef()
-{
-
-}
-
-void Parser::ParseGlobalDef()
-{
-
-}
-
-void Parser::ParseArray()
-{
-	if(t + 3 >= tokens.size())
-	{
-		// Unexpected end of file
-		return;
-	}
-
-	const Token& type = tokens[t];
-	const Token& identifier = tokens[t+1];
-	
-	if(type == ReservedWord::Bool || type == ReservedWord::Int || type == ReservedWord::Float)
-	{
-
-	}
-	else
-	{
-		// Unexpected token
-	}
-
-	if(identifier.type != TokenType::Identifier)
-	{
-		// Expected an identifier
-	}
-
-	if(tokens[t + 2] != ReservedSymbol::BracketL)
-	{
-		// Expected a left bracket
-	}
-
-	t += 3;
-	
-	while(tokens[t] != ReservedSymbol::BracketR)
-	{
-		if(tokens[t].type == TokenType::Identifier)
-		{
-			t++;
-			// Do stuff
-		}
-		else if(tokens[t].type == TokenType::IntType)
-		{
-			t++;
-			// Do stuff
-		}
-		else
-		{
-			// Unexpected token
-		}
-
-		if(tokens[t] == ReservedSymbol::Comma) t++;
-
-		if(t >= tokens.size())
-		{
-			// Unexpected end of file
 			return;
 		}
 	}
 }
 
-void Parser::ParseParameter()
+bool Parser::Declaration()
 {
-	if(t + 2 >= tokens.size())
+	return (Extern() && Dec()) || (Export() && Def());
+}
+
+bool Parser::Dec()
+{
+	return (Type() && ArrayId() && Id() && ((FunHeader() && FunDec()) || GlobalDec())) ||
+		Void() && Id() && FunHeader() && FunDec();
+}
+
+bool Parser::FunHeader()
+{
+	return ParenthesesL() && Param() && Params() && ParenthesesR();
+}
+
+bool Parser::Param()
+{
+	size_t tOld = t;
+	return (Type() && ArrayId() && Id()) || (tOld == t);
+}
+
+bool Parser::Params()
+{
+	size_t tOld = t;
+	return (Comma() && Type() && ArrayId() && Params()) || (tOld == t);
+}
+
+bool Parser::FunDec()
+{
+	return Semicolon();
+}
+
+bool Parser::GlobalDec()
+{
+	return Semicolon();
+}
+
+bool Parser::Def()
+{
+	if(Void() && Id() && FunHeader() && FunDef())
 	{
-		// unexpected end of file
-		return;
+		return true;
+	}
+	else if(Type())
+	{
+		size_t tOld = t;
+		return (ArrayExpr() && Id() && AssignOpt() && GlobalDef()) || (tOld == t && Id() && FunHeader() && FunDef());
 	}
 
-	const Token& type = tokens[t];
-	const Token& identifier = tokens[t + 1];
-	bool isArray = tokens[t + 2] == ReservedSymbol::BracketL;
+	return false;
+}
 
-	if(isArray)
+bool Parser::Export()
+{
+	Word(ReservedWord::Export);
+	return true;
+}
+
+bool Parser::GlobalDef()
+{
+	return Semicolon();
+}
+
+bool Parser::FunDef()
+{
+	return BraceL() && FunBody() && BraceR();
+}
+
+bool Parser::Type()
+{
+	if(Word(ReservedWord::Bool))
 	{
-		ParseArray();
+		return true;
 	}
-	else
+	else if(Word(ReservedWord::Int))
 	{
-		if(type == ReservedWord::Bool || type == ReservedWord::Int || type == ReservedWord::Float)
-		{
-			if(identifier.type == TokenType::Identifier)
-			{
-				t += 2;
-			}
-			else
-			{
-				// Unexpected token
-			}
-		}
-		else
-		{
-			// Unexpected token
-		}
+		return true;
 	}
+	else if(Word(ReservedWord::Float))
+	{
+		return true;
+	}
+
+	return false;
+}
+
+bool Parser::FunBody()
+{
+	return VarDecs() && LocalFunDef() && Statement() && Return();
+}
+
+bool Parser::LocalFunDef()
+{
+	size_t tOld = t;
+	return (Type() && Id() && FunHeader() && BraceL() && FunBody() && BraceR() && LocalFunDef()) || (tOld == t);
+}
+
+bool Parser::VarDecs()
+{
+	size_t tOld = t;
+	return (Type() && ArrayExpr() && Id() && AssignOpt() && Semicolon() && VarDecs()) || (tOld == t);
+}
+
+bool Parser::ArrayExpr()
+{
+	size_t tOld = t;
+	return (BracketL() && Expr() && Exprs() && BracketR()) || (tOld == t);
+}
+
+bool Parser::ArrayId()
+{
+	size_t tOld = t;
+	return (BracketL() && Id() && Ids() && BracketR()) || (tOld == t);
+}
+
+bool Parser::Ids()
+{
+	size_t tOld = t;
+	return (Comma() && Id() && Ids()) || (tOld == t);
+}
+
+bool Parser::Statement()
+{
+	return (Id() && ((ArrayExpr() && Assign() && Semicolon()) ||
+		ParenthesesL() && ArrayExpr() && ParenthesesR() && Semicolon())) ||
+		(If() && ParenthesesL() && Expr() && ParenthesesR() && Block() && ElseBlock()) ||
+		(While() && ParenthesesL() && Expr() && ParenthesesR() && Block()) ||
+		(Do() && Block() && While() && ParenthesesL() && Expr() && ParenthesesR() && Semicolon()) ||
+		(For() && ParenthesesL() && Int() && Id() && Assign() && Comma() && Expr() && Step() && ParenthesesR() && Block());
+}
+
+bool Parser::Statements()
+{
+	size_t tOld = t;
+	return (Statement() && Statements()) || (tOld == t);
+}
+
+bool Parser::Step()
+{
+	size_t tOld = t;
+	return (Comma() && Expr()) || (tOld == t);
+}
+
+bool Parser::Block()
+{
+	return (BraceL() && Statements() && BraceR()) || Statement();
+}
+
+bool Parser::ElseBlock()
+{
+	size_t tOld = t;
+	return (Else() && Block()) || (tOld == t);
+}
+
+bool Parser::Return()
+{
+	size_t tOld = t;
+	return (Word(ReservedWord::Return) && Expr() && Semicolon()) || (tOld == t);
+}
+
+bool Parser::Assign()
+{
+	return Symbol(ReservedSymbol::Assign) && Expr();
+}
+
+bool Parser::AssignOpt()
+{
+	size_t tOld = t;
+	return Assign() || (tOld == t);
+}
+
+bool Parser::Expr()
+{
+	return false;
+}
+
+bool Parser::Exprs()
+{
+	size_t tOld = t;
+	return (Comma() && Expr() && Exprs()) || (tOld == t);
+}
+
+bool Parser::Word(ReservedWord word)
+{
+	if(tokens[t] == word)
+	{
+		t++;
+		return true;
+	}
+
+	return false;
+}
+
+bool Parser::Symbol(ReservedSymbol symbol)
+{
+	if(tokens[t] == symbol)
+	{
+		t++;
+		return true;
+	}
+
+	return false;
+}
+
+bool Parser::Id()
+{
+	if(tokens[t].type == TokenType::Identifier)
+	{
+		t++;
+		return true;
+	}
+
+	return false;
+}
+
+bool Parser::Void()
+{
+	return Word(ReservedWord::Void);
+}
+
+bool Parser::ParenthesesL()
+{
+	return Symbol(ReservedSymbol::ParenthesesL);
+}
+
+bool Parser::ParenthesesR()
+{
+	return Symbol(ReservedSymbol::ParenthesesR);
+}
+
+bool Parser::BraceL()
+{
+	return Symbol(ReservedSymbol::BraceL);
+}
+
+bool Parser::BraceR()
+{
+	return Symbol(ReservedSymbol::BraceR);
+}
+
+bool Parser::BracketL()
+{
+	return Symbol(ReservedSymbol::BracketL);
+}
+
+bool Parser::BracketR()
+{
+	return Symbol(ReservedSymbol::BracketR);
+}
+
+bool Parser::Comma()
+{
+	return Symbol(ReservedSymbol::Comma);
+}
+
+bool Parser::Semicolon()
+{
+	return Symbol(ReservedSymbol::Semicolon);
+}
+
+bool Parser::Extern()
+{
+	return Word(ReservedWord::Extern);
+}
+
+bool Parser::If()
+{
+	return Word(ReservedWord::If);
+}
+
+bool Parser::Else()
+{
+	return Word(ReservedWord::Else);
+}
+
+bool Parser::While()
+{
+	return Word(ReservedWord::While);
+}
+
+bool Parser::Do()
+{
+	return Word(ReservedWord::Do);
+}
+
+bool Parser::For()
+{
+	return Word(ReservedWord::For);
+}
+
+bool Parser::Int()
+{
+	return Word(ReservedWord::Int);
 }

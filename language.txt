@@ -1,6 +1,6 @@
 Program		=>	[Declaration]+
 
-Declaration	=>	extern Dec | export Def | Def
+Declaration	=>	extern Dec | export Def
 
 Dec			=> 	Type Id FunHeader FunDec
 			| 	Type ArrayId Id GlobalDec
@@ -17,7 +17,7 @@ FunDec		=>	;
 GlobalDec	=>	;
 
 Def			=>	Export Type Id FunHeader FunDef
-			| 	Export Type ArrayExpr ID AssignOpt GlobalDef
+			| 	Export Type ArrayExpr Id AssignOpt GlobalDef
 			|	Export void FunHeader FunDef
 
 Export		=>	export | $
@@ -38,7 +38,7 @@ ArrayExpr	=>	[ Expr Exprs ] | $
 
 ArrayId		=>	[ Id Ids ] | $
 
-Ids			=>	, Id | $
+Ids			=>	, Id Ids | $
 
 Statement	=>	Id ArrayExpr Assign ;	
 			|	Id ( ArrayExpr ) ;
@@ -50,6 +50,8 @@ Statement	=>	Id ArrayExpr Assign ;
 Step		=>	, Expr | $
 
 Block		=>	{ Statements } | Statement
+
+ElseBlock	=>	else Block | $
 
 Statements	=>	Statement Statements | $
 
