@@ -14,7 +14,7 @@ export int main() // comment after
 {
 	bool /* inline comment */ innerFunction()
 	{
-		return !true;
+		return !true==false;
 	}
 	
 	innerFunction();
