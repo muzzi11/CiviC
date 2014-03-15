@@ -17,6 +17,7 @@ FunDec		=>	;
 GlobalDec	=>	;
 
 Def			=>	Export Type Id FunHeader FunDef
+			|	Export Type Id AssignOpt GlobalDef
 			| 	Export Type ArrayExpr Id AssignOpt GlobalDef
 			|	Export void FunHeader FunDef
 
@@ -28,20 +29,24 @@ FunDef		=>	{ FunBody }
 
 Type		=>	bool | int | float
 
-FunBody		=>	VarDecs LocalFunDef Statement Return
+FunBody		=>	LocalDecs Statements Return
 
-LocalFunDef	=>	Type Id FunHeader { FunBody } LocalFunDef | $
+Locals		=>	Type Id FunHeader { FunBody } Locals
+			|	void Id FunHeader { FunBody } Locals
+			|	Type Id AssignOpts ; Locals
+			|	Type ArrayExpr Id AssignOpts ; Locals
+			|	$
 
-VarDecs		=>	Type ArrayExpr Id AssignOpts ; VarDecs | $
-
-ArrayExpr	=>	[ Expr Exprs ] | $
+ArrayExpr	=>	[ Expr Exprs ]
 
 ArrayId		=>	[ Id Ids ] | $
 
 Ids			=>	, Id Ids | $
 
-Statement	=>	Id ArrayExpr Assign ;	
-			|	Id ( ArrayExpr ) ;
+Statement	=>	Id ArrayExpr Assign ;
+			|	Id Assign ;
+			|	Id ( ) ;
+			|	Id ( Expr Exprs ) ;
 			|	if ( Expr ) Block ElseBlock
 			|	while ( Expr ) Block
 			|	do Block while ( Expr ) ;
