@@ -115,6 +115,7 @@ while (i<n) {
 	i = i + 1;
 }
 \end{lstlisting}
+This does not preserve the order of execution, which is no problem in this specific piece of code.
 
 \section*{Assignment 17: Compilation Schemes}
 
@@ -138,7 +139,8 @@ if (\emph{condition}) \{\\
 	do \{\\
 		$\mathcal{C} \left[ \emph{Body} \right]$ \\
 	\} while(\emph{condition});\\
-\}
+\}\\
+$\mathcal{C} \left[ \emph{Rest} \right]$
 }
 \bigg| always
 \end{equation}
