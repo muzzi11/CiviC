@@ -14,7 +14,7 @@ public:
 
 private:
 	size_t t;
-	const int unaryPresedence = 500;
+	const unsigned int unaryPresedence = 500;
 	const std::vector<Token>& tokens;
 	
 	bool Declaration();
@@ -30,8 +30,8 @@ private:
 	bool FunDef();
 	bool Type();
 	bool FunBody();
-	bool LocalFunDef();
-	bool VarDecs();
+	bool Locals();
+	bool LocalFun();
 	bool ArrayExpr();
 	bool ArrayId();
 	bool Ids();
@@ -47,7 +47,7 @@ private:
 	bool Exprs();
 	bool Args();
 
-	int Presedence(size_t tokenIndex);
+	unsigned int Presedence(size_t tokenIndex);
 	bool RightAssociative(size_t tokenIndex);
 
 	bool Word(ReservedWord word);

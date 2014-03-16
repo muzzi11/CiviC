@@ -20,12 +20,12 @@ void Parser::ParseProgram()
 
 bool Parser::Declaration()
 {
-	return (Extern() && Dec()) || (Export() && Def());
+	return Extern() && Dec() || Export() && Def();
 }
 
 bool Parser::Dec()
 {
-	return (Type() && ArrayId() && Id() && ((FunHeader() && FunDec()) || GlobalDec())) ||
+	return Type() && ArrayId() && Id() && ((FunHeader() && FunDec()) || GlobalDec()) ||
 		Void() && Id() && FunHeader() && FunDec();
 }
 
@@ -37,13 +37,13 @@ bool Parser::FunHeader()
 bool Parser::Param()
 {
 	size_t tOld = t;
-	return (Type() && ArrayId() && Id()) || (tOld == t);
+	return Type() && ArrayId() && Id() || (tOld == t);
 }
 
 bool Parser::Params()
 {
 	size_t tOld = t;
-	return (Comma() && Type() && ArrayId() && Params()) || (tOld == t);
+	return Comma() && Type() && ArrayId() && Params() || (tOld == t);
 }
 
 bool Parser::FunDec()
@@ -64,8 +64,8 @@ bool Parser::Def()
 	}
 	else if(Type())
 	{
-		size_t tOld = t;
-		return (ArrayExpr() && Id() && AssignOpt() && GlobalDef()) || (tOld == t && Id() && FunHeader() && FunDef());
+		return ArrayExpr() && Id() && AssignOpt() && GlobalDef() ||
+			Id() && (FunHeader() && FunDef() || AssignOpt() && GlobalDef());
 	}
 
 	return false;
@@ -107,76 +107,79 @@ bool Parser::Type()
 
 bool Parser::FunBody()
 {
-	return VarDecs() && LocalFunDef() && Statement() && Return();
+	return Locals() && Statements() && Return();
 }
 
-bool Parser::LocalFunDef()
+bool Parser::Locals()
 {
 	size_t tOld = t;
-	return (Type() && Id() && FunHeader() && BraceL() && FunBody() && BraceR() && LocalFunDef()) || (tOld == t);
+
+	return Void() && Id() && LocalFun() && Locals() ||
+		Type() && (ArrayExpr() && Id() && AssignOpt() && Semicolon() && Locals() ||
+		Id() && (LocalFun() && Locals() || AssignOpt() && Semicolon() && Locals())) ||
+		(tOld == t);
 }
 
-bool Parser::VarDecs()
+bool Parser::LocalFun()
 {
-	size_t tOld = t;
-	return (Type() && ArrayExpr() && Id() && AssignOpt() && Semicolon() && VarDecs()) || (tOld == t);
+	return FunHeader() && BraceL() && FunBody() && BraceR();
 }
 
 bool Parser::ArrayExpr()
 {
-	size_t tOld = t;
-	return (BracketL() && Expr() && Exprs() && BracketR()) || (tOld == t);
+	return BracketL() && Expr() && Exprs() && BracketR();
 }
 
 bool Parser::ArrayId()
 {
 	size_t tOld = t;
-	return (BracketL() && Id() && Ids() && BracketR()) || (tOld == t);
+	return BracketL() && Id() && Ids() && BracketR() || (tOld == t);
 }
 
 bool Parser::Ids()
 {
 	size_t tOld = t;
-	return (Comma() && Id() && Ids()) || (tOld == t);
+	return Comma() && Id() && Ids() || (tOld == t);
 }
 
 bool Parser::Statement()
 {
-	return (Id() && ((ArrayExpr() && Assign() && Semicolon()) ||
-		ParenthesesL() && ArrayExpr() && ParenthesesR() && Semicolon())) ||
-		(If() && ParenthesesL() && Expr() && ParenthesesR() && Block() && ElseBlock()) ||
-		(While() && ParenthesesL() && Expr() && ParenthesesR() && Block()) ||
-		(Do() && Block() && While() && ParenthesesL() && Expr() && ParenthesesR() && Semicolon()) ||
-		(For() && ParenthesesL() && Int() && Id() && Assign() && Comma() && Expr() && Step() && ParenthesesR() && Block());
+	return Id() && ((ArrayExpr() && Assign() && Semicolon()) ||
+		Assign() && Semicolon() ||
+		ParenthesesL() && (ParenthesesR() && Semicolon() || Expr() && Exprs() && ParenthesesR() && Semicolon())) ||
+		If() && ParenthesesL() && Expr() && ParenthesesR() && Block() && ElseBlock() ||
+		While() && ParenthesesL() && Expr() && ParenthesesR() && Block() ||
+		Do() && Block() && While() && ParenthesesL() && Expr() && ParenthesesR() && Semicolon() ||
+		For() && ParenthesesL() && Int() && Id() && Assign() && Comma() && Expr() && Step() && ParenthesesR() && Block();
 }
 
 bool Parser::Statements()
 {
 	size_t tOld = t;
-	return (Statement() && Statements()) || (tOld == t);
+	return Statement() && Statements() || (tOld == t);
 }
 
 bool Parser::Step()
 {
 	size_t tOld = t;
-	return (Comma() && Expr()) || (tOld == t);
+	return Comma() && Expr() || (tOld == t);
 }
 
 bool Parser::Block()
 {
-	return (BraceL() && Statements() && BraceR()) || Statement();
+	return BraceL() && Statements() && BraceR() || Statement();
 }
 
 bool Parser::ElseBlock()
 {
 	size_t tOld = t;
-	return (Else() && Block()) || (tOld == t);
+	return Else() && Block() || (tOld == t);
 }
 
 bool Parser::Return()
 {
 	size_t tOld = t;
-	return (Word(ReservedWord::Return) && Expr() && Semicolon()) || (tOld == t);
+	return Word(ReservedWord::Return) && Expr() && Semicolon() || (tOld == t);
 }
 
 bool Parser::Assign()
@@ -192,33 +195,115 @@ bool Parser::AssignOpt()
 
 bool Parser::Expr()
 {
-	std::vector<const Token*> output, stack;
+	std::vector<Token> output;
+	std::vector<size_t> stack;
+	size_t end;
 
-	for(;;)
+	int parentheses = 0, brackets = 0;
+	for(end = t; end < tokens.size(); ++end)
+	{
+		const Token& token = tokens[end];
+
+		if(token == ReservedSymbol::Semicolon) break;
+		else if(token == ReservedSymbol::ParenthesesL) parentheses++;
+		else if(token == ReservedSymbol::ParenthesesR) parentheses--;
+		else if(token == ReservedSymbol::BracketL) brackets++;
+		else if(token == ReservedSymbol::BracketR) brackets--;
+
+		if(parentheses < 0 || brackets < 0) break;
+	}
+
+	for(; t < end; ++t)
 	{
 		const Token& token = tokens[t];
 
 		if(token.type == TokenType::BoolType || token.type == TokenType::IntType || token.type == TokenType::FloatType)
 		{
-			output.push_back(&token);
+			output.push_back(token);
+		}
+		else if(token.type == TokenType::Identifier)
+		{
+			stack.push_back(t);
+		}
+		else if(token == ReservedSymbol::Comma)
+		{
+			while(!stack.empty() && tokens[stack.back()] != ReservedSymbol::ParenthesesL)
+			{
+				output.push_back(tokens[stack.back()]);
+				stack.pop_back();
+			}
+		}
+		else if(Presedence(t) > 0)
+		{
+			while(!stack.empty() && Presedence(stack.back()) > 0 && (!RightAssociative(t) && Presedence(t) == Presedence(stack.back()) || Presedence(t) < Presedence(stack.back())))
+			{
+				output.push_back(tokens[stack.back()]);
+				stack.pop_back();
+			}
+			stack.push_back(t);
+		}
+		else if(token == ReservedSymbol::ParenthesesL)
+		{
+			stack.push_back(t);
+		}
+		else if(token == ReservedSymbol::ParenthesesR)
+		{
+			for(;;)
+			{
+				if(stack.empty())
+				{
+					// parentheses mismatch
+					return false;
+				}
+
+				if(tokens[stack.back()] == ReservedSymbol::ParenthesesL)
+				{
+					stack.pop_back();
+					break;
+				}
+				output.push_back(tokens[stack.back()]);
+				stack.pop_back();
+			}
+		}
+		else
+		{
+			// unexpected token
+			return false;
 		}
 	}
 
-	return false;
+	while(!stack.empty())
+	{
+		const Token& token = tokens[stack.back()];
+
+		if(token == ReservedSymbol::ParenthesesL || token == ReservedSymbol::ParenthesesR)
+		{
+			// parentheses mismatch
+			return false;
+		}
+		else
+		{
+			output.push_back(token);
+		}
+
+		stack.pop_back();
+	}
+
+	return true;
 }
 
 bool Parser::Exprs()
 {
 	size_t tOld = t;
-	return (Comma() && Expr() && Exprs()) || (tOld == t);
+	return Comma() && Expr() && Exprs() || (tOld == t);
 }
 
-int Parser::Presedence(size_t tokenIndex)
+unsigned int Parser::Presedence(size_t tokenIndex)
 {
-	if(tokenIndex == 0) return -1;
+	if(tokenIndex == 0) return 0;
 
 	const Token& token = tokens[tokenIndex];
-	const int addPresedence = 300, minusPresedence = addPresedence;
+	const unsigned int addPresedence = 300, minusPresedence = addPresedence;
 
 	if(token == ReservedSymbol::And || token == ReservedSymbol::Or) return 100;
 	else if(token == ReservedSymbol::Equals || token == ReservedSymbol::Unequals || token == ReservedSymbol::Less ||
@@ -241,7 +326,7 @@ int Parser::Presedence(size_t tokenIndex)
 		}
 	}
 
-	return -1;
+	return 0;
 }
 
 bool Parser::RightAssociative(size_t tokenIndex)
