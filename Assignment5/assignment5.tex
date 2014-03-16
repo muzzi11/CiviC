@@ -93,6 +93,8 @@ while (phi(p_0, p_1)) {
 \section*{Assignment 16: Machine-independent optimisation}
 
 Apply the loop unswitching optimisation to the (original) code above.
+\\\\
+Loop unswitching by moving the if statements out of the loop is not possible due to the if expression being loop variant. A possible optimization that can work, with a bit of magic, is the following:
 
 \begin{lstlisting}
 i = 0;
@@ -115,7 +117,7 @@ while (i<n) {
 	i = i + 1;
 }
 \end{lstlisting}
-This does not preserve the order of execution, which is no problem in this specific piece of code.
+This does not preserve the order of execution, but this is not a problem in this specific piece of code.
 
 \section*{Assignment 17: Compilation Schemes}
 
