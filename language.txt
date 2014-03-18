@@ -29,7 +29,7 @@ FunDef		=>	{ FunBody }
 
 Type		=>	bool | int | float
 
-FunBody		=>	LocalDecs Statements Return
+FunBody		=>	Locals Statements Return
 
 Locals		=>	Type Id FunHeader { FunBody } Locals
 			|	void Id FunHeader { FunBody } Locals

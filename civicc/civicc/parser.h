@@ -1,9 +1,20 @@
 #pragma once
 
 #include <vector>
+#include <string>
 
 #include "token.h"
 
+
+class ParseException : public std::exception
+{
+public:
+	ParseException(const std::string& msg, const Token& token);
+	const char* what() const override;
+
+private:
+	std::string msg;
+};
 
 class Parser
 {
@@ -19,7 +30,7 @@ private:
 	
 	bool Declaration();
 	bool Dec();
-	bool FunHeader();
+	bool FunHeader(bool error = false);
 	bool Param();
 	bool Params();
 	bool FunDec();
@@ -28,10 +39,10 @@ private:
 	bool Export();
 	bool GlobalDef();
 	bool FunDef();
-	bool Type();
+	bool Type(bool error = false);
 	bool FunBody();
 	bool Locals();
-	bool LocalFun();
+	bool LocalFun(bool error = false);
 	bool ArrayExpr();
 	bool ArrayId();
 	bool Ids();
@@ -53,13 +64,13 @@ private:
 	bool Word(ReservedWord word);
 	bool Symbol(ReservedSymbol symbol);
 
-	bool Id();
+	bool Id(bool error = false);
 	bool Void();
-	bool ParenthesesL();
+	bool ParenthesesL(bool error = false);
 	bool ParenthesesR();
-	bool BraceL();
+	bool BraceL(bool error = false);
 	bool BraceR();
-	bool BracketL();
+	bool BracketL(bool error = false);
 	bool BracketR();
 	bool Comma();
 	bool Semicolon();

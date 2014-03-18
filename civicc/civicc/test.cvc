@@ -5,7 +5,7 @@ float fl=1337.0;
 /////////
 int test(int loel)
 {
-	return loel + 3;
+	retur loel + 3;
 }
 
 /* multi line comment

@@ -1,5 +1,19 @@
+#include <sstream>
+
 #include "parser.h"
 
+
+ParseException::ParseException(const std::string& str, const Token& token)
+{
+	std::stringstream sstream(str);
+	sstream << str << " at line " << token.line << " column " << token.pos << "\n";
+	msg = sstream.str();
+}
+
+const char* ParseException::what() const
+{
+	return msg.c_str();
+}
 
 Parser::Parser(const std::vector<Token>& tokens) : 
 	t(0),
@@ -13,7 +27,7 @@ void Parser::ParseProgram()
 	{
 		if(!Declaration())
 		{
-			return;
+			throw ParseException("Unexpected token", tokens[t]);
 		}
 	}
 }
@@ -25,25 +39,23 @@ bool Parser::Declaration()
 
 bool Parser::Dec()
 {
-	return Type() && ArrayId() && Id() && ((FunHeader() && FunDec()) || GlobalDec()) ||
-		Void() && Id() && FunHeader() && FunDec();
+	return Type() && ArrayId() && Id(true) && ((FunHeader() && FunDec()) || GlobalDec()) ||
+		Void() && Id(true) && FunHeader(true) && FunDec();
 }
 
-bool Parser::FunHeader()
+bool Parser::FunHeader(bool error)
 {
-	return ParenthesesL() && Param() && Params() && ParenthesesR();
+	return ParenthesesL(error) && Param() && Params() && ParenthesesR();
 }
 
 bool Parser::Param()
 {
-	size_t tOld = t;
-	return Type() && ArrayId() && Id() || (tOld == t);
+	return Type() && ArrayId() && Id(true) || true;
 }
 
 bool Parser::Params()
 {
-	size_t tOld = t;
-	return Comma() && Type() && ArrayId() && Params() || (tOld == t);
+	return Comma() && Type(true) && ArrayId() && Id(true) && Params() || true;
 }
 
 bool Parser::FunDec()
@@ -58,13 +70,13 @@ bool Parser::GlobalDec()
 
 bool Parser::Def()
 {
-	if(Void() && Id() && FunHeader() && FunDef())
+	if(Void() && Id(true) && FunHeader(true) && FunDef())
 	{
 		return true;
 	}
 	else if(Type())
 	{
-		return ArrayExpr() && Id() && AssignOpt() && GlobalDef() ||
+		return ArrayExpr() && Id(true) && AssignOpt() && GlobalDef() ||
 			Id() && (FunHeader() && FunDef() || AssignOpt() && GlobalDef());
 	}
 
@@ -84,10 +96,10 @@ bool Parser::GlobalDef()
 
 bool Parser::FunDef()
 {
-	return BraceL() && FunBody() && BraceR();
+	return BraceL(true) && FunBody() && BraceR();
 }
 
-bool Parser::Type()
+bool Parser::Type(bool error)
 {
 	if(Word(ReservedWord::Bool))
 	{
@@ -102,6 +114,8 @@ bool Parser::Type()
 		return true;
 	}
 
+	if(error) throw ParseException("Missing type", tokens[t]);
+
 	return false;
 }
 
@@ -112,17 +126,29 @@ bool Parser::FunBody()
 
 bool Parser::Locals()
 {
-	size_t tOld = t;
-
-	return Void() && Id() && LocalFun() && Locals() ||
-		Type() && (ArrayExpr() && Id() && AssignOpt() && Semicolon() && Locals() ||
-		Id() && (LocalFun() && Locals() || AssignOpt() && Semicolon() && Locals())) ||
-		(tOld == t);
+	if(Void() && Id(true) && LocalFun(true) && Locals())
+	{
+		return true;
+	}
+	else if(Type())
+	{
+		if(ArrayExpr() && Id(true) && AssignOpt() && Semicolon() && Locals() ||
+			Id() && (LocalFun() && Locals() || AssignOpt() && Semicolon() && Locals()))
+		{
+			return true;
+		}
+		else
+		{
+			throw ParseException("Expected a function definition or ';'", tokens[t]);
+		}
+	}
+	
+	return true;
 }
 
-bool Parser::LocalFun()
+bool Parser::LocalFun(bool error)
 {
-	return FunHeader() && BraceL() && FunBody() && BraceR();
+	return FunHeader(error) && BraceL(true) && FunBody() && BraceR();
 }
 
 bool Parser::ArrayExpr()
@@ -132,31 +158,41 @@ bool Parser::ArrayExpr()
 
 bool Parser::ArrayId()
 {
-	size_t tOld = t;
-	return BracketL() && Id() && Ids() && BracketR() || (tOld == t);
+	return BracketL() && Id(true) && Ids() && BracketR() || true;
 }
 
 bool Parser::Ids()
 {
-	size_t tOld = t;
-	return Comma() && Id() && Ids() || (tOld == t);
+	return Comma() && Id(true) && Ids() || true;
 }
 
 bool Parser::Statement()
 {
-	return Id() && ((ArrayExpr() && Assign() && Semicolon()) ||
+	/*if(Id())
+	{
+		if(ArrayExpr() && Assign() && Semicolon() ||
+			Assign() && Semicolon() ||
+			ParenthesesL() && (ParenthesesR() && Semicolon() || Expr() && Exprs() && ParenthesesR() && Semicolon()))
+		{
+			return true;
+		}
+		else
+		{
+			throw ParseException("Invalid statement, expected an assignment or function call after identifier", tokens[t]);
+		}
+	}*/
+	return Id() && (ArrayExpr() && Assign() && Semicolon() ||
 		Assign() && Semicolon() ||
 		ParenthesesL() && (ParenthesesR() && Semicolon() || Expr() && Exprs() && ParenthesesR() && Semicolon())) ||
 		If() && ParenthesesL() && Expr() && ParenthesesR() && Block() && ElseBlock() ||
 		While() && ParenthesesL() && Expr() && ParenthesesR() && Block() ||
 		Do() && Block() && While() && ParenthesesL() && Expr() && ParenthesesR() && Semicolon() ||
-		For() && ParenthesesL() && Int() && Id() && Assign() && Comma() && Expr() && Step() && ParenthesesR() && Block();
+		For() && ParenthesesL() && Int() && Id(true) && Assign() && Comma() && Expr() && Step() && ParenthesesR() && Block();
 }
 
 bool Parser::Statements()
 {
-	size_t tOld = t;
-	return Statement() && Statements() || (tOld == t);
+	return Statement() && Statements() || true;
 }
 
 bool Parser::Step()
@@ -167,13 +203,12 @@ bool Parser::Step()
 
 bool Parser::Block()
 {
-	return BraceL() && Statements() && BraceR() || Statement();
+	return BraceL(true) && Statements() && BraceR() || Statement();
 }
 
 bool Parser::ElseBlock()
 {
-	size_t tOld = t;
-	return Else() && Block() || (tOld == t);
+	return Else() && Block() || true;
 }
 
 bool Parser::Return()
@@ -189,8 +224,7 @@ bool Parser::Assign()
 
 bool Parser::AssignOpt()
 {
-	size_t tOld = t;
-	return Assign() || (tOld == t);
+	return Assign() || true;
 }
 
 bool Parser::Expr()
@@ -362,13 +396,15 @@ bool Parser::Symbol(ReservedSymbol symbol)
 	return false;
 }
 
-bool Parser::Id()
+bool Parser::Id(bool error)
 {
 	if(tokens[t].type == TokenType::Identifier)
 	{
 		t++;
 		return true;
 	}
+
+	if(error) throw ParseException("Missing identifier", tokens[t]);
 
 	return false;
 }
@@ -378,34 +414,52 @@ bool Parser::Void()
 	return Word(ReservedWord::Void);
 }
 
-bool Parser::ParenthesesL()
+bool Parser::ParenthesesL(bool error)
 {
-	return Symbol(ReservedSymbol::ParenthesesL);
+	if(!Symbol(ReservedSymbol::ParenthesesL))
+	{
+		if(error) throw ParseException("Expected a '(' ", tokens[t]);
+		return false;
+	}
+	return true;
 }
 
 bool Parser::ParenthesesR()
 {
-	return Symbol(ReservedSymbol::ParenthesesR);
+	if(!Symbol(ReservedSymbol::ParenthesesR)) throw ParseException("Expected a ')' ", tokens[t]);
+	return true;
 }
 
-bool Parser::BraceL()
+bool Parser::BraceL(bool error)
 {
-	return Symbol(ReservedSymbol::BraceL);
+	if(!Symbol(ReservedSymbol::BraceL))
+	{
+		if(error) throw ParseException("Expected a '{' ", tokens[t]);
+		return false;
+	}
+	return true;
 }
 
 bool Parser::BraceR()
 {
-	return Symbol(ReservedSymbol::BraceR);
+	if(!Symbol(ReservedSymbol::BraceR)) throw ParseException("Expected a '}' ", tokens[t]);
+	return true;
 }
 
-bool Parser::BracketL()
+bool Parser::BracketL(bool error)
 {
-	return Symbol(ReservedSymbol::BracketL);
+	if(!Symbol(ReservedSymbol::BracketL))
+	{
+		if(error) throw ParseException("Expected a '[' ", tokens[t]);
+		return false;
+	}
+	return true;
 }
 
 bool Parser::BracketR()
 {
-	return Symbol(ReservedSymbol::BracketR);
+	if(!Symbol(ReservedSymbol::BracketR)) throw ParseException("Expected a ']' ", tokens[t]);
+	return true;
 }
 
 bool Parser::Comma()
@@ -415,7 +469,8 @@ bool Parser::Comma()
 
 bool Parser::Semicolon()
 {
-	return Symbol(ReservedSymbol::Semicolon);
+	if(!Symbol(ReservedSymbol::Semicolon)) throw ParseException("Expected a ';' ", tokens[t]);
+	return true;
 }
 
 bool Parser::Extern()
