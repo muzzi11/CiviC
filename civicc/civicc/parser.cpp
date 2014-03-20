@@ -126,20 +126,20 @@ bool Parser::FunBody()
 
 bool Parser::Locals()
 {
-	if(Void() && Id(true) && LocalFun(true) && Locals())
+	if(Void() && Id(true) && LocalFun(true) && LocalFuns())
 	{
 		return true;
 	}
 	else if(Type())
 	{
 		if(ArrayExpr() && Id(true) && AssignOpt() && Semicolon() && Locals() ||
-			Id() && (LocalFun() && Locals() || AssignOpt() && Semicolon() && Locals()))
+			Id() && (LocalFun() && LocalFuns() || AssignOpt() && Semicolon() && Locals()))
 		{
 			return true;
 		}
 		else
 		{
-			throw ParseException("Expected a function definition or ';'", tokens[t]);
+			throw ParseException("Expected a function definition or variable declaration", tokens[t]);
 		}
 	}
 	
@@ -151,9 +151,28 @@ bool Parser::LocalFun(bool error)
 	return FunHeader(error) && BraceL(true) && FunBody() && BraceR();
 }
 
+bool Parser::LocalFuns()
+{
+	if(Void() && Id(true) && LocalFun(true) && LocalFuns())
+	{
+		return true;
+	}
+	else if(Type())
+	{
+		if(ArrayExpr()) throw ParseException("Unexpected array expression(variable declarations should preceed function definitions)", tokens[t]);
+		else if(Id(true))
+		{
+			if(AssignOpt() || Semicolon()) throw ParseException("Variable declaration should preceed function definitions", tokens[t]);
+			return LocalFun(true) && LocalFuns();
+		}
+	}
+
+	return true;
+}
+
 bool Parser::ArrayExpr()
 {
-	return BracketL() && Expr() && Exprs() && BracketR();
+	return BracketL() && Expr(true) && Exprs() && BracketR();
 }
 
 bool Parser::ArrayId()
@@ -168,7 +187,7 @@ bool Parser::Ids()
 
 bool Parser::Statement()
 {
-	/*if(Id())
+	if(Id())
 	{
 		if(ArrayExpr() && Assign() && Semicolon() ||
 			Assign() && Semicolon() ||
@@ -180,14 +199,11 @@ bool Parser::Statement()
 		{
 			throw ParseException("Invalid statement, expected an assignment or function call after identifier", tokens[t]);
 		}
-	}*/
-	return Id() && (ArrayExpr() && Assign() && Semicolon() ||
-		Assign() && Semicolon() ||
-		ParenthesesL() && (ParenthesesR() && Semicolon() || Expr() && Exprs() && ParenthesesR() && Semicolon())) ||
-		If() && ParenthesesL() && Expr() && ParenthesesR() && Block() && ElseBlock() ||
-		While() && ParenthesesL() && Expr() && ParenthesesR() && Block() ||
-		Do() && Block() && While() && ParenthesesL() && Expr() && ParenthesesR() && Semicolon() ||
-		For() && ParenthesesL() && Int() && Id(true) && Assign() && Comma() && Expr() && Step() && ParenthesesR() && Block();
+	}
+	return If() && ParenthesesL(true) && Expr(true) && ParenthesesR() && Block() && ElseBlock() ||
+		While() && ParenthesesL(true) && Expr(true) && ParenthesesR() && Block() ||
+		Do() && Block() && While(true) && ParenthesesL(true) && Expr(true) && ParenthesesR() && Semicolon() ||
+		For() && ParenthesesL(true) && Int() && Id(true) && Assign() && Comma(true) && Expr(true) && Step() && ParenthesesR() && Block();
 }
 
 bool Parser::Statements()
@@ -197,13 +213,12 @@ bool Parser::Statements()
 
 bool Parser::Step()
 {
-	size_t tOld = t;
-	return Comma() && Expr() || (tOld == t);
+	return Comma() && Expr(true) || true;
 }
 
 bool Parser::Block()
 {
-	return BraceL(true) && Statements() && BraceR() || Statement();
+	return BraceL() && Statements() && BraceR() || Statement();
 }
 
 bool Parser::ElseBlock()
@@ -213,13 +228,12 @@ bool Parser::ElseBlock()
 
 bool Parser::Return()
 {
-	size_t tOld = t;
-	return Word(ReservedWord::Return) && Expr() && Semicolon() || (tOld == t);
+	return Word(ReservedWord::Return) && Expr(true) && Semicolon() || true;
 }
 
 bool Parser::Assign()
 {
-	return Symbol(ReservedSymbol::Assign) && Expr();
+	return Symbol(ReservedSymbol::Assign) && Expr(true);
 }
 
 bool Parser::AssignOpt()
@@ -227,7 +241,7 @@ bool Parser::AssignOpt()
 	return Assign() || true;
 }
 
-bool Parser::Expr()
+bool Parser::Expr(bool error)
 {
 	std::vector<Token> output;
 	std::vector<size_t> stack;
@@ -286,7 +300,7 @@ bool Parser::Expr()
 			{
 				if(stack.empty())
 				{
-					// parentheses mismatch
+					if(error) throw ParseException("Parentheses mismatch in expression", tokens[t]);
 					return false;
 				}
 
@@ -301,7 +315,7 @@ bool Parser::Expr()
 		}
 		else
 		{
-			// unexpected token
+			if(error) throw ParseException("Unexpected token in expression", tokens[t]);
 			return false;
 		}
 	}
@@ -312,7 +326,7 @@ bool Parser::Expr()
 
 		if(token == ReservedSymbol::ParenthesesL || token == ReservedSymbol::ParenthesesR)
 		{
-			// parentheses mismatch
+			if(error) throw ParseException("Parentheses mismatch in expression", tokens[t]);
 			return false;
 		}
 		else
@@ -328,8 +342,7 @@ bool Parser::Expr()
 
 bool Parser::Exprs()
 {
-	size_t tOld = t;
-	return Comma() && Expr() && Exprs() || (tOld == t);
+	return Comma() && Expr(true) && Exprs() || true;
 }
 
 unsigned int Parser::Presedence(size_t tokenIndex)
@@ -462,9 +475,14 @@ bool Parser::BracketR()
 	return true;
 }
 
-bool Parser::Comma()
+bool Parser::Comma(bool error)
 {
-	return Symbol(ReservedSymbol::Comma);
+	if(!Symbol(ReservedSymbol::Comma))
+	{
+		if(error) throw ParseException("Expected a ',' ", tokens[t]);
+		return false;
+	}
+	return true;
 }
 
 bool Parser::Semicolon()
@@ -488,9 +506,14 @@ bool Parser::Else()
 	return Word(ReservedWord::Else);
 }
 
-bool Parser::While()
+bool Parser::While(bool error)
 {
-	return Word(ReservedWord::While);
+	if(!Word(ReservedWord::While))
+	{
+		if(error) throw ParseException("Expected the keyword 'while'", tokens[t]);
+		return false;
+	}
+	return true;
 }
 
 bool Parser::Do()
@@ -505,5 +528,6 @@ bool Parser::For()
 
 bool Parser::Int()
 {
-	return Word(ReservedWord::Int);
+	if(!Word(ReservedWord::Int)) throw ParseException("Expected type 'int'", tokens[t]);
+	return true;
 }

@@ -34,13 +34,13 @@ int main(int argc, char* argv[])
 			file.close();
 		}
 
-		//try
+		try
 		{
 			parser.ParseProgram();
 		}
-		//catch(ParseException e)
+		catch(ParseException e)
 		{
-			//std::cout << e.what();
+			std::cout << e.what();
 		}
 	}
 

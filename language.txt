@@ -31,11 +31,20 @@ Type		=>	bool | int | float
 
 FunBody		=>	Locals Statements Return
 
-Locals		=>	Type Id FunHeader { FunBody } Locals
-			|	void Id FunHeader { FunBody } Locals
+Locals		=>	Type Id LocalFun LocalFuns
+			|	void Id LocalFun LocalFuns
 			|	Type Id AssignOpts ; Locals
 			|	Type ArrayExpr Id AssignOpts ; Locals
 			|	$
+			
+LocalFun	=>	FunHeader { FunBody }
+
+LocalFuns	=>	Type Id LocalFun LocalFuns
+			|	void Id LocalFun LocalFuns
+			|	$
+
+LocalVars	=>	Type Id AssignOpts ; LocalVars
+			|	Type
 
 ArrayExpr	=>	[ Expr Exprs ]
 

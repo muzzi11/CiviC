@@ -43,6 +43,7 @@ private:
 	bool FunBody();
 	bool Locals();
 	bool LocalFun(bool error = false);
+	bool LocalFuns();
 	bool ArrayExpr();
 	bool ArrayId();
 	bool Ids();
@@ -54,7 +55,7 @@ private:
 	bool Return();
 	bool Assign();
 	bool AssignOpt();
-	bool Expr();
+	bool Expr(bool error = false);
 	bool Exprs();
 	bool Args();
 
@@ -72,12 +73,12 @@ private:
 	bool BraceR();
 	bool BracketL(bool error = false);
 	bool BracketR();
-	bool Comma();
+	bool Comma(bool error = false);
 	bool Semicolon();
 	bool Extern();
 	bool If();
 	bool Else();
-	bool While();
+	bool While(bool error = false);
 	bool Do();
 	bool For();
 	bool Int();
