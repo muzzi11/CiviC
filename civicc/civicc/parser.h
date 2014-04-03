@@ -4,11 +4,13 @@
 #include <string>
 
 #include "token.h"
+#include "node.h"
 
 
 class ParseException : public std::exception
 {
 public:
+	ParseException(const std::string& msg);
 	ParseException(const std::string& msg, const Token& token);
 	const char* what() const override;
 
@@ -24,10 +26,23 @@ public:
 	void ParseProgram();
 
 private:
+	struct Operator
+	{
+		size_t t;
+		const Token& token;
+		std::vector<Operator> args;
+
+		Operator(size_t t, const Token& token) : t(t), token(token)
+		{
+		}
+	};
+
 	size_t t;
-	const unsigned int unaryPresedence = 500;
+	const int unaryPrecedence = 5;
 	const std::vector<Token>& tokens;
 	
+	void CheckUnexpectedEOF() const;
+
 	bool Declaration();
 	bool Dec();
 	bool FunHeader(bool error = false);
@@ -55,15 +70,20 @@ private:
 	bool Return();
 	bool Assign();
 	bool AssignOpt();
-	bool Expr(bool error = false);
+	bool Expr();
+	NodePtr Expr(int precedence);
+	NodePtr P();
+	bool Literal() const;
+	bool BinaryOp() const;
+	bool UnaryOp() const;
 	bool Exprs();
 	bool Args();
 
-	unsigned int Presedence(size_t tokenIndex);
-	bool RightAssociative(size_t tokenIndex);
+	int Precedence(size_t tokenIndex) const;
+	bool RightAssociative(size_t tokenIndex) const;
 
-	bool Word(ReservedWord word);
-	bool Symbol(ReservedSymbol symbol);
+	bool Word(ReservedWord word, bool eofError = true);
+	bool Symbol(ReservedSymbol symbol, bool eofError = true);
 
 	bool Id(bool error = false);
 	bool Void();

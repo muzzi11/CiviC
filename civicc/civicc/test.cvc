@@ -1,4 +1,4 @@
-int intGlobal = 5 * test(a, b, +);
+int intGlobal = 1 + 2 * bla(3 + 5, 9, 4);
 float fl=1337.0;
 
 // comment // /// /////////

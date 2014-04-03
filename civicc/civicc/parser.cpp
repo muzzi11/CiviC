@@ -1,12 +1,18 @@
 #include <sstream>
+#include <iostream>
 
 #include "parser.h"
 
 
+ParseException::ParseException(const std::string& str)
+{
+	msg = str + "\n";
+}
+
 ParseException::ParseException(const std::string& str, const Token& token)
 {
 	std::stringstream sstream(str);
-	sstream << str << " at line " << token.line << " column " << token.pos << "\n";
+	sstream << str << " at line " << token.line << " column " << token.pos + 1 << "\n";
 	msg = sstream.str();
 }
 
@@ -30,6 +36,11 @@ void Parser::ParseProgram()
 			throw ParseException("Unexpected token", tokens[t]);
 		}
 	}
+}
+
+void Parser::CheckUnexpectedEOF() const
+{
+	if(t >= tokens.size()) throw ParseException("Unexpected end of file.");
 }
 
 bool Parser::Declaration()
@@ -139,7 +150,7 @@ bool Parser::Locals()
 		}
 		else
 		{
-			throw ParseException("Expected a function definition or variable declaration", tokens[t]);
+			throw ParseException("Expected a function definition or variable declaration", tokens[t - 1]);
 		}
 	}
 	
@@ -159,10 +170,10 @@ bool Parser::LocalFuns()
 	}
 	else if(Type())
 	{
-		if(ArrayExpr()) throw ParseException("Unexpected array expression(variable declarations should preceed function definitions)", tokens[t]);
+		if(ArrayExpr()) throw ParseException("Unexpected array expression(variable declarations should preceed function definitions)", tokens[t - 1]);
 		else if(Id(true))
 		{
-			if(AssignOpt() || Semicolon()) throw ParseException("Variable declaration should preceed function definitions", tokens[t]);
+			if(AssignOpt() || Semicolon()) throw ParseException("Variable declaration should preceed function definitions", tokens[t - 1]);
 			return LocalFun(true) && LocalFuns();
 		}
 	}
@@ -172,7 +183,7 @@ bool Parser::LocalFuns()
 
 bool Parser::ArrayExpr()
 {
-	return BracketL() && Expr(true) && Exprs() && BracketR();
+	return BracketL() && Expr() && Exprs() && BracketR();
 }
 
 bool Parser::ArrayId()
@@ -200,10 +211,10 @@ bool Parser::Statement()
 			throw ParseException("Invalid statement, expected an assignment or function call after identifier", tokens[t]);
 		}
 	}
-	return If() && ParenthesesL(true) && Expr(true) && ParenthesesR() && Block() && ElseBlock() ||
-		While() && ParenthesesL(true) && Expr(true) && ParenthesesR() && Block() ||
-		Do() && Block() && While(true) && ParenthesesL(true) && Expr(true) && ParenthesesR() && Semicolon() ||
-		For() && ParenthesesL(true) && Int() && Id(true) && Assign() && Comma(true) && Expr(true) && Step() && ParenthesesR() && Block();
+	return If() && ParenthesesL(true) && Expr() && ParenthesesR() && Block() && ElseBlock() ||
+		While() && ParenthesesL(true) && Expr() && ParenthesesR() && Block() ||
+		Do() && Block() && While(true) && ParenthesesL(true) && Expr() && ParenthesesR() && Semicolon() ||
+		For() && ParenthesesL(true) && Int() && Id(true) && Assign() && Comma(true) && Expr() && Step() && ParenthesesR() && Block();
 }
 
 bool Parser::Statements()
@@ -213,7 +224,7 @@ bool Parser::Statements()
 
 bool Parser::Step()
 {
-	return Comma() && Expr(true) || true;
+	return Comma() && Expr() || true;
 }
 
 bool Parser::Block()
@@ -228,12 +239,12 @@ bool Parser::ElseBlock()
 
 bool Parser::Return()
 {
-	return Word(ReservedWord::Return) && Expr(true) && Semicolon() || true;
+	return Word(ReservedWord::Return) && Expr() && Semicolon() || true;
 }
 
 bool Parser::Assign()
 {
-	return Symbol(ReservedSymbol::Assign) && Expr(true);
+	return Symbol(ReservedSymbol::Assign) && Expr();
 }
 
 bool Parser::AssignOpt()
@@ -241,10 +252,107 @@ bool Parser::AssignOpt()
 	return Assign() || true;
 }
 
-bool Parser::Expr(bool error)
+bool Parser::Expr()
+{
+	auto node = Expr(1);
+	if(!node) throw ParseException("Invalid expression", tokens[t]);
+	return true;
+}
+
+NodePtr Parser::Expr(int precedence)
+{
+	auto left = P();
+
+	while(left != nullptr && BinaryOp() && Precedence(t) >= precedence)
+	{
+		int q = RightAssociative(t) ? Precedence(t) : Precedence(t) + 1;
+		const Token& token = tokens[t++];
+
+		auto right = Expr(q);
+		auto op = std::make_shared<BinaryOpNode>(token);
+		op->children.push_back(left);
+		op->children.push_back(right);
+		
+		left = op;
+	}
+
+	return left;
+}
+
+NodePtr Parser::P()
+{
+	if(UnaryOp())
+	{
+		int q = Precedence(t);
+		const Token& token = tokens[t++];
+		auto op = std::make_shared<UnaryOpNode>(token);
+		op->children.push_back(Expr(q));
+		return op;
+	}
+	else if(ParenthesesL())
+	{
+		auto expr = Expr(1);
+		ParenthesesR();
+		return expr;
+	}
+	else if(Literal())
+	{
+		const Token& token = tokens[t++];
+		return std::make_shared<LiteralNode>(token);
+	}
+	else if(Id())
+	{
+		if(ParenthesesL())
+		{
+			auto call = std::make_shared<CallNode>(tokens[t-2]);
+			
+			bool comma = false;
+			do
+			{
+				auto expr = Expr(1);
+				if(expr != nullptr) call->children.push_back(expr);
+				else if(comma) throw ParseException("Expected an expression after ','", tokens[t - 1]);
+				comma = true;
+			} while(Comma());
+
+			ParenthesesR();
+
+			return call;
+		}
+
+		const Token& id = tokens[t - 1];
+		return std::make_shared<IdentifierNode>(id);
+	}
+	
+	return nullptr;
+}
+
+bool Parser::Literal() const
+{
+	if(t >= tokens.size()) return false;
+
+	const Token& tok = tokens[t];
+	return tok.type == TokenType::BoolType || tok.type == TokenType::IntType || tok.type == TokenType::FloatType;
+}
+
+bool Parser::BinaryOp() const
+{
+	if(t >= tokens.size()) return false;
+
+	int p = Precedence(t);
+	return p > 0 && p < unaryPrecedence;
+}
+
+bool Parser::UnaryOp() const
+{
+	if(t >= tokens.size()) return false;
+	return Precedence(t) == unaryPrecedence;
+}
+
+/*bool Parser::Expr(bool error)
 {
 	std::vector<Token> output;
-	std::vector<size_t> stack;
+	std::vector<Operator> stack, argStack;
 	size_t end;
 
 	int parentheses = 0, brackets = 0;
@@ -271,28 +379,38 @@ bool Parser::Expr(bool error)
 		}
 		else if(token.type == TokenType::Identifier)
 		{
-			stack.push_back(t);
+			stack.emplace_back(t, token);
 		}
 		else if(token == ReservedSymbol::Comma)
 		{
-			while(!stack.empty() && tokens[stack.back()] != ReservedSymbol::ParenthesesL)
+			while(!stack.empty() && stack.back().token != ReservedSymbol::ParenthesesL)
 			{
-				output.push_back(tokens[stack.back()]);
+				output.push_back(stack.back().token);
 				stack.pop_back();
 			}
 		}
 		else if(Presedence(t) > 0)
 		{
-			while(!stack.empty() && Presedence(stack.back()) > 0 && (!RightAssociative(t) && Presedence(t) == Presedence(stack.back()) || Presedence(t) < Presedence(stack.back())))
+			while(!stack.empty())
 			{
-				output.push_back(tokens[stack.back()]);
-				stack.pop_back();
+				Operator op = stack.back();
+				int presOp = Presedence(op.t);
+				int presCur = Presedence(t);
+
+				if(presOp > 0 && (!RightAssociative(t) && presCur == presOp || presCur < presOp))
+				{
+					output.push_back(op.token);
+					stack.pop_back();
+				}
+				else break;
 			}
-			stack.push_back(t);
+			stack.emplace_back(t, token);
 		}
 		else if(token == ReservedSymbol::ParenthesesL)
 		{
-			stack.push_back(t);
+			// check if paren belongs to a function
+			if(tokens[t - 1].type == TokenType::Identifier) argStack.emplace_back(t, token);
+			stack.emplace_back(t, tokens[t]);
 		}
 		else if(token == ReservedSymbol::ParenthesesR)
 		{
@@ -300,33 +418,33 @@ bool Parser::Expr(bool error)
 			{
 				if(stack.empty())
 				{
-					if(error) throw ParseException("Parentheses mismatch in expression", tokens[t]);
+					if(error) throw ParseException("Parentheses mismatch in expression", token);
 					return false;
 				}
 
-				if(tokens[stack.back()] == ReservedSymbol::ParenthesesL)
+				if(stack.back().token == ReservedSymbol::ParenthesesL)
 				{
 					stack.pop_back();
 					break;
 				}
-				output.push_back(tokens[stack.back()]);
+				output.push_back(stack.back().token);
 				stack.pop_back();
 			}
 		}
 		else
 		{
-			if(error) throw ParseException("Unexpected token in expression", tokens[t]);
+			if(error) throw ParseException("Unexpected token in expression", token);
 			return false;
 		}
 	}
 
 	while(!stack.empty())
 	{
-		const Token& token = tokens[stack.back()];
+		const Token& token = stack.back().token;
 
 		if(token == ReservedSymbol::ParenthesesL || token == ReservedSymbol::ParenthesesR)
 		{
-			if(error) throw ParseException("Parentheses mismatch in expression", tokens[t]);
+			if(error) throw ParseException("Parentheses mismatch in expression", token);
 			return false;
 		}
 		else
@@ -338,26 +456,26 @@ bool Parser::Expr(bool error)
 	}
 
 	return true;
-}
+}*/
 
 bool Parser::Exprs()
 {
-	return Comma() && Expr(true) && Exprs() || true;
+	return Comma() && Expr() && Exprs() || true;
 }
 
-unsigned int Parser::Presedence(size_t tokenIndex)
+int Parser::Precedence(size_t tokenIndex) const
 {
 	if(tokenIndex == 0) return 0;
 
 	const Token& token = tokens[tokenIndex];
-	const unsigned int addPresedence = 300, minusPresedence = addPresedence;
+	const int addPresedence = 3, minusPresedence = addPresedence;
 
-	if(token == ReservedSymbol::And || token == ReservedSymbol::Or) return 100;
+	if(token == ReservedSymbol::And || token == ReservedSymbol::Or) return 1;
 	else if(token == ReservedSymbol::Equals || token == ReservedSymbol::Unequals || token == ReservedSymbol::Less ||
-		token == ReservedSymbol::LessEqual || token == ReservedSymbol::More || token == ReservedSymbol::MoreEqual) return 200;
+		token == ReservedSymbol::LessEqual || token == ReservedSymbol::More || token == ReservedSymbol::MoreEqual) return 2;
 	else if(token == ReservedSymbol::Plus) return addPresedence;
-	else if(token == ReservedSymbol::Multiply || token == ReservedSymbol::Divide || token == ReservedSymbol::Modulo) return 400;
-	else if(token == ReservedSymbol::Not) return unaryPresedence;
+	else if(token == ReservedSymbol::Multiply || token == ReservedSymbol::Divide || token == ReservedSymbol::Modulo) return 4;
+	else if(token == ReservedSymbol::Not) return unaryPrecedence;
 	else if(token == ReservedSymbol::Minus)
 	{
 		const Token& prev = tokens[tokenIndex - 1];
@@ -369,26 +487,29 @@ unsigned int Parser::Presedence(size_t tokenIndex)
 		}
 		else
 		{
-			return unaryPresedence;
+			return unaryPrecedence;
 		}
 	}
 
 	return 0;
 }
 
-bool Parser::RightAssociative(size_t tokenIndex)
+bool Parser::RightAssociative(size_t tokenIndex) const
 {
 	const Token& token = tokens[tokenIndex];
 
 	if(token == ReservedSymbol::Not) return true;
-	else if(token == ReservedSymbol::Minus) return Presedence(tokenIndex) == unaryPresedence;
+	else if(token == ReservedSymbol::Minus) return Precedence(tokenIndex) == unaryPrecedence;
 
 	return false;
 }
 
 
-bool Parser::Word(ReservedWord word)
+bool Parser::Word(ReservedWord word, bool eofError)
 {
+	if(eofError) CheckUnexpectedEOF();
+	if(t >= tokens.size()) return false;
+
 	if(tokens[t] == word)
 	{
 		t++;
@@ -398,8 +519,11 @@ bool Parser::Word(ReservedWord word)
 	return false;
 }
 
-bool Parser::Symbol(ReservedSymbol symbol)
+bool Parser::Symbol(ReservedSymbol symbol, bool eofError)
 {
+	if(eofError) CheckUnexpectedEOF();
+	if(t >= tokens.size()) return false;
+
 	if(tokens[t] == symbol)
 	{
 		t++;
@@ -411,6 +535,8 @@ bool Parser::Symbol(ReservedSymbol symbol)
 
 bool Parser::Id(bool error)
 {
+	CheckUnexpectedEOF();
+
 	if(tokens[t].type == TokenType::Identifier)
 	{
 		t++;
@@ -455,7 +581,7 @@ bool Parser::BraceL(bool error)
 
 bool Parser::BraceR()
 {
-	if(!Symbol(ReservedSymbol::BraceR)) throw ParseException("Expected a '}' ", tokens[t]);
+	if(!Symbol(ReservedSymbol::BraceR, false)) throw ParseException("Expected a '}' ", tokens[t - 1]);
 	return true;
 }
 
@@ -487,7 +613,7 @@ bool Parser::Comma(bool error)
 
 bool Parser::Semicolon()
 {
-	if(!Symbol(ReservedSymbol::Semicolon)) throw ParseException("Expected a ';' ", tokens[t]);
+	if(!Symbol(ReservedSymbol::Semicolon, false)) throw ParseException("Expected a ';' ", tokens[t - 1]);
 	return true;
 }
 
