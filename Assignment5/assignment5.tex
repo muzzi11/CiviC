@@ -1,0 +1,153 @@
+\documentclass[12pt]{article}
+
+\usepackage[dutch]{babel}
+\usepackage{a4wide}
+\usepackage{amsmath}
+\usepackage{graphicx}
+\usepackage{enumerate}
+\usepackage{eurosym}
+\usepackage[normalem]{ulem}
+\usepackage{tikz}
+\usetikzlibrary{automata,positioning}
+
+\usepackage{listings}
+\usepackage{color}
+
+\usepackage{stmaryrd}
+
+\definecolor{dkgreen}{rgb}{0,0.6,0}
+\definecolor{gray}{rgb}{0.5,0.5,0.5}
+\definecolor{mauve}{rgb}{0.58,0,0.82}
+
+\lstset{frame=tb,
+  language=C++,
+  aboveskip=3mm,
+  belowskip=3mm,
+  showstringspaces=false,
+  columns=flexible,
+  basicstyle={\small\ttfamily},
+  numbers=none,
+  numberstyle=\tiny\color{gray},
+  keywordstyle=\color{blue},
+  commentstyle=\color{dkgreen},
+  stringstyle=\color{mauve},
+  breaklines=true,
+  breakatwhitespace=true,
+  tabsize=4
+}
+
+\title{Assignment serie 5}
+\author{Jos Bonsink (10172920) \& Mustafa Karaalioglu (10217665)}
+\begin{document}
+\maketitle
+
+\noindent Consider the following CiviC code fragment:
+\begin{lstlisting}
+i = 0;
+while (i<n) {
+	j = 0;
+	while (j<n) {
+		if (i<j) {
+			A[i,j] = A[i,j] + i;
+		}
+		else if (j==i) {
+			A[i,j] = -A[i,j];
+		}
+		else {
+			A[i,j] = A[i,j] + j;
+		}
+		j = j + 1;
+	}
+	i = i + 1;
+}
+\end{lstlisting}
+
+\section*{Assignment 15: Static Single Assignment Form}
+
+Transform the above code into Static Single Assignment Form (SSA).
+
+\begin{lstlisting}
+i_0 = 0;
+p_0 = i_0 < n;
+while (phi(p_0, p_1)) {
+	j_0 = 0;
+	t_0 = j_0 < n;
+	while (phi(t_0, t_1)) {
+		if (i_0<j_0) {
+			A_1[i_0,j_0] = A_0[i_0,j_0] + i_0;
+		}
+		else if (j_0==i_0) {
+			A_2[i_0,j_0] = -A_0[i_0,j_0];
+		}
+		else {
+			A_3[i_0,j_0] = A_0[i_0,j_0] + j_0;
+		}
+		j_1 = j_0 + 1;
+		t_1 = j_1 < n;
+	}
+	i_1 = i_0 + 1;
+	p_1 = i_1 < n;
+}
+\end{lstlisting}
+
+\section*{Assignment 16: Machine-independent optimisation}
+
+Apply the loop unswitching optimisation to the (original) code above.
+\\\\
+Loop unswitching by moving the if statements out of the loop is not possible due to the if expression being loop variant. A possible optimization that can work, with a bit of magic, is the following:
+
+\begin{lstlisting}
+i = 0;
+while (i<n) {
+	j = i + 1;
+	while (j<n) {
+		A[i,j] = A[i,j] + i;
+		j = j + 1;
+	}
+	j = i;
+	while (j == i) {
+		A[i,j] = -A[i,j];
+		j = j + 1;
+	}
+	j = 0;
+	while (j < i) {
+		A[i,j] = A[i,j] + j;
+		j = j + 1;
+	}
+	i = i + 1;
+}
+\end{lstlisting}
+This does not preserve the order of execution, but this is not a problem in this specific piece of code.
+
+\section*{Assignment 17: Compilation Schemes}
+
+Devise a formal compilation scheme that systematically eliminates all occurences of
+while-loops in the body of a CiviC function definition and replaces them by semantically equivalent control code without while-loops.
+
+\begin{equation}
+\mathcal{C} \left[
+\parbox{4cm}{
+while (\emph{condition}) \{\\
+	\emph{Body}\\
+\}\\
+\emph{Rest}\\
+}
+\right]
+\end{equation}
+
+\begin{equation}
+\Rightarrow \parbox{4cm}{
+if (\emph{condition}) \{\\
+	do \{\\
+		$\mathcal{C} \left[ \emph{Body} \right]$ \\
+	\} while(\emph{condition});\\
+\}\\
+$\mathcal{C} \left[ \emph{Rest} \right]$
+}
+\bigg| always
+\end{equation}
+
+\end{document}
+
+
+
