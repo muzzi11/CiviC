@@ -1,8 +1,6 @@
 #pragma once
 
 #include <memory>
-#include <vector>
-#include <functional>
 #include <string>
 #include <unordered_map>
 
@@ -69,20 +67,3 @@ struct CallNode : public Node<CallNode>
 {
 	CallNode(const Token& token) : Node<CallNode>(token) {}
 };
-
-void Traverse(NodePtr root, std::function<void(NodePtr)> func);
-
-template<class T>
-void Traverse(NodePtr root, std::function<void(std::shared_ptr<T>)> func)
-{
-	if(root)
-	{
-		if(root->Family() == T::Family()) func(std::static_pointer_cast<T>(root));
-		for(auto child : root->children)
-		{
-			Traverse<T>(child, func);
-		}
-	}
-}
-
-std::string TreeToJSON(NodePtr root);

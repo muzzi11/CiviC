@@ -27,6 +27,9 @@
     <ClCompile Include="parser.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="traverse.cpp">
+      <Filter>Header Files</Filter>
+    </ClCompile>
     <ClCompile Include="node.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -39,6 +42,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="parser.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="traverse.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="node.h">

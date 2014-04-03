@@ -26,22 +26,22 @@ public:
 	void ParseProgram();
 
 private:
-	struct Operator
-	{
-		size_t t;
-		const Token& token;
-		std::vector<Operator> args;
-
-		Operator(size_t t, const Token& token) : t(t), token(token)
-		{
-		}
-	};
-
 	size_t t;
 	const int unaryPrecedence = 5;
 	const std::vector<Token>& tokens;
+	std::vector<Token> stack;
 	
 	void CheckUnexpectedEOF() const;
+
+	void AddFunctionDec();
+	void AddGlobalDec();
+	void AddFunctionDef();
+	void AddGlobalDef();
+	void AddVarDec();
+	void AddAssignment();
+	void AddCall();
+	void AddStatement();
+	void AddCast();
 
 	bool Declaration();
 	bool Dec();

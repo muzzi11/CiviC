@@ -403,6 +403,7 @@ bool Parser::Word(ReservedWord word, bool eofError)
 
 	if(tokens[t] == word)
 	{
+		stack.push_back(tokens[t]);
 		t++;
 		return true;
 	}
@@ -417,6 +418,7 @@ bool Parser::Symbol(ReservedSymbol symbol, bool eofError)
 
 	if(tokens[t] == symbol)
 	{
+		stack.push_back(tokens[t]);
 		t++;
 		return true;
 	}
@@ -430,6 +432,7 @@ bool Parser::Id(bool error)
 
 	if(tokens[t].type == TokenType::Identifier)
 	{
+		stack.push_back(tokens[t]);
 		t++;
 		return true;
 	}
