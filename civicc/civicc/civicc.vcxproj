@@ -76,6 +76,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="Instruction.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="node.cpp" />
     <ClCompile Include="parser.cpp" />
@@ -84,6 +85,7 @@
     <ClCompile Include="traverse.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="instruction.h" />
     <ClInclude Include="node.h" />
     <ClInclude Include="parser.h" />
     <ClInclude Include="token.h" />
