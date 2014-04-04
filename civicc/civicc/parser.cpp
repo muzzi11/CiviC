@@ -27,8 +27,9 @@ Parser::Parser(const std::vector<Token>& tokens) :
 {
 }
 
-void Parser::ParseProgram()
+void Parser::ParseProgram(Node::NodePtr node)
 {
+	root = node;
 	while(t < tokens.size())
 	{
 		if(!Declaration())
@@ -41,6 +42,123 @@ void Parser::ParseProgram()
 void Parser::CheckUnexpectedEOF() const
 {
 	if(t >= tokens.size()) throw ParseException("Unexpected end of file.");
+}
+
+bool IsType(const Token& t)
+{
+	return t == ReservedWord::Bool || t == ReservedWord::Int || t == ReservedWord::Float || t == ReservedWord::Void;
+}
+
+Node::Type ReservedWordToType(ReservedWord word)
+{
+	if(word == ReservedWord::Bool) return Node::Type::Bool;
+	else if(word == ReservedWord::Int) return Node::Type::Int;
+	else if(word == ReservedWord::Float) return Node::Type::Float;
+	else return Node::Type::Void;
+}
+
+int ExtractVariable(int start, const std::vector<Token>& stack, Node::Variable& out)
+{
+	int i;
+	for(i = start; i < stack.size(); ++i)
+	{
+		if(!IsType(stack[i])) continue;
+
+		out.type = ReservedWordToType(stack[i++].reservedWord);
+		if(stack[i] == ReservedSymbol::BracketL)
+		{
+			for(; stack[i] != ReservedSymbol::BracketR; ++i)
+			{
+				if(stack[i].type == TokenType::IntType) out.dim.push_back(stack[i].intValue);
+			}
+		}
+
+		out.name = stack[++i].readString;
+		return i;
+	}
+
+	return -1;
+}
+
+int ExtractFunctionHeader(int start, const std::vector<Token>& stack, Node::FunctionHeader& out)
+{
+	int i;
+	out.returnType = ReservedWordToType(stack[start].reservedWord);
+	out.name = stack[start + 1].readString;
+
+	for(i = start + 2; stack[i] != ReservedSymbol::ParenthesesR; ++i)
+	{
+		if(stack[i].type != TokenType::ReservedWord) continue;
+
+		Node::Variable var;
+		i = ExtractVariable(i, stack, var);
+		if(i >= 0) out.args.push_back(var);
+	}
+
+	return  ++i;
+}
+
+void Parser::AddFunctionDec()
+{
+	auto node = std::make_shared<Node::FunctionDec>();
+	ExtractFunctionHeader(0, stack, node->header);
+	stack.clear();
+	root->children.push_back(node);
+}
+
+void Parser::AddGlobalDec()
+{
+	auto node = std::make_shared<Node::GlobalDec>();
+	ExtractVariable(1, stack, node->var);
+	stack.clear();
+	root->children.push_back(node);
+}
+
+void Parser::AddFunctionDef()
+{
+	auto node = std::make_shared<Node::FunctionDef>();
+	node->export = stack[0] == ReservedWord::Export;
+	ExtractFunctionHeader(node->export ? 1 : 0, stack, node->header);	
+	stack.clear();
+	if(scopes.empty()) root->children.push_back(node);
+	else scopes.back()->children.push_back(node);
+	scopes.push_back(node);
+}
+
+void Parser::AddGlobalDef()
+{
+	auto node = std::make_shared<Node::GlobalDef>();
+	node->export = stack[0] == ReservedWord::Export;
+	ExtractVariable(node->export ? 1 : 0, stack, node->var);
+	stack.clear();
+	root->children.push_back(node);
+	scopes.push_back(node);
+}
+
+void Parser::AddReturn()
+{
+	auto node = std::make_shared<Node::Return>();
+	stack.clear();
+	scopes.back()->children.push_back(node);
+	scopes.push_back(node);
+}
+
+void Parser::AddVarDec()
+{
+	auto node = std::make_shared<Node::VarDec>();
+	ExtractVariable(0, stack, node->var);
+	stack.clear();
+	scopes.back()->children.push_back(node);
+	scopes.push_back(node);
+}
+
+void Parser::AddAssignment()
+{
+	auto node = std::make_shared<Node::Assignment>();
+	node->name = stack[0].readString;
+	stack.clear();
+	scopes.back()->children.push_back(node);
+	scopes.push_back(node);
 }
 
 bool Parser::Declaration()
@@ -71,24 +189,41 @@ bool Parser::Params()
 
 bool Parser::FunDec()
 {
-	return Semicolon();
+	Semicolon();
+	AddFunctionDec();
+	return true;
 }
 
 bool Parser::GlobalDec()
 {
-	return Semicolon();
+	Semicolon();
+	AddGlobalDec();
+	return true;
 }
 
 bool Parser::Def()
 {
-	if(Void() && Id(true) && FunHeader(true) && FunDef())
+	if(Void() && Id(true) && FunHeader(true))
 	{
-		return true;
+		AddFunctionDef();
+		return FunDef();
 	}
 	else if(Type())
 	{
-		return ArrayExpr() && Id(true) && AssignOpt() && GlobalDef() ||
-			Id() && (FunHeader() && FunDef() || AssignOpt() && GlobalDef());
+		if(ArrayExpr() && Id(true) && AssignOpt() && GlobalDef())
+		{
+			return true;
+		}
+		else if(Id())
+		{
+			if(FunHeader())
+			{
+				AddFunctionDef();
+				return FunDef();
+			}
+			
+			return AssignOpt() && GlobalDef();
+		}
 	}
 
 	return false;
@@ -96,32 +231,41 @@ bool Parser::Def()
 
 bool Parser::Export()
 {
-	Word(ReservedWord::Export);
+	if(Word(ReservedWord::Export)) infoPool.bools.push_back(true);
 	return true;
 }
 
 bool Parser::GlobalDef()
 {
-	return Semicolon();
+	Semicolon();
+	stack.clear();
+	scopes.pop_back();
+	return true;
 }
 
 bool Parser::FunDef()
 {
-	return BraceL(true) && FunBody() && BraceR();
+	BraceL(true) && FunBody() && BraceR();
+	stack.clear();
+	scopes.pop_back();
+	return true;
 }
 
 bool Parser::Type(bool error)
 {
 	if(Word(ReservedWord::Bool))
 	{
+		infoPool.types.push_back(Node::Type::Bool);
 		return true;
 	}
 	else if(Word(ReservedWord::Int))
 	{
+		infoPool.types.push_back(Node::Type::Int);
 		return true;
 	}
 	else if(Word(ReservedWord::Float))
 	{
+		infoPool.types.push_back(Node::Type::Float);
 		return true;
 	}
 
@@ -143,10 +287,22 @@ bool Parser::Locals()
 	}
 	else if(Type())
 	{
-		if(ArrayExpr() && Id(true) && AssignOpt() && Semicolon() && Locals() ||
-			Id() && (LocalFun() && LocalFuns() || AssignOpt() && Semicolon() && Locals()))
+		if(ArrayExpr())
 		{
-			return true;
+			Id(true); AddVarDec(); AssignOpt(); Semicolon();
+			stack.clear();
+			scopes.pop_back();
+			return Locals();
+		}
+		else if(Id())
+		{
+			if(LocalFun() && LocalFuns()) return true;
+
+			AddVarDec();
+			AssignOpt(); Semicolon();
+			stack.clear();
+			scopes.pop_back();
+			return Locals();
 		}
 		else
 		{
@@ -159,7 +315,13 @@ bool Parser::Locals()
 
 bool Parser::LocalFun(bool error)
 {
-	return FunHeader(error) && BraceL(true) && FunBody() && BraceR();
+	if(FunHeader(error))
+	{
+		AddFunctionDef();
+		return BraceL(true) && FunBody() && BraceR();
+	}
+
+	return false;
 }
 
 bool Parser::LocalFuns()
@@ -206,6 +368,7 @@ bool Parser::Statement()
 		{
 			return true;
 		}
+		else if(ArrayExpr())
 		else
 		{
 			throw ParseException("Invalid statement, expected an assignment or function call after identifier", tokens[t]);
@@ -239,7 +402,15 @@ bool Parser::ElseBlock()
 
 bool Parser::Return()
 {
-	return Word(ReservedWord::Return) && Expr() && Semicolon() || true;
+	if(Word(ReservedWord::Return))
+	{
+		AddReturn();
+		Expr(); Semicolon();
+		stack.clear();
+		scopes.pop_back();
+	}
+	
+	return true;
 }
 
 bool Parser::Assign()
@@ -432,6 +603,7 @@ bool Parser::Id(bool error)
 
 	if(tokens[t].type == TokenType::Identifier)
 	{
+		infoPool.strings.push_back(tokens[t].readString);
 		stack.push_back(tokens[t]);
 		t++;
 		return true;
@@ -444,7 +616,13 @@ bool Parser::Id(bool error)
 
 bool Parser::Void()
 {
-	return Word(ReservedWord::Void);
+	if(Word(ReservedWord::Void))
+	{
+		infoPool.types.push_back(Node::Type::Void);
+		return true;
+	}
+
+	return false;
 }
 
 bool Parser::ParenthesesL(bool error)

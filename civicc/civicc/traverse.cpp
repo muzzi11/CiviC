@@ -36,7 +36,7 @@ std::string TreeToJSON(NodePtr root)
 
 		json += tabs;
 		json += "\"" + node->FamilyName() + "\": ";
-		json += "\"" + node->token.readString + "\",";
+		json += "\"" + node->ToString() + "\",";
 	});
 
 	json.replace(json.length() - 1, 1, "\n");

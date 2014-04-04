@@ -7,6 +7,21 @@
 #include "node.h"
 
 
+struct NodeInfoPool
+{
+	std::vector<bool> bools;
+	std::vector<std::string> strings;
+	std::vector<Node::Type> types;
+
+	void Reset() 
+	{ 
+		bools.clear();
+		strings.clear();
+		types.clear();
+	}
+};
+
+
 class ParseException : public std::exception
 {
 public:
@@ -18,14 +33,18 @@ private:
 	std::string msg;
 };
 
+
 class Parser
 {
 public:
 	Parser(const std::vector<Token>& tokens);
 
-	void ParseProgram();
+	void ParseProgram(Node::NodePtr root);
 
 private:
+	NodeInfoPool infoPool;
+	Node::NodePtr root;
+	std::vector<Node::NodePtr> scopes;
 	size_t t;
 	const int unaryPrecedence = 5;
 	const std::vector<Token>& tokens;
@@ -37,6 +56,7 @@ private:
 	void AddGlobalDec();
 	void AddFunctionDef();
 	void AddGlobalDef();
+	void AddReturn();
 	void AddVarDec();
 	void AddAssignment();
 	void AddCall();
@@ -71,8 +91,8 @@ private:
 	bool Assign();
 	bool AssignOpt();
 	bool Expr();
-	NodePtr Expr(int precedence);
-	NodePtr P();
+	Node::NodePtr Expr(int precedence);
+	Node::NodePtr P();
 	bool Literal() const;
 	bool BinaryOp() const;
 	bool UnaryOp() const;
