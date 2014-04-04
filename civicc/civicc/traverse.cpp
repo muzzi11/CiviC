@@ -3,18 +3,6 @@
 using namespace Node;
 
 
-void Traverse(NodePtr root, int depth, std::function<void(NodePtr, int)> func)
-{
-	if(root)
-	{
-		func(root, depth);
-		for(auto child : root->children)
-		{
-			Traverse(child, depth + 1, func);
-		}
-	}
-}
-
 std::string ToJSON(NodePtr root, int depth)
 {
 	std::string str;

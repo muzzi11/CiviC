@@ -169,8 +169,7 @@ void Parser::AddVarDec()
 
 void Parser::AddAssignment()
 {
-	auto node = std::make_shared<Node::Assignment>();
-	node->name = stack[0].readString;
+	auto node = std::make_shared<Node::Assignment>(stack[0].readString);
 
 	if(scopes.back()->Family() == Node::ArrayExpr::Family())
 	{
@@ -192,6 +191,41 @@ std::shared_ptr<Node::Call> Parser::AddCall()
 	stack.clear();
 
 	return node;
+}
+
+void Parser::AddIf()
+{
+	auto node = std::make_shared<Node::If>();
+	scopes.back()->children.push_back(node);
+	scopes.push_back(node);
+}
+
+void Parser::AddElse()
+{
+	auto node = std::make_shared<Node::Else>();
+	scopes.back()->children.push_back(node);
+	scopes.push_back(node);
+}
+
+void Parser::AddWhile()
+{
+	auto node = std::make_shared<Node::While>();
+	scopes.back()->children.push_back(node);
+	scopes.push_back(node);
+}
+
+void Parser::AddDoWhile()
+{
+	auto node = std::make_shared<Node::DoWhile>();
+	scopes.back()->children.push_back(node);
+	scopes.push_back(node);
+}
+
+void Parser::AddFor()
+{
+	auto node = std::make_shared<Node::For>();
+	scopes.back()->children.push_back(node);
+	scopes.push_back(node);
 }
 
 bool Parser::Declaration()
@@ -419,10 +453,22 @@ bool Parser::Statement()
 			else throw ParseException("Invalid statement, expected an assignment or function call after identifier", tokens[t]);
 		}
 	}
-	return If() && ParenthesesL(true) && Expr() && ParenthesesR() && Block() && ElseBlock() ||
+	if(If() && ParenthesesL(true) && Expr() && ParenthesesR() && Block() && ElseBlock() ||
 		While() && ParenthesesL(true) && Expr() && ParenthesesR() && Block() ||
-		Do() && Block() && While(true) && ParenthesesL(true) && Expr() && ParenthesesR() && Semicolon() ||
-		For() && ParenthesesL(true) && Int() && Id(true) && Assign() && Comma(true) && Expr() && Step() && ParenthesesR() && Block();
+		Do() && Block() && While(true) && ParenthesesL(true) && Expr() && ParenthesesR() && Semicolon())
+	{
+		return true;
+	}
+	else if(For() && ParenthesesL(true) && Int() && Id(true))
+	{
+		AddVarDec();
+		Assign(); 
+		scopes.pop_back(); 
+		Comma(true); Expr(); Step(); ParenthesesR(); Block();
+		return true;
+	}
+
+	return false;
 }
 
 bool Parser::Statements()
@@ -432,12 +478,25 @@ bool Parser::Statements()
 
 bool Parser::Step()
 {
-	return Comma() && Expr() || true;
+	if(Comma() && Expr());
+	else scopes.back()->children.push_back(std::make_shared<Node::Literal>(1));
+	return true;
 }
 
 bool Parser::Block()
 {
-	return BraceL() && Statements() && BraceR() || Statement();
+	if(BraceL())
+	{
+		Statements(); BraceR();
+		scopes.pop_back();
+		return true;
+	}
+	else if(Statement())
+	{
+		scopes.pop_back();
+		return true;
+	}
+	return false;
 }
 
 bool Parser::ElseBlock()
@@ -809,12 +868,22 @@ bool Parser::Extern()
 
 bool Parser::If()
 {
-	return Word(ReservedWord::If);
+	if(Word(ReservedWord::If))
+	{
+		AddIf();
+		return true;
+	}
+	return false;
 }
 
 bool Parser::Else()
 {
-	return Word(ReservedWord::Else);
+	if(Word(ReservedWord::Else))
+	{
+		AddElse();
+		return true;
+	}
+	return false;
 }
 
 bool Parser::While(bool error)
@@ -824,21 +893,33 @@ bool Parser::While(bool error)
 		if(error) throw ParseException("Expected the keyword 'while'", tokens[t]);
 		return false;
 	}
+	if(!error) AddWhile();
 	return true;
 }
 
 bool Parser::Do()
 {
-	return Word(ReservedWord::Do);
+	if(Word(ReservedWord::Do))
+	{
+		AddDoWhile();
+		return true;
+	}
+	return false;
 }
 
 bool Parser::For()
 {
-	return Word(ReservedWord::For);
+	if(Word(ReservedWord::For))
+	{
+		AddFor();
+		return true;
+	}
+	return false;
 }
 
 bool Parser::Int()
 {
 	if(!Word(ReservedWord::Int)) throw ParseException("Expected type 'int'", tokens[t]);
+	else stack.push_back(tokens[t - 1]);
 	return true;
 }
