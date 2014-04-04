@@ -4,6 +4,7 @@
 
 #include "tokenizer.h"
 #include "parser.h"
+#include "instruction.h"
 
 int main(int argc, char* argv[])
 {
@@ -42,7 +43,6 @@ int main(int argc, char* argv[])
 		{
 			std::cout << e.what();
 		}
-	}
-
+	}	
 	return 0;
 }
