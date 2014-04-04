@@ -44,8 +44,11 @@ private:
 	void AddVarDec();
 	void AddAssignment();
 	std::shared_ptr<Node::Call> AddCall();
-	void AddStatement();
-	void AddCast();
+	void AddIf();
+	void AddElse();
+	void AddWhile();
+	void AddDoWhile();
+	void AddFor();
 
 	bool Declaration();
 	bool Dec();

@@ -42,6 +42,7 @@ int main(int argc, char* argv[])
 			auto root = std::make_shared<Node::BaseNode>();
 			parser.ParseProgram(root);
 			std::cout << TreeToJSON(root) << "\n";
+			std::cout << Count<Node::ArrayExpr>(root, 1) << "\n";
 		}
 		catch(ParseException e)
 		{

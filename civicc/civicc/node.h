@@ -159,9 +159,9 @@ namespace Node
 		std::string ToString() const override;
 	};
 
-	struct Expr : public Node<Expr>
+	/*struct Expr : public Node<Expr>
 	{
-	};
+	};*/
 
 	struct BinaryOp : public Node<BinaryOp>
 	{
@@ -207,5 +207,25 @@ namespace Node
 
 		Identifier(const std::string& name) : name(name) {}
 		std::string ToString() const override;
+	};
+
+	struct If : public Node<If>
+	{
+	};
+
+	struct Else : public Node<Else>
+	{
+	};
+
+	struct While : public Node<While>
+	{
+	};
+
+	struct DoWhile : public Node<DoWhile>
+	{
+	};
+
+	struct For : public Node<For>
+	{
 	};
 }
