@@ -467,6 +467,28 @@ bool Parser::AssignOpt()
 	return Assign() || true;
 }
 
+Node::Operator TokenToBinaryOp(const Token& token)
+{
+	static const std::unordered_map<ReservedSymbol, Node::Operator> map(
+	{
+		{ ReservedSymbol::Plus, Node::Operator::Add },
+		{ ReservedSymbol::Minus, Node::Operator::Subtract },
+		{ ReservedSymbol::Multiply, Node::Operator::Multiply },
+		{ ReservedSymbol::Divide, Node::Operator::Divide },
+		{ ReservedSymbol::Modulo, Node::Operator::Modulo },
+		{ ReservedSymbol::Equals, Node::Operator::Equal },
+		{ ReservedSymbol::Unequals, Node::Operator::NotEqual },
+		{ ReservedSymbol::Less, Node::Operator::Less },
+		{ ReservedSymbol::LessEqual, Node::Operator::LessEqual },
+		{ ReservedSymbol::More, Node::Operator::More },
+		{ ReservedSymbol::MoreEqual, Node::Operator::MoreEqual },
+		{ ReservedSymbol::And, Node::Operator::And },
+		{ ReservedSymbol::Or, Node::Operator::Or }
+	});
+
+	return map.at(token.reservedSymbol);
+}
+
 bool Parser::Expr()
 {
 	auto node = Expr(1);
@@ -485,7 +507,7 @@ Node::NodePtr Parser::Expr(int precedence)
 		const Token& token = tokens[t++];
 
 		auto right = Expr(q);
-		auto op = std::make_shared<Node::BinaryOp>();
+		auto op = std::make_shared<Node::BinaryOp>(TokenToBinaryOp(token));
 		op->children.push_back(left);
 		op->children.push_back(right);
 		
@@ -501,12 +523,22 @@ Node::NodePtr Parser::P()
 	{
 		int q = Precedence(t);
 		const Token& token = tokens[t++];
-		auto op = std::make_shared<Node::UnaryOp>();
-		op->children.push_back(Expr(q));
-		return op;
+		Node::Operator op = token.reservedSymbol == ReservedSymbol::Not ? Node::Operator::Not : Node::Operator::Negate;
+		auto node = std::make_shared<Node::UnaryOp>(op);
+		node->children.push_back(Expr(q));
+		return node;
 	}
 	else if(ParenthesesL())
 	{
+		if(IsType(tokens[t]))
+		{
+			const Token& token = tokens[t++];
+			if(token == ReservedWord::Void) throw ParseException("Can not cast to 'void'", token);
+			ParenthesesR();
+			auto node = std::make_shared<Node::Cast>(TokenToType(token));
+			node->children.push_back(Expr(unaryPrecedence));
+			return node;
+		}
 		auto expr = Expr(1);
 		ParenthesesR();
 		return expr;

@@ -97,6 +97,11 @@ std::string Call::ToString() const
 	return name;
 }
 
+std::string Cast::ToString() const
+{
+	return TypeToString(type);
+}
+
 std::string Literal::ToString() const
 {
 	std::stringstream sstream;

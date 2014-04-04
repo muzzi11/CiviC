@@ -19,6 +19,25 @@ namespace Node
 		Void
 	};
 
+	enum class Operator
+	{
+		Add,
+		Subtract,
+		Multiply,
+		Divide,
+		Modulo,
+		Equal,
+		NotEqual,
+		Less,
+		LessEqual,
+		More,
+		MoreEqual,
+		And,
+		Or,
+		Negate,
+		Not
+	};
+
 	class BaseNode;
 
 	typedef std::shared_ptr<BaseNode> NodePtr;
@@ -146,10 +165,24 @@ namespace Node
 
 	struct BinaryOp : public Node<BinaryOp>
 	{
+		Operator op;
+
+		BinaryOp(Operator op) : op(op) {}
 	};
 
 	struct UnaryOp : public Node<UnaryOp>
 	{
+		Operator op;
+
+		UnaryOp(Operator op) : op(op) {}
+	};
+
+	struct Cast : public Node<Cast>
+	{
+		Type type;
+
+		Cast(Type type) : type(type) {}
+		std::string ToString() const override;
 	};
 
 	struct Literal : public Node<Literal>

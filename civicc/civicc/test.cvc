@@ -24,8 +24,8 @@ export int main() // comment after
 		return !true==false;
 	}
 
-	localFloat = 1.2;
 	arr[1] = 1;
+	localFloat = (float)(int)(bool)1.2;
 
 	innerFunction();
 	
