@@ -169,8 +169,7 @@ void Parser::AddVarDec()
 
 void Parser::AddAssignment()
 {
-	auto node = std::make_shared<Node::Assignment>();
-	node->name = stack[0].readString;
+	auto node = std::make_shared<Node::Assignment>(stack[0].readString);
 
 	if(scopes.back()->Family() == Node::ArrayExpr::Family())
 	{

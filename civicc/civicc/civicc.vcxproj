@@ -80,6 +80,7 @@
     <ClCompile Include="main.cpp" />
     <ClCompile Include="node.cpp" />
     <ClCompile Include="parser.cpp" />
+    <ClCompile Include="seperation.cpp" />
     <ClCompile Include="token.cpp" />
     <ClCompile Include="tokenizer.cpp" />
     <ClCompile Include="traverse.cpp" />
@@ -88,6 +89,7 @@
     <ClInclude Include="instruction.h" />
     <ClInclude Include="node.h" />
     <ClInclude Include="parser.h" />
+    <ClInclude Include="seperation.h" />
     <ClInclude Include="token.h" />
     <ClInclude Include="tokenizer.h" />
     <ClInclude Include="traverse.h" />

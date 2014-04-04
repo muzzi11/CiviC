@@ -7,8 +7,28 @@
 #include "node.h"
 
 
+// func(node, parent)
 template<class T>
-void Traverse(Node::NodePtr root, std::function<void(std::shared_ptr<T>)> func, int depth = -1)
+bool Traverse(Node::NodePtr root, std::function<bool(std::shared_ptr<T>, Node::NodePtr)> func, Node::NodePtr parent = nullptr)
+{
+	bool increment = true;
+
+	if(root)
+	{
+		if(root->Family() == T::Family()) increment = func(std::static_pointer_cast<T>(root), parent);
+		size_t i = 0;
+		while(i < root->children.size())
+		{
+			if(Traverse<T>(root->children[i], func, root)) ++i;
+		}
+	}
+
+	return increment;
+}
+
+// -1 for unlimited depth
+template<class T>
+void Traverse(Node::NodePtr root, std::function<void(std::shared_ptr<T>)> func, int depth)
 {
 	if(root)
 	{

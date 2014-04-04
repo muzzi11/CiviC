@@ -145,6 +145,7 @@ namespace Node
 	{
 		std::string name;
 
+		Assignment(const std::string& name) : name(name) {}
 		std::string ToString() const override;
 	};
 

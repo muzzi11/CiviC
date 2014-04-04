@@ -17,46 +17,12 @@ comming in
 export int main() // comment after
 {
 	int local = t1(t2(t3(0)));
-	float localFloat;
+	float localFloat = 1.2;
 
 	bool /* inline comment */ innerFunction()
 	{
 		return !true==false;
 	}
-
-	arr[1] = 1;
-	localFloat = (float)(int)(bool)1.2;
-
-	innerFunction();
-
-	if(true) single();
-	else single();
-
-	if(false)
-	{
-		first();
-		second();
-	}
-	else
-	{
-		third();
-		fourth();
-	}
-
-	while(true) endless();
-	while(false)
-	{
-		never();
-		ever();
-	}
-
-	do
-	{
-		once();
-	} while(false);
-
-	for(int i = 0, 4, 2) two();
-	for(int i = 0, 4) one();
 	
 	return 0;
 }
