@@ -1,5 +1,8 @@
+int[2, 3] array = [[1, 2], [3, 4, 5]];
 int intGlobal = 1 + 2 * bla(3 + 5, 9, 4);
 float fl=1337.0;
+
+extern void external();
 
 // comment // /// /////////
 /////////
@@ -13,10 +16,16 @@ comming in
 */
 export int main() // comment after
 {
+	int local = t1(t2(t3(0)));
+	float localFloat;
+
 	bool /* inline comment */ innerFunction()
 	{
 		return !true==false;
 	}
+
+	localFloat = 1.2;
+	arr[1] = 1;
 
 	innerFunction();
 	

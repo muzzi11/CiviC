@@ -7,21 +7,6 @@
 #include "node.h"
 
 
-struct NodeInfoPool
-{
-	std::vector<bool> bools;
-	std::vector<std::string> strings;
-	std::vector<Node::Type> types;
-
-	void Reset() 
-	{ 
-		bools.clear();
-		strings.clear();
-		types.clear();
-	}
-};
-
-
 class ParseException : public std::exception
 {
 public:
@@ -42,12 +27,11 @@ public:
 	void ParseProgram(Node::NodePtr root);
 
 private:
-	NodeInfoPool infoPool;
+	size_t t;
+	const std::vector<Token>& tokens;
+
 	Node::NodePtr root;
 	std::vector<Node::NodePtr> scopes;
-	size_t t;
-	const int unaryPrecedence = 5;
-	const std::vector<Token>& tokens;
 	std::vector<Token> stack;
 	
 	void CheckUnexpectedEOF() const;
@@ -59,7 +43,7 @@ private:
 	void AddReturn();
 	void AddVarDec();
 	void AddAssignment();
-	void AddCall();
+	std::shared_ptr<Node::Call> AddCall();
 	void AddStatement();
 	void AddCast();
 

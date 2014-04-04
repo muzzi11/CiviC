@@ -12,6 +12,7 @@ namespace Node
 {
 	enum class Type
 	{
+		None,
 		Bool,
 		Int,
 		Float,
@@ -58,7 +59,6 @@ namespace Node
 	{
 		Type type;
 		std::string name;
-		int dim;
 
 		std::string ToString() const;
 	};
@@ -97,7 +97,7 @@ namespace Node
 
 	struct FunctionDef : public Node<FunctionDef>
 	{
-		bool export;
+		bool exp;
 		FunctionHeader header;
 
 		std::string ToString() const override;
@@ -105,7 +105,7 @@ namespace Node
 
 	struct GlobalDef : public Node<GlobalDef>
 	{
-		bool export;
+		bool exp;
 		Variable var;
 
 		std::string ToString() const override;
@@ -118,10 +118,13 @@ namespace Node
 		std::string ToString() const override;
 	};
 
+	struct ArrayExpr : public Node<ArrayExpr>
+	{
+	};
+
 	struct Assignment : public Node<Assignment>
 	{
 		std::string name;
-		int dim;
 
 		std::string ToString() const override;
 	};
@@ -130,32 +133,46 @@ namespace Node
 	{
 	};
 
+	struct Call : public Node<Call>
+	{
+		std::string name;
+
+		std::string ToString() const override;
+	};
+
 	struct Expr : public Node<Expr>
 	{
 	};
 
-	struct BinaryOpNode : public Node<BinaryOpNode>
+	struct BinaryOp : public Node<BinaryOp>
 	{
-		BinaryOpNode(const Token& token) {}
 	};
 
-	struct UnaryOpNode : public Node<UnaryOpNode>
+	struct UnaryOp : public Node<UnaryOp>
 	{
-		UnaryOpNode(const Token& token) {}
 	};
 
-	struct IdentifierNode : public Node<IdentifierNode>
+	struct Literal : public Node<Literal>
 	{
-		IdentifierNode(const Token& token) {}
+		Type type;
+		union
+		{
+			bool boolValue;
+			int intValue;
+			float floatValue;
+		};
+
+		Literal(bool value) : type(Type::Bool), boolValue(value) {}
+		Literal(int value) : type(Type::Int), intValue(value) {}
+		Literal(float value) : type(Type::Float), floatValue(value) {}
+		std::string ToString() const override;
 	};
 
-	struct LiteralNode : public Node<LiteralNode>
+	struct Identifier : public Node<Identifier>
 	{
-		LiteralNode(const Token& token) {}
-	};
+		std::string name;
 
-	struct CallNode : public Node<CallNode>
-	{
-		CallNode(const Token& token) {}
+		Identifier(const std::string& name) : name(name) {}
+		std::string ToString() const override;
 	};
 }

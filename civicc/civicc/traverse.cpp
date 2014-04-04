@@ -1,5 +1,7 @@
 #include "traverse.h"
 
+using namespace Node;
+
 
 void Traverse(NodePtr root, int depth, std::function<void(NodePtr, int)> func)
 {
@@ -13,42 +15,31 @@ void Traverse(NodePtr root, int depth, std::function<void(NodePtr, int)> func)
 	}
 }
 
-std::string TreeToJSON(NodePtr root)
+std::string ToJSON(NodePtr root, int depth)
 {
-	std::string json = "{";
-	int prevDepth = 0;
+	std::string str;
 
-	Traverse(root, prevDepth, [&](NodePtr node, int depth)
+	if(root)
 	{
-		std::string tabs = "\t";
+		std::string tabs(depth + 1, '\t');
 
-		for(int i = 0; i < depth; ++i) tabs += '\t';
-
-		if(prevDepth < depth) json += " \"children\": {\n";
-		else if(prevDepth > depth)
+		str += tabs + "\"" + root->FamilyName() + "\": \"" + root->ToString() + "\"";
+		if(!root->children.empty())
 		{
-			json.erase(json.length() - 1, 1);
-			json += "\n" + tabs + "},\n";
+			str += ",\n" + tabs + "\"children\": {";
+			for(auto child : root->children)
+			{
+				str += '\n' + ToJSON(child, depth + 1) + ",";
+			}
+			str.pop_back();
+			str += "\n" + tabs + "}";
 		}
-		else json += "\n";
-
-		prevDepth = depth;
-
-		json += tabs;
-		json += "\"" + node->FamilyName() + "\": ";
-		json += "\"" + node->ToString() + "\",";
-	});
-
-	json.replace(json.length() - 1, 1, "\n");
-	for(int i = 0; i < prevDepth; ++i)
-	{
-		for(int k = prevDepth - i - 1; k >= 0; --k)
-		{
-			json += '\t';
-		}
-		json += "}\n";
 	}
 
-	json += "}";
-	return json;
+	return str;
+}
+
+std::string TreeToJSON(NodePtr root)
+{
+	return "{\n" + ToJSON(root, 0) + "\n}";
 }

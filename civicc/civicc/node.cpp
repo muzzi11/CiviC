@@ -39,7 +39,7 @@ std::string TypeToString(Type type)
 
 std::string Variable::ToString() const
 {
-	return TypeToString(type) + ' ' + name + (dim > 0 ? "[]" : "");
+	return TypeToString(type) + ' ' + name;
 }
 
 std::string Param::ToString() const
@@ -74,12 +74,12 @@ std::string GlobalDec::ToString() const
 
 std::string FunctionDef::ToString() const
 {
-	return export ? "export " + header.ToString() : header.ToString;
+	return exp ? "export " + header.ToString() : header.ToString();
 }
 
 std::string GlobalDef::ToString() const
 {
-	return export ? "export " + var.ToString() : var.ToString();
+	return exp ? "export " + var.ToString() : var.ToString();
 }
 
 std::string VarDec::ToString() const
@@ -89,5 +89,26 @@ std::string VarDec::ToString() const
 
 std::string Assignment::ToString() const
 {
-	return name + (dim > 0 ? "[]" : "");
+	return name;
+}
+
+std::string Call::ToString() const
+{
+	return name;
+}
+
+std::string Literal::ToString() const
+{
+	std::stringstream sstream;
+
+	if(type == Type::Bool) sstream << boolValue;
+	else if(type == Type::Int) sstream << intValue;
+	else sstream << floatValue;
+
+	return sstream.str();
+}
+
+std::string Identifier::ToString() const
+{
+	return name + (children.empty() ? "" : "[]");
 }
