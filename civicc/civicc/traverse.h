@@ -8,7 +8,7 @@
 
 
 template<class T>
-void Traverse(NodePtr root, std::function<void(std::shared_ptr<T>)> func)
+void Traverse(Node::NodePtr root, std::function<void(std::shared_ptr<T>)> func)
 {
 	if(root)
 	{
@@ -20,4 +20,4 @@ void Traverse(NodePtr root, std::function<void(std::shared_ptr<T>)> func)
 	}
 }
 
-std::string TreeToJSON(NodePtr root);
+std::string TreeToJSON(Node::NodePtr root);

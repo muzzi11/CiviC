@@ -18,17 +18,20 @@ private:
 	std::string msg;
 };
 
+
 class Parser
 {
 public:
 	Parser(const std::vector<Token>& tokens);
 
-	void ParseProgram();
+	void ParseProgram(Node::NodePtr root);
 
 private:
 	size_t t;
-	const int unaryPrecedence = 5;
 	const std::vector<Token>& tokens;
+
+	Node::NodePtr root;
+	std::vector<Node::NodePtr> scopes;
 	std::vector<Token> stack;
 	
 	void CheckUnexpectedEOF() const;
@@ -37,9 +40,10 @@ private:
 	void AddGlobalDec();
 	void AddFunctionDef();
 	void AddGlobalDef();
+	void AddReturn();
 	void AddVarDec();
 	void AddAssignment();
-	void AddCall();
+	std::shared_ptr<Node::Call> AddCall();
 	void AddStatement();
 	void AddCast();
 
@@ -71,8 +75,8 @@ private:
 	bool Assign();
 	bool AssignOpt();
 	bool Expr();
-	NodePtr Expr(int precedence);
-	NodePtr P();
+	Node::NodePtr Expr(int precedence);
+	Node::NodePtr P();
 	bool Literal() const;
 	bool BinaryOp() const;
 	bool UnaryOp() const;

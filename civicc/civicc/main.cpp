@@ -5,6 +5,8 @@
 #include "tokenizer.h"
 #include "parser.h"
 #include "instruction.h"
+#include "node.h"
+#include "traverse.h"
 
 int main(int argc, char* argv[])
 {
@@ -37,7 +39,9 @@ int main(int argc, char* argv[])
 
 		try
 		{
-			parser.ParseProgram();
+			auto root = std::make_shared<Node::BaseNode>();
+			parser.ParseProgram(root);
+			std::cout << TreeToJSON(root) << "\n";
 		}
 		catch(ParseException e)
 		{

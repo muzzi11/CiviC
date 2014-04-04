@@ -4,6 +4,8 @@
 #include "parser.h"
 
 
+const int unaryPrecedence = 5;
+
 ParseException::ParseException(const std::string& str)
 {
 	msg = str + "\n";
@@ -27,8 +29,9 @@ Parser::Parser(const std::vector<Token>& tokens) :
 {
 }
 
-void Parser::ParseProgram()
+void Parser::ParseProgram(Node::NodePtr node)
 {
+	root = node;
 	while(t < tokens.size())
 	{
 		if(!Declaration())
@@ -41,6 +44,154 @@ void Parser::ParseProgram()
 void Parser::CheckUnexpectedEOF() const
 {
 	if(t >= tokens.size()) throw ParseException("Unexpected end of file.");
+}
+
+bool IsType(const Token& t)
+{
+	return t == ReservedWord::Bool || t == ReservedWord::Int || t == ReservedWord::Float || t == ReservedWord::Void;
+}
+
+Node::Type TokenToType(const Token& t)
+{
+	if(t == ReservedWord::Bool) return Node::Type::Bool;
+	else if(t == ReservedWord::Int) return Node::Type::Int;
+	else if(t == ReservedWord::Float) return Node::Type::Float;
+	else if(t == ReservedWord::Void) return Node::Type::Void;
+	else return Node::Type::None;
+}
+
+void ExtractParameters(int start, const std::vector<Token>& stack, std::vector<Node::Param>& out)
+{
+	for(size_t i = start; i < stack.size(); ++i)
+	{
+		if(!IsType(stack[i])) continue;
+
+		out.emplace_back();
+		out.back().type = TokenToType(stack[i]);
+
+		if(stack[++i] == ReservedSymbol::BracketL)
+		{
+			for(; stack[i] != ReservedSymbol::BracketR; ++i)
+			{
+				if(stack[i].type == TokenType::Identifier) out.back().dim.push_back(stack[i].readString);
+			}
+			++i;
+		}
+
+		out.back().name = stack[i].readString;
+	}
+}
+
+void Parser::AddFunctionDec()
+{
+	auto node = std::make_shared<Node::FunctionDec>();
+
+	node->header.returnType = TokenToType(stack[0]);
+	node->header.name = stack[1].readString;
+	ExtractParameters(2, stack, node->header.params);
+
+	root->children.push_back(node);
+	stack.clear();
+}
+
+void Parser::AddGlobalDec()
+{
+	auto node = std::make_shared<Node::GlobalDec>();
+
+	std::vector<Node::Param> temp;
+	ExtractParameters(0, stack, temp);
+	node->param = temp[0];
+
+	root->children.push_back(node);
+	stack.clear();
+}
+
+void Parser::AddFunctionDef()
+{
+	auto node = std::make_shared<Node::FunctionDef>();
+
+	node->exp = stack[0] == ReservedWord::Export;
+	int i = node->exp ? 1 : 0;
+	node->header.returnType = TokenToType(stack[i]);
+	node->header.name = stack[i + 1].readString;
+	ExtractParameters(i + 2, stack, node->header.params);
+
+	if(scopes.empty()) root->children.push_back(node);
+	else scopes.back()->children.push_back(node);
+	scopes.push_back(node);
+	stack.clear();
+}
+
+void Parser::AddGlobalDef()
+{
+	auto node = std::make_shared<Node::GlobalDef>();
+	
+	node->exp = stack[0] == ReservedWord::Export;
+	int i = node->exp ? 1 : 0;
+	node->var.type = TokenToType(stack[i]);
+	node->var.name = stack[i + 1].readString;
+
+	if(!scopes.empty() && scopes.back()->Family() == Node::ArrayExpr::Family())
+	{
+		node->children.push_back(scopes.back());
+		scopes.pop_back();
+	}
+	
+	root->children.push_back(node);
+	scopes.push_back(node);
+	stack.clear();
+}
+
+void Parser::AddReturn()
+{
+	auto node = std::make_shared<Node::Return>();
+	scopes.back()->children.push_back(node);
+	scopes.push_back(node);
+}
+
+void Parser::AddVarDec()
+{
+	auto node = std::make_shared<Node::VarDec>();
+
+	node->var.type = TokenToType(stack[0]);
+	node->var.name = stack[1].readString;
+
+	if(scopes.back()->Family() == Node::ArrayExpr::Family())
+	{
+		node->children.push_back(scopes.back());
+		scopes.pop_back();
+	}
+
+	scopes.back()->children.push_back(node);
+	scopes.push_back(node);
+	stack.clear();
+}
+
+void Parser::AddAssignment()
+{
+	auto node = std::make_shared<Node::Assignment>();
+	node->name = stack[0].readString;
+
+	if(scopes.back()->Family() == Node::ArrayExpr::Family())
+	{
+		node->children.push_back(scopes.back());
+		scopes.pop_back();
+	}
+	
+	scopes.back()->children.push_back(node);
+	scopes.push_back(node);
+	stack.clear();
+}
+
+std::shared_ptr<Node::Call> Parser::AddCall()
+{
+	auto node = std::make_shared<Node::Call>();
+	node->name = stack[0].readString;
+
+	scopes.back()->children.push_back(node);
+	stack.clear();
+
+	return node;
 }
 
 bool Parser::Declaration()
@@ -71,24 +222,41 @@ bool Parser::Params()
 
 bool Parser::FunDec()
 {
+	AddFunctionDec();
 	return Semicolon();
 }
 
 bool Parser::GlobalDec()
 {
+	AddGlobalDec();
 	return Semicolon();
 }
 
 bool Parser::Def()
 {
-	if(Void() && Id(true) && FunHeader(true) && FunDef())
+	if(Void() && Id(true) && FunHeader(true))
 	{
-		return true;
+		AddFunctionDef();
+		return FunDef();
 	}
 	else if(Type())
 	{
-		return ArrayExpr() && Id(true) && AssignOpt() && GlobalDef() ||
-			Id() && (FunHeader() && FunDef() || AssignOpt() && GlobalDef());
+		if(ArrayExpr() && Id(true))
+		{
+			AddGlobalDef();
+			return AssignOpt() && GlobalDef();
+		}
+		else if(Id())
+		{
+			if(FunHeader())
+			{
+				AddFunctionDef();
+				return FunDef();
+			}
+
+			AddGlobalDef();
+			return AssignOpt() && GlobalDef();
+		}
 	}
 
 	return false;
@@ -96,32 +264,28 @@ bool Parser::Def()
 
 bool Parser::Export()
 {
-	Word(ReservedWord::Export);
+	if(Word(ReservedWord::Export)) stack.push_back(tokens[t - 1]);
 	return true;
 }
 
 bool Parser::GlobalDef()
 {
+	scopes.pop_back();
 	return Semicolon();
 }
 
 bool Parser::FunDef()
 {
-	return BraceL(true) && FunBody() && BraceR();
+	BraceL(true); FunBody(); BraceR();
+	scopes.pop_back();
+	return true;
 }
 
 bool Parser::Type(bool error)
 {
-	if(Word(ReservedWord::Bool))
+	if(Word(ReservedWord::Bool) || Word(ReservedWord::Int) || Word(ReservedWord::Float))
 	{
-		return true;
-	}
-	else if(Word(ReservedWord::Int))
-	{
-		return true;
-	}
-	else if(Word(ReservedWord::Float))
-	{
+		stack.push_back(tokens[t - 1]);
 		return true;
 	}
 
@@ -143,10 +307,20 @@ bool Parser::Locals()
 	}
 	else if(Type())
 	{
-		if(ArrayExpr() && Id(true) && AssignOpt() && Semicolon() && Locals() ||
-			Id() && (LocalFun() && LocalFuns() || AssignOpt() && Semicolon() && Locals()))
+		if(ArrayExpr())
 		{
-			return true;
+			Id(true); AddVarDec(); AssignOpt(); Semicolon();
+			scopes.pop_back();
+			return Locals();
+		}
+		else if(Id())
+		{
+			if(LocalFun() && LocalFuns()) return true;
+			
+			AddVarDec();
+			AssignOpt(); Semicolon();
+			scopes.pop_back();
+			return Locals();
 		}
 		else
 		{
@@ -159,7 +333,15 @@ bool Parser::Locals()
 
 bool Parser::LocalFun(bool error)
 {
-	return FunHeader(error) && BraceL(true) && FunBody() && BraceR();
+	if(FunHeader(error))
+	{
+		AddFunctionDef();
+		BraceL(true); FunBody(); BraceR();
+		scopes.pop_back();
+		return true;
+	}
+
+	return false;
 }
 
 bool Parser::LocalFuns()
@@ -170,10 +352,10 @@ bool Parser::LocalFuns()
 	}
 	else if(Type())
 	{
-		if(ArrayExpr()) throw ParseException("Unexpected array expression(variable declarations should preceed function definitions)", tokens[t - 1]);
+		if(ArrayExpr()) throw ParseException("Unexpected array expression(variable declarations should precede function definitions)", tokens[t - 1]);
 		else if(Id(true))
 		{
-			if(AssignOpt() || Semicolon()) throw ParseException("Variable declaration should preceed function definitions", tokens[t - 1]);
+			if(AssignOpt() || Semicolon()) throw ParseException("Variable declaration should precede function definitions", tokens[t - 1]);
 			return LocalFun(true) && LocalFuns();
 		}
 	}
@@ -183,7 +365,15 @@ bool Parser::LocalFuns()
 
 bool Parser::ArrayExpr()
 {
-	return BracketL() && Expr() && Exprs() && BracketR();
+	if(BracketL())
+	{
+		stack.pop_back();
+		scopes.push_back(std::make_shared<Node::ArrayExpr>());
+		Expr(); Exprs(); BracketR();
+		stack.pop_back();
+		return true;
+	}
+	return false;
 }
 
 bool Parser::ArrayId()
@@ -200,15 +390,33 @@ bool Parser::Statement()
 {
 	if(Id())
 	{
-		if(ArrayExpr() && Assign() && Semicolon() ||
-			Assign() && Semicolon() ||
-			ParenthesesL() && (ParenthesesR() && Semicolon() || Expr() && Exprs() && ParenthesesR() && Semicolon()))
+		if(ArrayExpr())
 		{
+			AddAssignment();
+			Assign(); Semicolon();
+			scopes.pop_back();
 			return true;
+		}
+		else if(ParenthesesL())
+		{
+			AddCall();
+			if(ParenthesesR() && Semicolon()) return true;
+			else
+			{
+				Expr(); Exprs();
+				scopes.pop_back();
+				return ParenthesesR() && Semicolon();
+			}
 		}
 		else
 		{
-			throw ParseException("Invalid statement, expected an assignment or function call after identifier", tokens[t]);
+			AddAssignment();
+			if(Assign() && Semicolon())
+			{
+				scopes.pop_back();
+				return true;
+			}
+			else throw ParseException("Invalid statement, expected an assignment or function call after identifier", tokens[t]);
 		}
 	}
 	return If() && ParenthesesL(true) && Expr() && ParenthesesR() && Block() && ElseBlock() ||
@@ -239,7 +447,14 @@ bool Parser::ElseBlock()
 
 bool Parser::Return()
 {
-	return Word(ReservedWord::Return) && Expr() && Semicolon() || true;
+	if(Word(ReservedWord::Return))
+	{
+		AddReturn();
+		Expr(); Semicolon();
+		scopes.pop_back();
+	}
+	
+	return true;
 }
 
 bool Parser::Assign()
@@ -252,14 +467,37 @@ bool Parser::AssignOpt()
 	return Assign() || true;
 }
 
+Node::Operator TokenToBinaryOp(const Token& token)
+{
+	static const std::unordered_map<ReservedSymbol, Node::Operator> map(
+	{
+		{ ReservedSymbol::Plus, Node::Operator::Add },
+		{ ReservedSymbol::Minus, Node::Operator::Subtract },
+		{ ReservedSymbol::Multiply, Node::Operator::Multiply },
+		{ ReservedSymbol::Divide, Node::Operator::Divide },
+		{ ReservedSymbol::Modulo, Node::Operator::Modulo },
+		{ ReservedSymbol::Equals, Node::Operator::Equal },
+		{ ReservedSymbol::Unequals, Node::Operator::NotEqual },
+		{ ReservedSymbol::Less, Node::Operator::Less },
+		{ ReservedSymbol::LessEqual, Node::Operator::LessEqual },
+		{ ReservedSymbol::More, Node::Operator::More },
+		{ ReservedSymbol::MoreEqual, Node::Operator::MoreEqual },
+		{ ReservedSymbol::And, Node::Operator::And },
+		{ ReservedSymbol::Or, Node::Operator::Or }
+	});
+
+	return map.at(token.reservedSymbol);
+}
+
 bool Parser::Expr()
 {
 	auto node = Expr(1);
 	if(!node) throw ParseException("Invalid expression", tokens[t]);
+	scopes.back()->children.push_back(node);
 	return true;
 }
 
-NodePtr Parser::Expr(int precedence)
+Node::NodePtr Parser::Expr(int precedence)
 {
 	auto left = P();
 
@@ -269,7 +507,7 @@ NodePtr Parser::Expr(int precedence)
 		const Token& token = tokens[t++];
 
 		auto right = Expr(q);
-		auto op = std::make_shared<BinaryOpNode>(token);
+		auto op = std::make_shared<Node::BinaryOp>(TokenToBinaryOp(token));
 		op->children.push_back(left);
 		op->children.push_back(right);
 		
@@ -279,33 +517,66 @@ NodePtr Parser::Expr(int precedence)
 	return left;
 }
 
-NodePtr Parser::P()
+Node::NodePtr Parser::P()
 {
 	if(UnaryOp())
 	{
 		int q = Precedence(t);
 		const Token& token = tokens[t++];
-		auto op = std::make_shared<UnaryOpNode>(token);
-		op->children.push_back(Expr(q));
-		return op;
+		Node::Operator op = token.reservedSymbol == ReservedSymbol::Not ? Node::Operator::Not : Node::Operator::Negate;
+		auto node = std::make_shared<Node::UnaryOp>(op);
+		node->children.push_back(Expr(q));
+		return node;
 	}
 	else if(ParenthesesL())
 	{
+		if(IsType(tokens[t]))
+		{
+			const Token& token = tokens[t++];
+			if(token == ReservedWord::Void) throw ParseException("Can not cast to 'void'", token);
+			ParenthesesR();
+			auto node = std::make_shared<Node::Cast>(TokenToType(token));
+			node->children.push_back(Expr(unaryPrecedence));
+			return node;
+		}
 		auto expr = Expr(1);
 		ParenthesesR();
 		return expr;
 	}
+	else if(BracketL())
+	{
+		stack.clear();
+
+		auto array = std::make_shared<Node::ArrayExpr>();
+
+		do
+		{
+			array->children.push_back(Expr(1));
+		} while(Comma());
+		
+		BracketR();
+		stack.clear();
+		return array;
+	}
 	else if(Literal())
 	{
 		const Token& token = tokens[t++];
-		return std::make_shared<LiteralNode>(token);
+		std::shared_ptr<Node::Literal> literal;
+		if(token.type == TokenType::BoolType) literal = std::make_shared<Node::Literal>(token.boolValue);
+		else if(token.type == TokenType::IntType) literal = std::make_shared<Node::Literal>(token.intValue);
+		else literal = std::make_shared<Node::Literal>(token.floatValue);
+		return literal;
 	}
 	else if(Id())
 	{
+		std::string id = stack[0].readString;
+		stack.clear();
+
 		if(ParenthesesL())
 		{
-			auto call = std::make_shared<CallNode>(tokens[t-2]);
-			
+			auto call = std::make_shared<Node::Call>();
+			call->name = id;
+
 			bool comma = false;
 			do
 			{
@@ -316,12 +587,27 @@ NodePtr Parser::P()
 			} while(Comma());
 
 			ParenthesesR();
-
 			return call;
 		}
+		else if(BracketL())
+		{
+			auto node = std::make_shared<Node::Identifier>(id);
 
-		const Token& id = tokens[t - 1];
-		return std::make_shared<IdentifierNode>(id);
+			bool comma = false;
+			do
+			{
+				auto expr = Expr(1);
+				if(expr != nullptr) node->children.push_back(expr);
+				else if(comma) throw ParseException("Expected an expression after ','", tokens[t - 1]);
+				comma = true;
+			} while(Comma());
+
+			BracketR();
+			stack.clear();
+			return node;
+		}
+
+		return std::make_shared<Node::Identifier>(id);
 	}
 	
 	return nullptr;
@@ -403,7 +689,6 @@ bool Parser::Word(ReservedWord word, bool eofError)
 
 	if(tokens[t] == word)
 	{
-		stack.push_back(tokens[t]);
 		t++;
 		return true;
 	}
@@ -418,7 +703,6 @@ bool Parser::Symbol(ReservedSymbol symbol, bool eofError)
 
 	if(tokens[t] == symbol)
 	{
-		stack.push_back(tokens[t]);
 		t++;
 		return true;
 	}
@@ -444,7 +728,12 @@ bool Parser::Id(bool error)
 
 bool Parser::Void()
 {
-	return Word(ReservedWord::Void);
+	if(Word(ReservedWord::Void))
+	{
+		stack.push_back(tokens[t - 1]);
+		return true;
+	}
+	return false;
 }
 
 bool Parser::ParenthesesL(bool error)
@@ -481,7 +770,8 @@ bool Parser::BraceR()
 
 bool Parser::BracketL(bool error)
 {
-	if(!Symbol(ReservedSymbol::BracketL))
+	if(Symbol(ReservedSymbol::BracketL)) stack.push_back(tokens[t - 1]);
+	else
 	{
 		if(error) throw ParseException("Expected a '[' ", tokens[t]);
 		return false;
@@ -491,7 +781,8 @@ bool Parser::BracketL(bool error)
 
 bool Parser::BracketR()
 {
-	if(!Symbol(ReservedSymbol::BracketR)) throw ParseException("Expected a ']' ", tokens[t]);
+	if(Symbol(ReservedSymbol::BracketR)) stack.push_back(tokens[t - 1]); 
+	else throw ParseException("Expected a ']' ", tokens[t]);
 	return true;
 }
 
