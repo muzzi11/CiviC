@@ -7,9 +7,10 @@
 #include "instruction.h"
 #include "node.h"
 #include "traverse.h"
+#include "symboltable.h"
 
 int main(int argc, char* argv[])
-{
+{	
 	if(argc < 2)
 	{
 		std::cout << "No input files suplied.\n";
@@ -47,6 +48,6 @@ int main(int argc, char* argv[])
 		{
 			std::cout << e.what();
 		}
-	}	
+	}
 	return 0;
 }
