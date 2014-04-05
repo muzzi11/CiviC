@@ -391,8 +391,9 @@ bool Parser::LocalFuns()
 		if(ArrayExpr()) throw ParseException("Unexpected array expression(variable declarations should precede function definitions)", tokens[t - 1]);
 		else if(Id(true))
 		{
-			if(AssignOpt() || Semicolon()) throw ParseException("Variable declaration should precede function definitions", tokens[t - 1]);
-			return LocalFun(true) && LocalFuns();
+			if(LocalFun()) return LocalFuns();
+			else if(AssignOpt() || Semicolon()) throw ParseException("Variable declaration should precede function definitions", tokens[t - 1]);
+			else(LocalFun(true));
 		}
 	}
 
