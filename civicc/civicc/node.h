@@ -164,15 +164,12 @@ namespace Node
 		std::string ToString() const override;
 	};
 
-	/*struct Expr : public Node<Expr>
-	{
-	};*/
-
 	struct BinaryOp : public Node<BinaryOp>
 	{
 		Operator op;
 
 		BinaryOp(Operator op) : op(op) {}
+		std::string ToString() const override;
 	};
 
 	struct UnaryOp : public Node<UnaryOp>
@@ -180,6 +177,7 @@ namespace Node
 		Operator op;
 
 		UnaryOp(Operator op) : op(op) {}
+		std::string ToString() const override;
 	};
 
 	struct Cast : public Node<Cast>
@@ -211,6 +209,11 @@ namespace Node
 		std::string name;
 
 		Identifier(const std::string& name) : name(name) {}
+		std::string ToString() const override;
+	};
+
+	struct Ternary : public Node<Ternary>
+	{
 		std::string ToString() const override;
 	};
 

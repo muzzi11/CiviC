@@ -9,6 +9,7 @@
 #include "traverse.h"
 #include "symboltable.h"
 #include "seperation.h"
+#include "replace_boolops.h"
 
 
 int main(int argc, char* argv[])
@@ -46,6 +47,7 @@ int main(int argc, char* argv[])
 			parser.ParseProgram(root);
 
 			SeperateDecAndInit(root);
+			ReplaceBooleanOperators(root);
 			
 			std::cout << TreeToJSON(root) << "\n";
 		}

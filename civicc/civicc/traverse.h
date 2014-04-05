@@ -46,6 +46,17 @@ void TraverseDepth(Node::NodePtr root, std::function<bool(std::shared_ptr<T>, No
 	}
 }
 
+template<class T>
+void Replace(Node::NodePtr& root, std::function<Node::NodePtr(std::shared_ptr<T>)> func)
+{
+	if(root)
+	{
+		size_t i = 0;
+		while(i < root->children.size()) Replace(root->children[i++], func);
+		if(root->Family() == T::Family()) root = func(std::static_pointer_cast<T>(root));
+	}
+}
+
 // -1 for unlimited depth
 /*
 template<class T>

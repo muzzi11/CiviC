@@ -45,6 +45,9 @@
     <ClCompile Include="traverse.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="replace_boolops.cpp">
+      <Filter>Passes</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="tokenizer.h">
@@ -69,6 +72,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="seperation.h">
+      <Filter>Passes</Filter>
+    </ClInclude>
+    <ClInclude Include="replace_boolops.h">
       <Filter>Passes</Filter>
     </ClInclude>
   </ItemGroup>

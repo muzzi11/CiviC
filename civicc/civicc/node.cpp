@@ -37,6 +37,30 @@ std::string TypeToString(Type type)
 	return map.at(type);
 }
 
+std::string OperatorToString(Operator op)
+{
+	static const std::unordered_map<Operator, std::string> map(
+	{
+		{ Operator::Add, "+" },
+		{ Operator::Subtract, "-" },
+		{ Operator::Multiply, "*" },
+		{ Operator::Divide, "/" },
+		{ Operator::Modulo, "%" },
+		{ Operator::Equal, "==" },
+		{ Operator::NotEqual, "!=" },
+		{ Operator::Less, "<" },
+		{ Operator::LessEqual, "<=" },
+		{ Operator::More, ">" },
+		{ Operator::MoreEqual, ">=" },
+		{ Operator::And, "&&" },
+		{ Operator::Or, "||" },
+		{ Operator::Negate, "-" },
+		{ Operator::Not, "!" },
+	});
+
+	return map.at(op);
+}
+
 std::string Variable::ToString() const
 {
 	return TypeToString(type) + ' ' + name;
@@ -107,6 +131,18 @@ std::string Call::ToString() const
 	return name;
 }
 
+std::string BinaryOp::ToString() const
+{
+	if(children.size() != 2) return "";
+	else return "(" + children[0]->ToString() + " " + OperatorToString(op) + " " + children[1]->ToString() + ")";
+}
+
+std::string UnaryOp::ToString() const
+{
+	if(children.size() != 1) return "";
+	else return OperatorToString(op) + children[0]->ToString();
+}
+
 std::string Cast::ToString() const
 {
 	return TypeToString(type);
@@ -126,4 +162,10 @@ std::string Literal::ToString() const
 std::string Identifier::ToString() const
 {
 	return name + (children.empty() ? "" : "[]");
+}
+
+std::string Ternary::ToString() const
+{
+	if(children.size() != 3) return "";
+	else return children[0]->ToString() + " ? " + children[1]->ToString() + " : " + children[2]->ToString();
 }

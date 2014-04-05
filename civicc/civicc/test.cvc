@@ -16,26 +16,7 @@ comming in
 */
 export int main() // comment after
 {
-	int local = t1(t2(t3(0)));
-	float localFloat = 1.2;
-
-	bool /* inline comment */ innerFunction()
-	{
-		return !true==false;
-	}
-
-	for(int i = first, b)
-	{
-		for(int i = local, 2)
-		{
-			val = i;
-		}
-		next = i;
-	}
-
-	for(int i = i, 123) bla();
-
-	test(a, 1);
+	if(a && b || c) bla();
 	
 	return 0;
 }
