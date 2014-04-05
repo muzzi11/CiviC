@@ -118,6 +118,8 @@ void Parser::AddFunctionDef()
 	int i = node->exp ? 1 : 0;
 	node->header.returnType = TokenToType(stack[i]);
 	node->header.name = stack[i + 1].readString;
+	node->pos = stack[i + 1].pos;
+	node->line = stack[i + 1].line;
 	ExtractParameters(i + 2, stack, node->header.params);
 
 	if(scopes.empty()) root->children.push_back(node);
@@ -134,6 +136,8 @@ void Parser::AddGlobalDef()
 	int i = node->exp ? 1 : 0;
 	node->var.type = TokenToType(stack[i]);
 	node->var.name = stack[i + 1].readString;
+	node->pos = stack[i + 1].pos;
+	node->line = stack[i + 1].line;
 
 	if(!scopes.empty() && scopes.back()->Family() == Node::ArrayExpr::Family())
 	{
@@ -152,6 +156,8 @@ void Parser::AddReturn()
 	auto node = std::make_shared<Node::Return>();
 	auto funDef = std::static_pointer_cast<Node::FunctionDef>(scopes.back());
 	node->functionName = funDef->header.name;
+	node->pos = stack[0].pos;
+	node->line = stack[1].line;
 	scopes.back()->children.push_back(node);
 	scopes.push_back(node);
 }
@@ -162,6 +168,8 @@ void Parser::AddVarDec()
 
 	node->var.type = TokenToType(stack[0]);
 	node->var.name = stack[1].readString;
+	node->pos = stack[1].pos;
+	node->line = stack[1].line;
 
 	if(scopes.back()->Family() == Node::ArrayExpr::Family())
 	{
@@ -194,7 +202,8 @@ std::shared_ptr<Node::Call> Parser::AddCall()
 {
 	auto node = std::make_shared<Node::Call>();
 	node->name = stack[0].readString;
-
+	node->pos = stack[0].pos;
+	node->line = stack[0].line;
 	scopes.back()->children.push_back(node);
 	scopes.push_back(node);
 	stack.clear();
