@@ -41,6 +41,7 @@
     </ClCompile>
     <ClCompile Include="symboltable.cpp">
       <Filter>Source Files</Filter>
+	</ClCompile>
     <ClCompile Include="seperation.cpp">
       <Filter>Passes</Filter>
     </ClCompile>
@@ -66,6 +67,7 @@
     </ClInclude>
     <ClInclude Include="symboltable.h">
       <Filter>Header Files</Filter>
+	</ClInclude>
     <ClInclude Include="seperation.h">
       <Filter>Passes</Filter>
     </ClInclude>
