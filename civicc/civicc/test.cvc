@@ -23,6 +23,8 @@ export int main() // comment after
 	{
 		return !true==false;
 	}
+
+	for(int i = local, b) bla();
 	
 	return 0;
 }

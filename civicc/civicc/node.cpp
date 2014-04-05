@@ -77,9 +77,19 @@ std::string FunctionDef::ToString() const
 	return exp ? "export " + header.ToString() : header.ToString();
 }
 
+bool GlobalDef::HasAssignment() const
+{
+	return var.array ? children.size() > 1 : !children.empty();
+}
+
 std::string GlobalDef::ToString() const
 {
 	return exp ? "export " + var.ToString() : var.ToString();
+}
+
+bool VarDec::HasAssignment() const
+{
+	return var.array ? children.size() > 1 : !children.empty();
 }
 
 std::string VarDec::ToString() const

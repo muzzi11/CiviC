@@ -46,6 +46,7 @@ int main(int argc, char* argv[])
 			parser.ParseProgram(root);
 
 			SeperateVarDecFromInit(root);
+			SeperateGlobalDefFromInit(root);
 			
 			std::cout << TreeToJSON(root) << "\n";
 		}
