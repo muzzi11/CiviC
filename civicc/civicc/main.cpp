@@ -12,8 +12,7 @@
 
 
 int main(int argc, char* argv[])
-{	
-	/*
+{		
 	if(argc < 2)
 	{
 		std::cout << "No input files suplied.\n";
@@ -55,11 +54,9 @@ int main(int argc, char* argv[])
 			std::cout << e.what();
 		}
 	}
-	return 0;
-	*/
 
 	SymbolTable::Record record = SymbolTable::Record();
-	
+
 	SymbolTable::Sheaf sheaf = SymbolTable::Sheaf();
 	sheaf.InitializeScope();
 	sheaf.Insert("a", record);
@@ -69,4 +66,5 @@ int main(int argc, char* argv[])
 	sheaf.Insert("b", record);
 	sheaf.FinalizeScope();
 
+	return 0;
 }

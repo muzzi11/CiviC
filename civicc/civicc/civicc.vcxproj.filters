@@ -68,8 +68,8 @@
     <ClInclude Include="symboltable.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-	<ClInclude Include="seperation.h">
-      <Filter>Passes</Filter>
+    <ClInclude Include="seperation.h">
+	    <Filter>Passes</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
