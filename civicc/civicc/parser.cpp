@@ -79,6 +79,8 @@ void ExtractParameters(int start, const std::vector<Token>& stack, std::vector<N
 		}
 
 		out.back().name = stack[i].readString;
+		out.back().pos = stack[i].pos;
+		out.back().line = stack[i].line;
 	}
 }
 
@@ -88,6 +90,8 @@ void Parser::AddFunctionDec()
 
 	node->header.returnType = TokenToType(stack[0]);
 	node->header.name = stack[1].readString;
+	node->line = stack[1].line;
+	node->pos = stack[1].pos;
 	ExtractParameters(2, stack, node->header.params);
 
 	root->children.push_back(node);
@@ -146,6 +150,8 @@ void Parser::AddGlobalDef()
 void Parser::AddReturn()
 {
 	auto node = std::make_shared<Node::Return>();
+	auto funDef = std::static_pointer_cast<Node::FunctionDef>(scopes.back());
+	node->functionName = funDef->header.name;
 	scopes.back()->children.push_back(node);
 	scopes.push_back(node);
 }
@@ -190,6 +196,7 @@ std::shared_ptr<Node::Call> Parser::AddCall()
 	node->name = stack[0].readString;
 
 	scopes.back()->children.push_back(node);
+	scopes.push_back(node);
 	stack.clear();
 
 	return node;
@@ -437,7 +444,11 @@ bool Parser::Statement()
 		else if(ParenthesesL())
 		{
 			AddCall();
-			if(ParenthesesR() && Semicolon()) return true;
+			if(ParenthesesR(false) && Semicolon())
+			{
+				scopes.pop_back();
+				return true;
+			}
 			else
 			{
 				Expr(); Exprs();
@@ -810,9 +821,13 @@ bool Parser::ParenthesesL(bool error)
 	return true;
 }
 
-bool Parser::ParenthesesR()
+bool Parser::ParenthesesR(bool error)
 {
-	if(!Symbol(ReservedSymbol::ParenthesesR)) throw ParseException("Expected a ')' ", tokens[t]);
+	if(!Symbol(ReservedSymbol::ParenthesesR))
+	{
+		if(error) throw ParseException("Expected a ')' ", tokens[t]);
+		return false;
+	}
 	return true;
 }
 

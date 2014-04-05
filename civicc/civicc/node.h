@@ -18,6 +18,7 @@ namespace Node
 		Float,
 		Void
 	};
+	std::string TypeToString(Type type);
 
 	enum class Operator
 	{
@@ -37,7 +38,7 @@ namespace Node
 		Negate,
 		Not
 	};
-
+	
 	class BaseNode;
 
 	typedef std::shared_ptr<BaseNode> NodePtr;
@@ -51,6 +52,8 @@ namespace Node
 
 		int Family() const;
 		std::string FamilyName() const;
+
+		int line, pos;
 
 	protected:
 		int family_;
@@ -79,7 +82,8 @@ namespace Node
 		bool array = false;
 		Type type;
 		std::string name;
-
+		int pos, line;
+		
 		std::string ToString() const;
 	};
 
@@ -88,6 +92,7 @@ namespace Node
 		Type type;
 		std::string name;
 		std::vector<std::string> dim;
+		int pos, line;
 
 		std::string ToString() const;
 	};
@@ -97,7 +102,8 @@ namespace Node
 		Type returnType;
 		std::string name;
 		std::vector<Param> params;
-
+		int pos, line;
+		
 		std::string ToString() const;
 	};
 
@@ -155,6 +161,7 @@ namespace Node
 
 	struct Return : public Node<Return>
 	{
+		std::string functionName;
 	};
 
 	struct Call : public Node<Call>
@@ -171,6 +178,7 @@ namespace Node
 	struct BinaryOp : public Node<BinaryOp>
 	{
 		Operator op;
+		Type type;
 
 		BinaryOp(Operator op) : op(op) {}
 	};

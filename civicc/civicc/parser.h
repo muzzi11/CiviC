@@ -95,7 +95,7 @@ private:
 	bool Id(bool error = false);
 	bool Void();
 	bool ParenthesesL(bool error = false);
-	bool ParenthesesR();
+	bool ParenthesesR(bool error = true);
 	bool BraceL(bool error = false);
 	bool BraceR();
 	bool BracketL(bool error = false);
