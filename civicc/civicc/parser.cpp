@@ -319,7 +319,9 @@ bool Parser::GlobalDef()
 
 bool Parser::FunDef()
 {
-	BraceL(true); FunBody(); BraceR();
+	BraceL(true); FunBody();
+	if(Type()) throw ParseException("Unexpected variable declaration or function definition", tokens[t - 1]);
+	BraceR();
 	scopes.pop_back();
 	return true;
 }
@@ -379,7 +381,9 @@ bool Parser::LocalFun(bool error)
 	if(FunHeader(error))
 	{
 		AddFunctionDef();
-		BraceL(true); FunBody(); BraceR();
+		BraceL(true); FunBody();
+		if(Type()) throw ParseException("Unexpected variable declaration or function definition", tokens[t - 1]);
+		BraceR();
 		scopes.pop_back();
 		return true;
 	}
