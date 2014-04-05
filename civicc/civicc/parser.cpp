@@ -36,7 +36,7 @@ void Parser::ParseProgram(Node::NodePtr node)
 	{
 		if(!Declaration())
 		{
-			throw ParseException("Unexpected token", tokens[t]);
+			throw ParseException("Invalid declaration", tokens[t]);
 		}
 	}
 }
