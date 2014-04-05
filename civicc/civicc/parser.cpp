@@ -133,6 +133,7 @@ void Parser::AddGlobalDef()
 
 	if(!scopes.empty() && scopes.back()->Family() == Node::ArrayExpr::Family())
 	{
+		node->var.array = true;
 		node->children.push_back(scopes.back());
 		scopes.pop_back();
 	}
@@ -158,6 +159,7 @@ void Parser::AddVarDec()
 
 	if(scopes.back()->Family() == Node::ArrayExpr::Family())
 	{
+		node->var.array = true;
 		node->children.push_back(scopes.back());
 		scopes.pop_back();
 	}
@@ -651,12 +653,14 @@ Node::NodePtr Parser::P()
 		else if(BracketL())
 		{
 			auto node = std::make_shared<Node::Identifier>(id);
+			auto array = std::make_shared<Node::ArrayExpr>();
+			node->children.push_back(array);
 
 			bool comma = false;
 			do
 			{
 				auto expr = Expr(1);
-				if(expr != nullptr) node->children.push_back(expr);
+				if(expr != nullptr) array->children.push_back(expr);
 				else if(comma) throw ParseException("Expected an expression after ','", tokens[t - 1]);
 				comma = true;
 			} while(Comma());

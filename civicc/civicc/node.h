@@ -76,6 +76,7 @@ namespace Node
 
 	struct Variable
 	{
+		bool array = false;
 		Type type;
 		std::string name;
 
