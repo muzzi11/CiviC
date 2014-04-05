@@ -1,22 +1,18 @@
-int[2, 3] array = [[1, 2], [3, 4, 5]];
-int intGlobal = 1 + 2 * bla(3 + 5, 9, 4);
-float fl=1337.0;
+int[2, 2+1] array = [[1, 2], [3, 4, 5]];
+//int intGlobal = 1 + 2 * bla(3 + 5, 9, 4);
+//float fl=1337.0 + intGlobal + foo;
+
+//int test = bla;
+//int bla;
 
 extern void external();
 
-// comment // /// /////////
-/////////
 int test(int loel)
 {
-	return loel + 3;
+	int inner(int coel)
+	{
+		return coel;
+	}
+	return (int)1.0 + 3;
 }
 
-/* multi line comment
-comming in
-*/
-export int main() // comment after
-{
-	if(a && b || c) bla();
-	
-	return 0;
-}

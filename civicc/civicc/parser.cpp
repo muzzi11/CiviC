@@ -79,6 +79,8 @@ void ExtractParameters(int start, const std::vector<Token>& stack, std::vector<N
 		}
 
 		out.back().name = stack[i].readString;
+		out.back().pos = stack[i].pos;
+		out.back().line = stack[i].line;
 	}
 }
 
@@ -88,6 +90,8 @@ void Parser::AddFunctionDec()
 
 	node->header.returnType = TokenToType(stack[0]);
 	node->header.name = stack[1].readString;
+	node->line = stack[1].line;
+	node->pos = stack[1].pos;
 	ExtractParameters(2, stack, node->header.params);
 
 	root->children.push_back(node);
@@ -146,6 +150,8 @@ void Parser::AddGlobalDef()
 void Parser::AddReturn()
 {
 	auto node = std::make_shared<Node::Return>();
+	auto funDef = std::static_pointer_cast<Node::FunctionDef>(scopes.back());
+	node->functionName = funDef->header.name;
 	scopes.back()->children.push_back(node);
 	scopes.push_back(node);
 }

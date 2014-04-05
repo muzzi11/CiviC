@@ -10,6 +10,7 @@
 #include "symboltable.h"
 #include "seperation.h"
 #include "replace_boolops.h"
+#include "analysis.h"
 
 
 int main(int argc, char* argv[])
@@ -47,7 +48,12 @@ int main(int argc, char* argv[])
 			parser.ParseProgram(root);
 
 			SeperateDecAndInit(root);
+<<<<<<< HEAD
 			ReplaceBooleanOperators(root);
+=======
+
+			Analyzer().Analyse(root);
+>>>>>>> 82e4a962a4af765786fd9ef7b88c9d28b3db020e
 			
 			std::cout << TreeToJSON(root) << "\n";
 		}
@@ -56,17 +62,5 @@ int main(int argc, char* argv[])
 			std::cout << e.what();
 		}
 	}
-
-	SymbolTable::Record record = SymbolTable::Record();
-
-	SymbolTable::Sheaf sheaf = SymbolTable::Sheaf();
-	sheaf.InitializeScope();
-	sheaf.Insert("a", record);
-	sheaf.InitializeScope();
-	sheaf.Insert("b", record);
-	sheaf.FinalizeScope();
-	sheaf.Insert("b", record);
-	sheaf.FinalizeScope();
-
 	return 0;
 }

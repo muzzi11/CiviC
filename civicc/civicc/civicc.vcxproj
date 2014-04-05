@@ -76,6 +76,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="analysis.cpp" />
     <ClCompile Include="Instruction.cpp" />
     <ClCompile Include="replace_boolops.cpp" />
     <ClCompile Include="main.cpp" />
@@ -88,6 +89,7 @@
     <ClCompile Include="traverse.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="analysis.h" />
     <ClInclude Include="instruction.h" />
     <ClInclude Include="replace_boolops.h" />
     <ClInclude Include="node.h" />

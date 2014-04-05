@@ -45,17 +45,13 @@ namespace SymbolTable
 	{
 	public:
 		Record() { }
-		Record(bool isFunction, Node::Type node) : isFunction(isFunction), type(node) { }
+		Record(bool immutable, Node::Type node) : immutable(immutable), type(node), initialized(false) { }
 
-		bool isFunction;
+		bool immutable;
+		bool initialized;
 		Node::Type type;
-		std::vector<FuncArg> funcArgs;
-		Node::Type returnType;
-	};
-		
-	class FuncArg
-	{
-	public:
-		Node::Type type;
+
+		std::vector<Node::Type> funcArgs;
+		std::vector<int> arrayDimensions;
 	};
 };

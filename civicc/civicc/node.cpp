@@ -2,8 +2,20 @@
 
 #include "node.h"
 
-using namespace Node;
+std::string Node::TypeToString(Type type)
+{
+	static const std::unordered_map<Type, std::string> map(
+	{
+		{ Type::Bool, "bool" },
+		{ Type::Int, "int" },
+		{ Type::Float, "float" },
+		{ Type::Void, "void" },
+	});
 
+	return map.at(type);
+}
+
+using namespace Node;
 
 int BaseNode::familyCounter_ = 0;
 std::unordered_map<int, std::string> BaseNode::familyNames_(1);
@@ -21,20 +33,6 @@ int BaseNode::Family() const
 std::string BaseNode::FamilyName() const
 {
 	return familyNames_[family_];
-}
-
-
-std::string TypeToString(Type type)
-{
-	static const std::unordered_map<Type, std::string> map(
-	{
-		{ Type::Bool, "bool" },
-		{ Type::Int, "int" },
-		{ Type::Float, "float"},
-		{ Type::Void, "void" },
-	});
-
-	return map.at(type);
 }
 
 std::string OperatorToString(Operator op)
