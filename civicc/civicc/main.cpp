@@ -45,8 +45,7 @@ int main(int argc, char* argv[])
 			auto root = std::make_shared<Node::BaseNode>();
 			parser.ParseProgram(root);
 
-			SeperateVarDecFromInit(root);
-			SeperateGlobalDefFromInit(root);
+			SeperateDecAndInit(root);
 			
 			std::cout << TreeToJSON(root) << "\n";
 		}

@@ -190,6 +190,7 @@ std::shared_ptr<Node::Call> Parser::AddCall()
 	node->name = stack[0].readString;
 
 	scopes.back()->children.push_back(node);
+	scopes.push_back(node);
 	stack.clear();
 
 	return node;
@@ -437,7 +438,11 @@ bool Parser::Statement()
 		else if(ParenthesesL())
 		{
 			AddCall();
-			if(ParenthesesR() && Semicolon()) return true;
+			if(ParenthesesR(false) && Semicolon())
+			{
+				scopes.pop_back();
+				return true;
+			}
 			else
 			{
 				Expr(); Exprs();
@@ -810,9 +815,13 @@ bool Parser::ParenthesesL(bool error)
 	return true;
 }
 
-bool Parser::ParenthesesR()
+bool Parser::ParenthesesR(bool error)
 {
-	if(!Symbol(ReservedSymbol::ParenthesesR)) throw ParseException("Expected a ')' ", tokens[t]);
+	if(!Symbol(ReservedSymbol::ParenthesesR))
+	{
+		if(error) throw ParseException("Expected a ')' ", tokens[t]);
+		return false;
+	}
 	return true;
 }
 

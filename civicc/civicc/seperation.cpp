@@ -11,7 +11,7 @@ using namespace Node;
 
 void SeperateVarDecFromInit(NodePtr root)
 {
-	Traverse<VarDec>(root, [](std::shared_ptr<VarDec> varDec, NodePtr parent)
+	TraverseBreadth<VarDec>(root, [](std::shared_ptr<VarDec> varDec, NodePtr parent)
 	{
 		if(!varDec->HasAssignment()) return true;
 
@@ -19,9 +19,9 @@ void SeperateVarDecFromInit(NodePtr root)
 		auto it = std::find(list.begin(), list.end(), varDec);
 		if(it != list.end())
 		{
-			auto assign = std::make_shared<Assignment>(varDec->var.name);
-			assign->children.push_back(varDec->children.back());
-			list.insert(++it, assign);
+			auto assignment = std::make_shared<Assignment>(varDec->var.name);
+			assignment->children.push_back(varDec->children.back());
+			list.insert(++it, assignment);
 			varDec->children.pop_back();
 		}
 
@@ -36,11 +36,13 @@ void SeperateGlobalDefFromInit(NodePtr root)
 	init->header.name = "__init";
 	init->header.returnType = Type::Void;
 
-	Traverse<GlobalDef>(root, [&](std::shared_ptr<GlobalDef> globalDef, NodePtr parent)
+	TraverseBreadth<GlobalDef>(root, [&](std::shared_ptr<GlobalDef> globalDef, NodePtr parent)
 	{
 		if(!globalDef->HasAssignment()) return true;
 
-		init->children.push_back(globalDef->children.back());
+		auto assignment = std::make_shared<Assignment>(globalDef->var.name);
+		assignment->children.push_back(globalDef->children.back());
+		init->children.push_back(assignment);
 		globalDef->children.pop_back();
 
 		return true;
@@ -51,10 +53,35 @@ void SeperateGlobalDefFromInit(NodePtr root)
 
 void ReplaceNamesInFor(NodePtr root)
 {
-	for(auto child : root->children)
-	{
+	int counter = 0;
 
-	}
+	TraverseDepth<For>(root, [&](std::shared_ptr<For> forLoop, NodePtr)
+	{
+		auto it = std::static_pointer_cast<VarDec>(forLoop->children[0]);
+		auto lower = std::static_pointer_cast<Assignment>(forLoop->children[1]);
+		std::stringstream newName;
+		newName << "_L" << counter++ << it->var.name;
+
+		for(size_t i = 4; i < forLoop->children.size(); ++i)
+		{
+			TraverseBreadth<Assignment>(forLoop->children[i], [&](std::shared_ptr<Assignment> assignment, NodePtr)
+			{
+				if(assignment->name == it->var.name) assignment->name = newName.str();
+				return true;
+			});
+
+			TraverseBreadth<Identifier>(forLoop->children[i], [&](std::shared_ptr<Identifier> id, NodePtr)
+			{
+				if(id->name == it->var.name) id->name = newName.str();
+				return true;
+			});
+		}
+
+		it->var.name = newName.str();
+		lower->name = newName.str();
+
+		return true;
+	});
 }
 
 void SeperateForLoopInduction(NodePtr root)
@@ -62,24 +89,56 @@ void SeperateForLoopInduction(NodePtr root)
 	std::stringstream sstream;
 	std::map<NodePtr, std::vector<NodePtr>> map;
 
-	Traverse<For>(root, [&](std::shared_ptr<For> forLoop, NodePtr parent)
+	ReplaceNamesInFor(root);
+
+	TraverseDepth<For>(root, [&](std::shared_ptr<For> forLoop, NodePtr parent)
 	{
-		auto it = std::static_pointer_cast<VarDec>(forLoop->children[0]);
+		auto lowerVar = std::static_pointer_cast<VarDec>(forLoop->children[0]);
+		auto lowerAss = std::static_pointer_cast<Assignment>(forLoop->children[1]);
 		auto upperVar = std::make_shared<VarDec>();
 		auto upperAss = std::make_shared<Assignment>("");
 		auto stepVar = std::make_shared<VarDec>();
 		auto stepAss = std::make_shared<Assignment>("");
 
-		it->immutable = true;
+		lowerVar->immutable = true;
 		upperVar->immutable = true;
 		upperVar->var.type = Type::Int;
-		upperVar->var.name = "_U" + it->var.name;
+		upperVar->var.name = "_U" + lowerVar->var.name;
 		upperAss->children.push_back(forLoop->children[2]);
 		stepVar->immutable = true;
 		stepVar->var.type = Type::Int;
-		stepVar->var.name = "_S" + it->var.name;
+		stepVar->var.name = "_S" + lowerVar->var.name;
 		stepAss->children.push_back(forLoop->children[3]);
+
+		map[parent].push_back(forLoop);
+		map[parent].push_back(lowerVar);
+		map[parent].push_back(lowerAss);
+		map[parent].push_back(upperVar);
+		map[parent].push_back(upperAss);
+		map[parent].push_back(stepVar);
+		map[parent].push_back(stepAss);
 
 		return true;
 	});
+
+	for(auto pair : map)
+	{
+		NodePtr parent = pair.first;
+		std::vector<NodePtr>& newInserts = pair.second;
+
+		for(size_t i = 0; i < newInserts.size(); i += 7)
+		{
+			NodePtr forLoop = newInserts[i];
+			auto it = std::find(parent->children.begin(), parent->children.end(), forLoop);
+			parent->children.insert(it, newInserts.begin() + i + 1, newInserts.begin() + i + 7);
+			forLoop->children.erase(forLoop->children.begin(), forLoop->children.begin() + 4);
+		}
+	}
+}
+
+void SeperateDecAndInit(NodePtr root)
+{
+	SeperateVarDecFromInit(root);
+	SeperateGlobalDefFromInit(root);
+	SeperateForLoopInduction(root);
 }

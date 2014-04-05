@@ -30,9 +30,6 @@
     <ClCompile Include="parser.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="traverse.cpp">
-      <Filter>Header Files</Filter>
-    </ClCompile>
     <ClCompile Include="node.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -41,9 +38,12 @@
     </ClCompile>
     <ClCompile Include="symboltable.cpp">
       <Filter>Source Files</Filter>
-	</ClCompile>
+    </ClCompile>
     <ClCompile Include="seperation.cpp">
       <Filter>Passes</Filter>
+    </ClCompile>
+    <ClCompile Include="traverse.cpp">
+      <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -69,7 +69,7 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="seperation.h">
-	    <Filter>Passes</Filter>
+      <Filter>Passes</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
