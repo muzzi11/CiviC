@@ -24,8 +24,131 @@ void Analyzer::TypeCheck(Node::NodePtr node)
 {
 	if (node->Family() == Node::Assignment::Family())
 	{
-		auto ass = std::static_pointer_cast<Node::Assignment>(node);
+		TypeCheckAssigment(node);
+	}
+	else if (node->Family() == Node::BinaryOp::Family())
+	{
+		TypeCheckBinOp(node);
+	}
+	else if (node->Family() == Node::Call::Family())
+	{
+		TypeCheckFuncArgs(node);
+	}
+	else if (node->Family() == Node::Return::Family())
+	{
+		
+	}
+}
 
+void Analyzer::TypeCheckAssigment(Node::NodePtr node)
+{	
+	auto ass = std::static_pointer_cast<Node::Assignment>(node);
+	auto record = sheaf.LookUp(ass->name);
+	if (record)
+		for (auto child : ass->children)
+			TypeCheck(child, record->type);	
+}
+
+void Analyzer::TypeCheckBinOp(Node::NodePtr node)
+{
+	auto binOp = std::static_pointer_cast<Node::BinaryOp>(node);
+	Node::Type type = Node::Type::None;
+	
+	auto left = binOp->children[0];
+	auto right = binOp->children[1];
+
+	auto leftType = GetType(left);
+	auto rightType = GetType(right);
+	if (leftType != rightType) std::cout << "Operator types differ" << std::endl;
+}
+
+void Analyzer::TypeCheckFuncArgs(Node::NodePtr node)
+{
+	auto funcCall = std::static_pointer_cast<Node::Call>(node);
+	auto record = sheaf.LookUp(funcCall->name);
+		
+	if (record)
+	{
+		if (record->funcArgs.size() != funcCall->children.size())
+			std::cout << "Arg count does not match function definition." << std::endl;
+		for (int i = 0; i < funcCall->children.size(); ++i)
+		{
+			TypeCheck(funcCall->children[i], record->funcArgs[i]);
+		}
+	}	
+}
+
+void Analyzer::TypeCheckFuncReturn(Node::NodePtr node)
+{
+	auto returnVal = std::static_pointer_cast<Node::Return>(node);
+	//for (auto child : returnVal->children)
+		//child->
+}
+
+Node::Type Analyzer::GetType(Node::NodePtr node)
+{	
+	if (node->Family() == Node::Literal::Family())
+	{
+		auto lit = std::static_pointer_cast<Node::Literal>(node);
+		return lit->type;
+	}
+	else if (node->Family() == Node::Identifier::Family())
+	{
+		auto id = std::static_pointer_cast<Node::Identifier>(node);
+		auto record = sheaf.LookUp(id->name);
+		if (record) return record->type;
+	}
+	else if (node->Family() == Node::Cast::Family())
+	{
+		auto cast = std::static_pointer_cast<Node::Cast>(node);
+		return cast->type;
+	}
+	else if (node->Family() == Node::Call::Family())
+	{
+		auto call = std::static_pointer_cast<Node::Call>(node);
+		auto record = sheaf.LookUp(call->name);
+		if (record) return record->type;
+	}
+}
+
+void Analyzer::TypeCheck(Node::NodePtr node, Node::Type type)
+{
+	if (node->Family() == Node::BinaryOp::Family())
+	{
+		auto binOp = std::static_pointer_cast<Node::BinaryOp>(node);
+		for (auto child : binOp->children)
+			TypeCheck(child, type);
+	}
+	else if (node->Family() == Node::Literal::Family())
+	{
+		auto lit = std::static_pointer_cast<Node::Literal>(node);
+		if (lit->type != type)
+			std::cout << "Literal is not of type " << (int)type << std::endl;
+	}
+	else if (node->Family() == Node::Identifier::Family())
+	{
+		auto id = std::static_pointer_cast<Node::Identifier>(node);
+		auto record = sheaf.LookUp(id->name);
+		if (record && record->type != type)
+			std::cout << "Identifier " << id->name << " is not of type " << (int)type << std::endl;
+	}
+	else if (node->Family() == Node::Cast::Family())
+	{
+		auto cast = std::static_pointer_cast<Node::Cast>(node);
+		if (cast->type != type)
+			std::cout << "Cast is not of type " << (int)type << std::endl;
+	}
+	else if (node->Family() == Node::Call::Family())
+	{
+		auto call = std::static_pointer_cast<Node::Call>(node);
+		auto record = sheaf.LookUp(call->name);
+		if (record && record->type != type)
+			std::cout << "Function call " << call->name << " does not return of type " << (int)type << std::endl;
+	}
+	else if (node->Family() == Node::ArrayExpr::Family())
+	{
+		auto arrayExpr = std::static_pointer_cast<Node::Call>(node);
+	
 	}
 }
 
@@ -69,6 +192,13 @@ void Analyzer::InsertGlobalDef(Node::NodePtr node)
 {
 	auto globDef = std::static_pointer_cast<Node::GlobalDef>(node);
 	auto record = SymbolTable::Record(false, globDef->var.type);
+
+	/*
+	if (globDef->var.array)
+	{
+		record.
+	}*/
+
 	sheaf.Insert(globDef->var.name, record);
 }
 
@@ -82,8 +212,7 @@ void Analyzer::InsertGlobalDec(Node::NodePtr node)
 void Analyzer::InsertFuncDef(Node::NodePtr node)
 {
 	auto funDef = std::static_pointer_cast<Node::FunctionDef>(node);
-	auto record = SymbolTable::Record(false, funDef->header.returnType);
-	sheaf.Insert(funDef->header.name, record);
+	auto funcRecord = SymbolTable::Record(false, funDef->header.returnType);
 
 	//Create new scope
 	sheaf.InitializeScope();
@@ -92,11 +221,16 @@ void Analyzer::InsertFuncDef(Node::NodePtr node)
 	{
 		auto record = SymbolTable::Record(false, param.type);
 		sheaf.Insert(param.name, record);
+		funcRecord.funcArgs.push_back(param.type);
 	}
+	sheaf.Insert(funDef->header.name, funcRecord);
 
 	//Add the declarations/definitions inside the function body to the scope
-	for (auto funnode : funDef->children)
-		ConsultTable(funnode);	
+	for (auto child : funDef->children)
+	{
+		ConsultTable(child);
+		TypeCheck(child);
+	}
 	sheaf.FinalizeScope();
 }
 

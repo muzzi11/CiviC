@@ -128,13 +128,16 @@ namespace Node
 		bool exp;
 		Variable var;
 
+		bool HasAssignment() const;
 		std::string ToString() const override;
 	};
 
 	struct VarDec : public Node<VarDec>
 	{
+		bool immutable = false;
 		Variable var;
 
+		bool HasAssignment() const;
 		std::string ToString() const override;
 	};
 

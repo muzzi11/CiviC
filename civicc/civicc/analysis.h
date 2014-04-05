@@ -21,6 +21,13 @@ private:
 	void LookUpIdentifier(Node::NodePtr node);
 
 	void TypeCheck(Node::NodePtr);
+	void TypeCheckAssigment(Node::NodePtr);
+	void TypeCheckBinOp(Node::NodePtr);
+	void TypeCheckFuncArgs(Node::NodePtr);
+	void TypeCheckFuncReturn(Node::NodePtr);
+
+	void TypeCheck(Node::NodePtr, Node::Type type);
+	Node::Type GetType(Node::NodePtr);
 
 	SymbolTable::Sheaf sheaf;
 };

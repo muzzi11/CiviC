@@ -49,13 +49,8 @@ namespace SymbolTable
 
 		bool isFunction;
 		Node::Type type;
-		std::vector<FuncArg> funcArgs;
-		Node::Type returnType;
-	};
-		
-	class FuncArg
-	{
-	public:
-		Node::Type type;
+
+		std::vector<Node::Type> funcArgs;
+		std::vector<int> arrayDimensions;
 	};
 };

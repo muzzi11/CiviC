@@ -7,23 +7,23 @@
 #include "node.h"
 
 
-// func(node, parent)
+// bool func(node, parent) - return false to terminate traversel
 template<class T>
-bool Traverse(Node::NodePtr root, std::function<bool(std::shared_ptr<T>, Node::NodePtr)> func, Node::NodePtr parent = nullptr)
+void Traverse(Node::NodePtr root, std::function<bool(std::shared_ptr<T>, Node::NodePtr)> func, Node::NodePtr parent = nullptr)
 {
-	bool increment = true;
-
 	if(root)
 	{
-		if(root->Family() == T::Family()) increment = func(std::static_pointer_cast<T>(root), parent);
+		if(root->Family() == T::Family())
+		{
+			if(!func(std::static_pointer_cast<T>(root), parent)) return;
+		}
 		size_t i = 0;
 		while(i < root->children.size())
 		{
-			if(Traverse<T>(root->children[i], func, root)) ++i;
+			Traverse<T>(root->children[i], func, root);
+			++i;
 		}
 	}
-
-	return increment;
 }
 
 // -1 for unlimited depth
