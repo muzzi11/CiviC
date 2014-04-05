@@ -48,13 +48,9 @@ int main(int argc, char* argv[])
 			parser.ParseProgram(root);
 
 			SeperateDecAndInit(root);
-<<<<<<< HEAD
-			ReplaceBooleanOperators(root);
-=======
-
 			Analyzer().Analyse(root);
->>>>>>> 82e4a962a4af765786fd9ef7b88c9d28b3db020e
-			
+			ReplaceBooleanOperators(root);
+
 			std::cout << TreeToJSON(root) << "\n";
 		}
 		catch(ParseException e)

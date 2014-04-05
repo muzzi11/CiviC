@@ -86,7 +86,7 @@ void Analyzer::TypeCheckFuncArgs(Node::NodePtr node)
 			std::cout << "Arg count does not match function definition." << std::endl;
 			return;
 		}
-		for (int i = 0; i < funcCall->children.size(); ++i)
+		for (size_t i = 0; i < funcCall->children.size(); ++i)
 		{
 			TypeCheck(funcCall->children[i], record->funcArgs[i]);
 		}
