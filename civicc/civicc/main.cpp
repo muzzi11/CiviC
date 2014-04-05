@@ -9,7 +9,7 @@
 #include "traverse.h"
 #include "symboltable.h"
 #include "seperation.h"
-
+#include "analysis.h"
 
 int main(int argc, char* argv[])
 {		
@@ -46,6 +46,7 @@ int main(int argc, char* argv[])
 			parser.ParseProgram(root);
 
 			SeperateVarDecFromInit(root);
+			Analyzer().Analyse(root);
 			
 			std::cout << TreeToJSON(root) << "\n";
 		}
@@ -54,17 +55,5 @@ int main(int argc, char* argv[])
 			std::cout << e.what();
 		}
 	}
-
-	SymbolTable::Record record = SymbolTable::Record();
-
-	SymbolTable::Sheaf sheaf = SymbolTable::Sheaf();
-	sheaf.InitializeScope();
-	sheaf.Insert("a", record);
-	sheaf.InitializeScope();
-	sheaf.Insert("b", record);
-	sheaf.FinalizeScope();
-	sheaf.Insert("b", record);
-	sheaf.FinalizeScope();
-
 	return 0;
 }
