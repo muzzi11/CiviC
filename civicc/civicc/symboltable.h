@@ -45,12 +45,12 @@ namespace SymbolTable
 	{
 	public:
 		Record() { }
-		Record(bool immutable, Node::Type node) : immutable(immutable), type(node), initialized(false) { }
+		Record(bool immutable, Node::Type node, Node::NodePtr ptr) : immutable(immutable), type(node), initialized(false), decPtr(ptr) { }
 
 		bool immutable;
 		bool initialized;
 		Node::Type type;
-
+		Node::NodePtr decPtr;
 		std::vector<Node::Type> funcArgs;
 		std::vector<int> arrayDimensions;
 	};
