@@ -187,7 +187,7 @@ namespace Nodes
 	struct Call : public Node<Call>
 	{
 		std::string name;
-		NodePtr decPtr;
+		NodePtr dec;
 
 		std::string ToString() const override;
 	};
@@ -237,7 +237,9 @@ namespace Nodes
 	struct Identifier : public Node<Identifier>
 	{
 		std::string name;
-		NodePtr defOrDec;
+		NodePtr dec;
+		Type type;
+
 		Identifier(const std::string& name) : name(name) {}
 		std::string ToString() const override;
 	};

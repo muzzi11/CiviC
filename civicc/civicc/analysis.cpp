@@ -339,7 +339,7 @@ void Analyzer::LookUpCall(Nodes::NodePtr node)
 	}
 	else
 	{
-		funCall->decPtr = record->decPtr;
+		funCall->dec = record->decPtr;
 	}
 }
 
@@ -354,7 +354,8 @@ void Analyzer::LookUpIdentifier(Nodes::NodePtr node)
 	}
 	else
 	{
-		identifier->defOrDec = record->decPtr;
+		identifier->dec = record->decPtr;
+		identifier->type = record->type;
 	}
 }
 

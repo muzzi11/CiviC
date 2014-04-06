@@ -30,10 +30,8 @@ std::string AssemblyGenerator::Generate(NodePtr root)
 
 	TraverseBreadth(root, [&](NodePtr node, NodePtr parent)
 	{
-		if(node->IsFamily<FunctionDef>())
-		{
-			sstream << FunDef(std::static_pointer_cast<FunctionDef>(node));
-		}
+		auto funDef = StaticCast<FunctionDef>(node);
+		if(funDef) sstream << FunDef(funDef);
 	});
 
 	sstream << "\n; globals:\n";
@@ -45,21 +43,29 @@ std::string AssemblyGenerator::Generate(NodePtr root)
 void AssemblyGenerator::BuildTables(Nodes::NodePtr root)
 {
 	int frame = 0, index = 0;
-	NodePtr cur = nullptr;
+	NodePtr prev = root;
 
 	TraverseBreadth(root, [&](NodePtr node, NodePtr parent)
 	{
 		auto funDef = StaticCast<FunctionDef>(node);
-		if(funDef && cur != parent)
+		if(funDef)
 		{
-			frame++;
+			if(prev != parent)
+			{
+				frame++;
+				prev = parent;
+			}
+			
 			index = funDef->header.params.size();
 			functionNestingTable[funDef] = frame;
 		}
 
 		if(node->IsFamily<GlobalDec>() || node->IsFamily<GlobalDef>()) globalIndexTable[node] = globalIndexTable.size();
-		if(node->IsFamily<VarDec>()) localTable[node] = { frame, index };
+		if(node->IsFamily<VarDec>()) localTable[node] = { frame, index++ };
 		if(node->IsFamily<Assignment>()) assignFrameTable[node] = frame;
+		if(node->IsFamily<Identifier>()) idFrameTable[node] = frame;
+		if(node->IsFamily<Call>())
+			functionCallTable[node] = frame;
 	});
 }
 
@@ -68,41 +74,109 @@ std::string AssemblyGenerator::FunDef(std::shared_ptr<FunctionDef> root)
 	std::stringstream sstream;
 
 	sstream << root->header.name << ":\n";
-	sstream << '\t' << CntrlFlwInstr::EnterSub(Count<VarDec>(root)) << "\n";
-
-	TraverseBreadth<Assignment>(root, [&](std::shared_ptr<Assignment> assign, NodePtr parent)
+	int varCount = std::count_if(root->children.begin(), root->children.end(), [](NodePtr node)
 	{
-		sstream << Assign(assign);
+		return node->IsFamily<VarDec>();
+	});
+	sstream << '\t' << CntrlFlwInstr::EnterSub(varCount) << "\n";
+
+	TraverseBreadth(root, [&](NodePtr node, NodePtr parent)
+	{
+		if(parent == root)
+		{
+			auto assign = StaticCast<Assignment>(node);
+			if(assign) sstream << Assign(assign, parent);
+
+			auto call = StaticCast<Call>(node);
+			if(call) sstream << FunCall(call, false);
+		}
 	});
 
-	if(root->children.back()->IsFamily<Return>())
+	if(!root->children.empty())
 	{
-		auto ret = std::static_pointer_cast<Return>(root->children.back());
+		auto ret = StaticCast<Return>(root->children.back());
+		if(ret) sstream << Expression(ret) << '\t' << CntrlFlwInstr::Return(NodeTypeToInstrType(ret->type)) << '\n';
+		else sstream << '\t' << CntrlFlwInstr::Return(Instr::Void) << '\n';
+	}
+	else sstream << '\t' << CntrlFlwInstr::Return(Instr::Void) << '\n';
 
+	return sstream.str();
+}
+
+std::string AssemblyGenerator::Assign(std::shared_ptr<Assignment> root, NodePtr parent)
+{
+	std::stringstream sstream;
+	Instr::Type type = NodeTypeToInstrType(root->type);
+
+	sstream << Expression(root);
+
+	if(root->dec->IsFamily<VarDec>())
+	{
+		int index = localTable[root->dec].index;
+		int frame = assignFrameTable[root] - localTable[root->dec].frame;
+		bool sameScope = frame == 0;
+
+		if(sameScope) sstream << '\t' << VarInstr::StoreLocal(type, index) << '\n';
+		else sstream << '\t' << VarInstr::StoreRelative(type, frame, index) << '\n';
+	}
+	else if(root->dec->IsFamily<FunctionDef>())
+	{
+		auto def = StaticCast<FunctionDef>(root->dec);
+		auto params = def->header.params;
+		int index = std::find_if(params.begin(), params.end(), [&](Param p) -> bool
+		{
+			return p.name == root->name;
+		}) - params.begin();
+		int frame = assignFrameTable[root] - functionNestingTable[root->dec];
+		bool sameScope = frame == 0;
+
+		if(sameScope) sstream << '\t' << VarInstr::StoreLocal(type, index) << '\n';
+		else sstream << '\t' << VarInstr::StoreRelative(type, functionNestingTable[def], index) << '\n';
+	}
+	else
+	{
+		sstream << '\t' << VarInstr::StoreGlobal(type, globalIndexTable[root->dec]) << '\n';
 	}
 
 	return sstream.str();
 }
 
-std::string AssemblyGenerator::Assign(std::shared_ptr<Assignment> root)
+std::string AssemblyGenerator::FunCall(std::shared_ptr<Call> call, bool expr)
 {
 	std::stringstream sstream;
 
-	sstream << Expression(root);
-
-	if(root->dec->IsFamily<GlobalDec>() || root->dec->IsFamily<GlobalDef>())
+	auto funDec = StaticCast<FunctionDec>(call->dec);
+	if(funDec)
 	{
-		sstream << '\t' << VarInstr::StoreGlobal(NodeTypeToInstrType(root->type), globalIndexTable[root->dec]);
-	}
-	else if(root->dec->IsFamily<VarDec>())
-	{
-		sstream << '\t' << VarInstr::StoreLocal(NodeTypeToInstrType(root->type), localTable[root->dec].index);
+		sstream << '\t' << CntrlFlwInstr::InitiateSub(CntrlFlwInstr::Scope::Global) << '\n';
+		for(auto child : call->children) sstream << Expression(child);
+		//!!!!!!!CntrlFlwInstr::JumpExtSub();
+		if(!expr && funDec->header.returnType != Type::Void)
+		{
+			sstream << '\t' << StackInstr::Pop(NodeTypeToInstrType(funDec->header.returnType)) << '\n';
+		}
 	}
 	else
 	{
-		int index = localTable[root->dec].index;
-		int frame = assignFrameTable[root] - localTable[root->dec].frame;
-		sstream << '\t' << VarInstr::StoreRelative(NodeTypeToInstrType(root->type), index, frame);
+		auto funDef = StaticCast<FunctionDef>(call->dec);
+		int funFrame = functionNestingTable[funDef];
+		int callFrame = functionCallTable[call];
+
+		sstream << '\t';
+		if(funFrame == 0) sstream << CntrlFlwInstr::InitiateSub(CntrlFlwInstr::Scope::Global);
+		else if((callFrame - funFrame) == 1 && (Count(funDef, call) > 0)) sstream << CntrlFlwInstr::InitiateSub(CntrlFlwInstr::Scope::Current);
+		else if(funFrame == callFrame) sstream << CntrlFlwInstr::InitiateSub(CntrlFlwInstr::Scope::Local);
+		else sstream << CntrlFlwInstr::InitiateSub(CntrlFlwInstr::Scope::Outer, callFrame - funFrame);
+		sstream << '\n';
+
+		for(auto child : call->children) sstream << Expression(child);
+
+		sstream << '\t' << CntrlFlwInstr::JumpSub(call->children.size(), call->name) << '\n';
+
+		if(!expr && funDef->header.returnType != Type::Void)
+		{
+			sstream << '\t' << StackInstr::Pop(NodeTypeToInstrType(funDef->header.returnType)) << '\n';
+		}
 	}
 
 	return sstream.str();
@@ -122,15 +196,21 @@ std::string AssemblyGenerator::Expression(NodePtr root)
 		{ Operator::Negate, &ArithInstr::Negate }
 	});
 
-	TraverseBreadth<Literal>(root, [&](std::shared_ptr<Literal> literal, NodePtr parent)
-	{
-		if(literal->type == Type::Int) sstream << '\t' << VarInstr::LoadConstant(literal->intValue) << '\n';
-		else if(literal->type == Type::Float) sstream << '\t' << VarInstr::LoadConstant(literal->floatValue) << '\n';
-		else sstream << '\t' << VarInstr::LoadConstant(literal->boolValue) << '\n';
-	});
-
+	NodePtr funcDef;
 	TraverseDepth(root, [&](NodePtr node, NodePtr parent)
 	{
+		if(parent && parent->IsFamily<Call>()) return;
+
+		if(node->IsFamily<FunctionDef>()) funcDef = node;
+
+		auto literal = StaticCast<Literal>(node);
+		if(literal)
+		{
+			if(literal->type == Type::Int) sstream << '\t' << VarInstr::LoadConstant(literal->intValue) << '\n';
+			else if(literal->type == Type::Float) sstream << '\t' << VarInstr::LoadConstant(literal->floatValue) << '\n';
+			else sstream << '\t' << VarInstr::LoadConstant(literal->boolValue) << '\n';
+		}
+
 		auto unOp = StaticCast<UnaryOp>(node);
 		if(unOp) sstream << '\t' << arithOpMap[unOp->op](NodeTypeToInstrType(unOp->type)) << '\n';
 
@@ -138,9 +218,40 @@ std::string AssemblyGenerator::Expression(NodePtr root)
 		if(binOp) sstream << '\t' << arithOpMap[binOp->op](NodeTypeToInstrType(binOp->type)) << '\n';
 
 		auto call = StaticCast<Call>(node);
-		if(call)
-		{
+		if(call) sstream << FunCall(call, true);
 
+		auto id = StaticCast<Identifier>(node);
+		if(id)
+		{
+			Instr::Type type = NodeTypeToInstrType(id->type);
+
+			if(id->dec->IsFamily<VarDec>())
+			{
+				int index = localTable[id->dec].index;
+				int frame = idFrameTable[id] - localTable[id->dec].frame;
+				bool sameScope = frame == 0;
+
+				if(sameScope) sstream << '\t' << VarInstr::LoadLocal(type, index) << '\n';
+				else sstream << '\t' << VarInstr::LoadRelative(type, frame, index) << '\n';
+			}
+			else if(id->dec->IsFamily<FunctionDef>())
+			{
+				auto def = StaticCast<FunctionDef>(id->dec);
+				auto params = def->header.params;
+				int index = std::find_if(params.begin(), params.end(), [&](Param p) -> bool
+				{
+					return p.name == id->name;
+				}) - params.begin();
+				int frame = idFrameTable[root] - functionNestingTable[def];
+				bool sameScope = frame == 0;
+
+				if(sameScope) sstream << '\t' << VarInstr::LoadLocal(type, index) << '\n';
+				else sstream << '\t' << VarInstr::LoadRelative(type, functionNestingTable[def], index) << '\n';
+			}
+			else
+			{
+				sstream << '\t' << VarInstr::LoadGlobal(type, globalIndexTable[id->dec]) << '\n';
+			}
 		}
 	});
 

@@ -25,6 +25,18 @@ void TraverseDepth(NodePtr root, std::function<void(NodePtr, NodePtr)> func, Nod
 	}
 }
 
+int Count(NodePtr root, NodePtr val)
+{
+	int count = 0;
+
+	TraverseBreadth(root, [&](NodePtr node, NodePtr)
+	{
+		if(node == val) count++;
+	});
+
+	return count;
+}
+
 std::string ToJSON(NodePtr root, int depth)
 {
 	std::string str;

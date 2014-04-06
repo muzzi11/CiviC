@@ -1,11 +1,26 @@
-int foo()
+int foo(float a)
 {
-	return 2;
+a = 2.0;
+return 3;
 }
 
 int test(int a, int b)
 {
-	float k = 0.0;
-	int b = 1.0 % 3.0;
-	return i;
+	int i = foo(1.0) + 2 * 3;
+	
+	void local()
+	{
+		void moreLocal()
+		{
+			int m = 1;
+			test(66, 99);
+			local();
+		}
+		
+		moreLocal();
+		local();
+	}
+	
+	foo(2.0);
+	return 0;
 }
