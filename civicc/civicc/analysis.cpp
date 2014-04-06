@@ -106,6 +106,8 @@ void Analyzer::TypeCheckFuncReturn(Nodes::NodePtr node)
 	{
 		for(auto child : returnVal->children)
 			TypeCheck(child, record->type);
+
+		returnVal->type = GetType(returnVal);
 	}
 }
 

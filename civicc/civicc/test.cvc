@@ -1,5 +1,11 @@
+int foo()
+{
+	return 2;
+}
+
 int test(int a, int b)
 {
-	int i = 1 + 2 * 3;
+	int i = foo() + 2 * 3;
+
 	return i;
 }

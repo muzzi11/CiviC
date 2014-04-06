@@ -35,9 +35,10 @@ public:
 	static const std::string Add(Instr::Type type);
 	static const std::string Sub(Instr::Type type);
 	static const std::string Multiply(Instr::Type type);
-	static const std::string Division(Instr::Type type);
-	static const std::string Modulo();
-	static const std::string Negation(Instr::Type type);
+	static const std::string Divide(Instr::Type type);
+	static const std::string Modulo(Instr::Type type);
+	static const std::string Negate(Instr::Type type);
+	static const std::string Not(Instr::Type type);
 	static const std::string Increment(const std::string local, const int constant);
 	static const std::string Decrement(const std::string local, const int constant);
 
