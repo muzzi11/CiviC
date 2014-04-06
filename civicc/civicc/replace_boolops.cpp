@@ -5,7 +5,6 @@
 
 using namespace Nodes;
 
-
 void ReplaceBooleanOperators(NodePtr root)
 {
 	Replace<BinaryOp>(root, [](std::shared_ptr<BinaryOp> binaryOp) -> NodePtr

@@ -489,7 +489,7 @@ bool Parser::Statement()
 	else if(For() && ParenthesesL(true) && Int() && Id(true))
 	{
 		AddVarDec();
-		Assign(); 
+		if (!Assign()) throw ParseException("Missing initialization of loop counter.", tokens[t]);
 		scopes.pop_back(); 
 		Comma(true); Expr(); Step(); ParenthesesR(); Block();
 		return true;
@@ -618,6 +618,8 @@ Nodes::NodePtr Parser::P()
 		Nodes::Operator op = token.reservedSymbol == ReservedSymbol::Not ? Nodes::Operator::Not : Nodes::Operator::Negate;
 		auto node = std::make_shared<Nodes::UnaryOp>(op);
 		node->children.push_back(Expr(q));
+		node->pos = token.pos;
+		node->line = token.line;
 		return node;
 	}
 	else if(ParenthesesL())

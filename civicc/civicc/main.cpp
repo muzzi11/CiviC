@@ -12,7 +12,7 @@
 #include "replace_boolops.h"
 #include "analysis.h"
 #include "assembly.h"
-
+#include "nested_func_renaming.h"
 
 int main(int argc, char* argv[])
 {		
@@ -36,7 +36,7 @@ int main(int argc, char* argv[])
 			while(tokenizer.GetNextToken(token))
 			{
 				tokens.push_back(token);
-				std::cout << token.readString << "\n";
+				//std::cout << token.readString << "\n";
 			}
 
 			std::cout << "\nToken count: " << tokens.size() << "\n";
@@ -50,13 +50,15 @@ int main(int argc, char* argv[])
 			parser.ParseProgram(root);
 
 			SeperateDecAndInit(root);
-			std::cout << TreeToJSON(root) << "\n";
 
 			auto errors = Analyzer().Analyse(root);
 			std::cout << errors;
 			if (errors.size() > 0) return 0;
 
 			ReplaceBooleanOperators(root);
+			RenameNestedFunctions(root);
+
+			std::cout << TreeToJSON(root) << "\n";
 			std::cout << "-------------------------------------\n";
 			std::cout << "Assembly\n";
 			std::cout << "-------------------------------------\n";
