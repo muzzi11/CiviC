@@ -212,7 +212,7 @@ namespace Nodes
 
 	struct Cast : public Node<Cast>
 	{
-		Type type;
+		Type type, castFrom;
 
 		Cast(Type type) : type(type) {}
 		std::string ToString() const override;
@@ -228,9 +228,9 @@ namespace Nodes
 			float floatValue;
 		};
 
-		Literal(bool value) : type(Type::Bool), boolValue(value) {}
-		Literal(int value) : type(Type::Int), intValue(value) {}
-		Literal(float value) : type(Type::Float), floatValue(value) {}
+		explicit Literal(bool value) : type(Type::Bool), boolValue(value) {}
+		explicit Literal(int value) : type(Type::Int), intValue(value) {}
+		explicit Literal(float value) : type(Type::Float), floatValue(value) {}
 		std::string ToString() const override;
 	};
 

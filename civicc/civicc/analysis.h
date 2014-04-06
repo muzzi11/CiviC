@@ -32,6 +32,7 @@ private:
 	void TypeCheckFuncArgs(Nodes::NodePtr);
 	void TypeCheckFuncReturn(Nodes::NodePtr);
 	void TypeCheckUnary(Nodes::NodePtr);
+	void TypeCheckCast(Nodes::NodePtr);
 
 	void CheckGlobalDef(Nodes::NodePtr);
 	void CheckRedefinition(Nodes::NodePtr, std::string name, bool result);

@@ -44,12 +44,14 @@ void AssemblyGenerator::BuildTables(Nodes::NodePtr root)
 {
 	int frame = 0, index = 0;
 	NodePtr prev = root;
-
+	
+	NodePtr curDef = nullptr;
 	TraverseBreadth(root, [&](NodePtr node, NodePtr parent)
 	{
 		auto funDef = StaticCast<FunctionDef>(node);
 		if(funDef)
 		{
+			curDef = funDef;
 			if(prev != parent)
 			{
 				frame++;
@@ -65,7 +67,9 @@ void AssemblyGenerator::BuildTables(Nodes::NodePtr root)
 		if(node->IsFamily<Assignment>()) assignFrameTable[node] = frame;
 		if(node->IsFamily<Identifier>()) idFrameTable[node] = frame;
 		if(node->IsFamily<Call>())
-			functionCallTable[node] = frame;
+		{
+			functionCallTable[node] = curDef && Count(curDef, node) ? frame + 1 : frame;
+		}
 	});
 }
 
@@ -166,7 +170,7 @@ std::string AssemblyGenerator::FunCall(std::shared_ptr<Call> call, bool expr)
 		if(funFrame == 0) sstream << CntrlFlwInstr::InitiateSub(CntrlFlwInstr::Scope::Global);
 		else if((callFrame - funFrame) == 1 && (Count(funDef, call) > 0)) sstream << CntrlFlwInstr::InitiateSub(CntrlFlwInstr::Scope::Current);
 		else if(funFrame == callFrame) sstream << CntrlFlwInstr::InitiateSub(CntrlFlwInstr::Scope::Local);
-		else sstream << CntrlFlwInstr::InitiateSub(CntrlFlwInstr::Scope::Outer, callFrame - funFrame);
+		else sstream << CntrlFlwInstr::InitiateSub(CntrlFlwInstr::Scope::Outer, callFrame - funFrame - 1);
 		sstream << '\n';
 
 		for(auto child : call->children) sstream << Expression(child);
@@ -193,7 +197,13 @@ std::string AssemblyGenerator::Expression(NodePtr root)
 		{ Operator::Divide, &ArithInstr::Divide },
 		{ Operator::Modulo, &ArithInstr::Modulo },
 		{ Operator::Not, &ArithInstr::Not },
-		{ Operator::Negate, &ArithInstr::Negate }
+		{ Operator::Negate, &ArithInstr::Negate },
+		{ Operator::Equal, &CompInstr::Equal },
+		{ Operator::NotEqual, &CompInstr::NotEqual },
+		{ Operator::More, &CompInstr::Greater },
+		{ Operator::MoreEqual, &CompInstr::GreaterEqual },
+		{ Operator::Less, &CompInstr::Less },
+		{ Operator::LessEqual, &CompInstr::LessEqual },
 	});
 
 	NodePtr funcDef;
@@ -219,6 +229,13 @@ std::string AssemblyGenerator::Expression(NodePtr root)
 
 		auto call = StaticCast<Call>(node);
 		if(call) sstream << FunCall(call, true);
+
+		auto cast = StaticCast<Cast>(node);
+		if(cast)
+		{
+			if(cast->type == Type::Int) sstream << '\t' << CastInstr::Float2Int() << '\n';
+			else sstream << '\t' << CastInstr::Int2Float() << '\n';
+		}
 
 		auto id = StaticCast<Identifier>(node);
 		if(id)

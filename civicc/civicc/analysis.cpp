@@ -30,6 +30,7 @@ void Analyzer::TypeCheck(Nodes::NodePtr node)
 	TypeCheckBinOp(node);
 	TypeCheckFuncArgs(node);
 	TypeCheckFuncReturn(node);	
+	TypeCheckCast(node);
 }
 
 void Analyzer::TypeCheckAssigment(Nodes::NodePtr node)
@@ -154,6 +155,12 @@ void Analyzer::TypeCheckFuncReturn(Nodes::NodePtr node)
 		returnVal->type = GetType(returnVal);
 	}
 	returnVal->type = GetType(returnVal);
+}
+
+void Analyzer::TypeCheckCast(Nodes::NodePtr node)
+{
+	auto cast = Nodes::StaticCast<Nodes::Cast>(node);
+	if(cast) cast->castFrom = GetType(cast->children[0]);
 }
 
 Nodes::Type Analyzer::GetType(Nodes::NodePtr node)
