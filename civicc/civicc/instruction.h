@@ -34,7 +34,9 @@ class ArithInstr
 public:	
 	static const std::string Add(Instr::Type type);
 	static const std::string Sub(Instr::Type type);
+	static const std::string Multiply(Instr::Type type);
 	static const std::string Division(Instr::Type type);
+	static const std::string Modulo();
 	static const std::string Negation(Instr::Type type);
 	static const std::string Increment(const std::string local, const int constant);
 	static const std::string Decrement(const std::string local, const int constant);
@@ -136,11 +138,11 @@ public:
 	VarInstr();
 
 	static const std::string LoadLocal(Instr::Type, const int index);	
-	static const std::string LoadRelative(Instr::Type, const int index, const int levels);
+	static const std::string LoadRelative(Instr::Type, const int levels, const int index);
 	static const std::string LoadGlobal(Instr::Type, const int index);
 	
 	static const std::string StoreLocal(Instr::Type, const int index);
-	static const std::string StoreRelative(Instr::Type, const int index, const int levels);
+	static const std::string StoreRelative(Instr::Type, const int levels, const int index);
 	static const std::string StoreGlobal(Instr::Type, const int index);
 	
 	static const std::string LoadConstant(const int value);

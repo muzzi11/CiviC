@@ -29,7 +29,7 @@ Parser::Parser(const std::vector<Token>& tokens) :
 {
 }
 
-void Parser::ParseProgram(Node::NodePtr node)
+void Parser::ParseProgram(Nodes::NodePtr node)
 {
 	root = node;
 	while(t < tokens.size())
@@ -51,16 +51,16 @@ bool IsType(const Token& t)
 	return t == ReservedWord::Bool || t == ReservedWord::Int || t == ReservedWord::Float || t == ReservedWord::Void;
 }
 
-Node::Type TokenToType(const Token& t)
+Nodes::Type TokenToType(const Token& t)
 {
-	if(t == ReservedWord::Bool) return Node::Type::Bool;
-	else if(t == ReservedWord::Int) return Node::Type::Int;
-	else if(t == ReservedWord::Float) return Node::Type::Float;
-	else if(t == ReservedWord::Void) return Node::Type::Void;
-	else return Node::Type::None;
+	if(t == ReservedWord::Bool) return Nodes::Type::Bool;
+	else if(t == ReservedWord::Int) return Nodes::Type::Int;
+	else if(t == ReservedWord::Float) return Nodes::Type::Float;
+	else if(t == ReservedWord::Void) return Nodes::Type::Void;
+	else return Nodes::Type::None;
 }
 
-void ExtractParameters(int start, const std::vector<Token>& stack, std::vector<Node::Param>& out)
+void ExtractParameters(int start, const std::vector<Token>& stack, std::vector<Nodes::Param>& out)
 {
 	for(size_t i = start; i < stack.size(); ++i)
 	{
@@ -86,7 +86,7 @@ void ExtractParameters(int start, const std::vector<Token>& stack, std::vector<N
 
 void Parser::AddFunctionDec()
 {
-	auto node = std::make_shared<Node::FunctionDec>();
+	auto node = std::make_shared<Nodes::FunctionDec>();
 
 	node->header.returnType = TokenToType(stack[0]);
 	node->header.name = stack[1].readString;
@@ -100,9 +100,9 @@ void Parser::AddFunctionDec()
 
 void Parser::AddGlobalDec()
 {
-	auto node = std::make_shared<Node::GlobalDec>();
+	auto node = std::make_shared<Nodes::GlobalDec>();
 
-	std::vector<Node::Param> temp;
+	std::vector<Nodes::Param> temp;
 	ExtractParameters(0, stack, temp);
 	node->param = temp[0];
 
@@ -112,7 +112,7 @@ void Parser::AddGlobalDec()
 
 void Parser::AddFunctionDef()
 {
-	auto node = std::make_shared<Node::FunctionDef>();
+	auto node = std::make_shared<Nodes::FunctionDef>();
 
 	node->exp = stack[0] == ReservedWord::Export;
 	int i = node->exp ? 1 : 0;
@@ -130,7 +130,7 @@ void Parser::AddFunctionDef()
 
 void Parser::AddGlobalDef()
 {
-	auto node = std::make_shared<Node::GlobalDef>();
+	auto node = std::make_shared<Nodes::GlobalDef>();
 	
 	node->exp = stack[0] == ReservedWord::Export;
 	int i = node->exp ? 1 : 0;
@@ -139,7 +139,7 @@ void Parser::AddGlobalDef()
 	node->pos = stack[i + 1].pos;
 	node->line = stack[i + 1].line;
 
-	if(!scopes.empty() && scopes.back()->Family() == Node::ArrayExpr::Family())
+	if(!scopes.empty() && scopes.back()->Family() == Nodes::ArrayExpr::Family())
 	{
 		node->var.array = true;
 		node->children.push_back(scopes.back());
@@ -153,8 +153,8 @@ void Parser::AddGlobalDef()
 
 void Parser::AddReturn()
 {
-	auto node = std::make_shared<Node::Return>();
-	auto funDef = std::static_pointer_cast<Node::FunctionDef>(scopes.back());
+	auto node = std::make_shared<Nodes::Return>();
+	auto funDef = std::static_pointer_cast<Nodes::FunctionDef>(scopes.back());
 	node->functionName = funDef->header.name;
 	scopes.back()->children.push_back(node);
 	scopes.push_back(node);
@@ -162,14 +162,14 @@ void Parser::AddReturn()
 
 void Parser::AddVarDec()
 {
-	auto node = std::make_shared<Node::VarDec>();
+	auto node = std::make_shared<Nodes::VarDec>();
 
 	node->var.type = TokenToType(stack[0]);
 	node->var.name = stack[1].readString;
 	node->pos = stack[1].pos;
 	node->line = stack[1].line;
 
-	if(scopes.back()->Family() == Node::ArrayExpr::Family())
+	if(scopes.back()->Family() == Nodes::ArrayExpr::Family())
 	{
 		node->var.array = true;
 		node->children.push_back(scopes.back());
@@ -183,11 +183,11 @@ void Parser::AddVarDec()
 
 void Parser::AddAssignment()
 {
-	auto node = std::make_shared<Node::Assignment>(stack[0].readString);
+	auto node = std::make_shared<Nodes::Assignment>(stack[0].readString);
 	node->pos = stack[0].pos;
 	node->line = stack[0].line;
 
-	if(scopes.back()->Family() == Node::ArrayExpr::Family())
+	if(scopes.back()->Family() == Nodes::ArrayExpr::Family())
 	{
 		node->children.push_back(scopes.back());
 		scopes.pop_back();
@@ -198,9 +198,9 @@ void Parser::AddAssignment()
 	stack.clear();
 }
 
-std::shared_ptr<Node::Call> Parser::AddCall()
+std::shared_ptr<Nodes::Call> Parser::AddCall()
 {
-	auto node = std::make_shared<Node::Call>();
+	auto node = std::make_shared<Nodes::Call>();
 	node->name = stack[0].readString;
 	node->pos = stack[0].pos;
 	node->line = stack[0].line;
@@ -213,35 +213,35 @@ std::shared_ptr<Node::Call> Parser::AddCall()
 
 void Parser::AddIf()
 {
-	auto node = std::make_shared<Node::If>();
+	auto node = std::make_shared<Nodes::If>();
 	scopes.back()->children.push_back(node);
 	scopes.push_back(node);
 }
 
 void Parser::AddElse()
 {
-	auto node = std::make_shared<Node::Else>();
+	auto node = std::make_shared<Nodes::Else>();
 	scopes.back()->children.push_back(node);
 	scopes.push_back(node);
 }
 
 void Parser::AddWhile()
 {
-	auto node = std::make_shared<Node::While>();
+	auto node = std::make_shared<Nodes::While>();
 	scopes.back()->children.push_back(node);
 	scopes.push_back(node);
 }
 
 void Parser::AddDoWhile()
 {
-	auto node = std::make_shared<Node::DoWhile>();
+	auto node = std::make_shared<Nodes::DoWhile>();
 	scopes.back()->children.push_back(node);
 	scopes.push_back(node);
 }
 
 void Parser::AddFor()
 {
-	auto node = std::make_shared<Node::For>();
+	auto node = std::make_shared<Nodes::For>();
 	scopes.back()->children.push_back(node);
 	scopes.push_back(node);
 }
@@ -425,7 +425,7 @@ bool Parser::ArrayExpr()
 	if(BracketL())
 	{
 		stack.pop_back();
-		scopes.push_back(std::make_shared<Node::ArrayExpr>());
+		scopes.push_back(std::make_shared<Nodes::ArrayExpr>());
 		Expr(); Exprs(); BracketR();
 		stack.pop_back();
 		return true;
@@ -508,7 +508,7 @@ bool Parser::Step()
 	if(Comma() && Expr());
 	else
 	{
-		auto literal = std::make_shared<Node::Literal>(1);
+		auto literal = std::make_shared<Nodes::Literal>(1);
 		literal->pos = tokens[t].pos;
 		literal->line = tokens[t].line;
 		scopes.back()->children.push_back(literal);
@@ -559,23 +559,23 @@ bool Parser::AssignOpt()
 	return Assign() || true;
 }
 
-Node::Operator TokenToBinaryOp(const Token& token)
+Nodes::Operator TokenToBinaryOp(const Token& token)
 {
-	static const std::unordered_map<ReservedSymbol, Node::Operator> map(
+	static const std::unordered_map<ReservedSymbol, Nodes::Operator> map(
 	{
-		{ ReservedSymbol::Plus, Node::Operator::Add },
-		{ ReservedSymbol::Minus, Node::Operator::Subtract },
-		{ ReservedSymbol::Multiply, Node::Operator::Multiply },
-		{ ReservedSymbol::Divide, Node::Operator::Divide },
-		{ ReservedSymbol::Modulo, Node::Operator::Modulo },
-		{ ReservedSymbol::Equals, Node::Operator::Equal },
-		{ ReservedSymbol::Unequals, Node::Operator::NotEqual },
-		{ ReservedSymbol::Less, Node::Operator::Less },
-		{ ReservedSymbol::LessEqual, Node::Operator::LessEqual },
-		{ ReservedSymbol::More, Node::Operator::More },
-		{ ReservedSymbol::MoreEqual, Node::Operator::MoreEqual },
-		{ ReservedSymbol::And, Node::Operator::And },
-		{ ReservedSymbol::Or, Node::Operator::Or }
+		{ ReservedSymbol::Plus, Nodes::Operator::Add },
+		{ ReservedSymbol::Minus, Nodes::Operator::Subtract },
+		{ ReservedSymbol::Multiply, Nodes::Operator::Multiply },
+		{ ReservedSymbol::Divide, Nodes::Operator::Divide },
+		{ ReservedSymbol::Modulo, Nodes::Operator::Modulo },
+		{ ReservedSymbol::Equals, Nodes::Operator::Equal },
+		{ ReservedSymbol::Unequals, Nodes::Operator::NotEqual },
+		{ ReservedSymbol::Less, Nodes::Operator::Less },
+		{ ReservedSymbol::LessEqual, Nodes::Operator::LessEqual },
+		{ ReservedSymbol::More, Nodes::Operator::More },
+		{ ReservedSymbol::MoreEqual, Nodes::Operator::MoreEqual },
+		{ ReservedSymbol::And, Nodes::Operator::And },
+		{ ReservedSymbol::Or, Nodes::Operator::Or }
 	});
 
 	return map.at(token.reservedSymbol);
@@ -589,7 +589,7 @@ bool Parser::Expr()
 	return true;
 }
 
-Node::NodePtr Parser::Expr(int precedence)
+Nodes::NodePtr Parser::Expr(int precedence)
 {
 	auto left = P();
 
@@ -599,7 +599,7 @@ Node::NodePtr Parser::Expr(int precedence)
 		const Token& token = tokens[t++];
 
 		auto right = Expr(q);
-		auto op = std::make_shared<Node::BinaryOp>(TokenToBinaryOp(token));
+		auto op = std::make_shared<Nodes::BinaryOp>(TokenToBinaryOp(token));
 		op->children.push_back(left);
 		op->children.push_back(right);
 		
@@ -609,14 +609,14 @@ Node::NodePtr Parser::Expr(int precedence)
 	return left;
 }
 
-Node::NodePtr Parser::P()
+Nodes::NodePtr Parser::P()
 {
 	if(UnaryOp())
 	{
 		int q = Precedence(t);
 		const Token& token = tokens[t++];
-		Node::Operator op = token.reservedSymbol == ReservedSymbol::Not ? Node::Operator::Not : Node::Operator::Negate;
-		auto node = std::make_shared<Node::UnaryOp>(op);
+		Nodes::Operator op = token.reservedSymbol == ReservedSymbol::Not ? Nodes::Operator::Not : Nodes::Operator::Negate;
+		auto node = std::make_shared<Nodes::UnaryOp>(op);
 		node->children.push_back(Expr(q));
 		return node;
 	}
@@ -627,7 +627,7 @@ Node::NodePtr Parser::P()
 			const Token& token = tokens[t++];
 			if(token == ReservedWord::Void) throw ParseException("Can not cast to 'void'", token);
 			ParenthesesR();
-			auto node = std::make_shared<Node::Cast>(TokenToType(token));
+			auto node = std::make_shared<Nodes::Cast>(TokenToType(token));
 			node->children.push_back(Expr(unaryPrecedence));
 			return node;
 		}
@@ -639,7 +639,7 @@ Node::NodePtr Parser::P()
 	{
 		stack.clear();
 
-		auto array = std::make_shared<Node::ArrayExpr>();
+		auto array = std::make_shared<Nodes::ArrayExpr>();
 
 		do
 		{
@@ -653,10 +653,10 @@ Node::NodePtr Parser::P()
 	else if(Literal())
 	{
 		const Token& token = tokens[t++];
-		std::shared_ptr<Node::Literal> literal;
-		if(token.type == TokenType::BoolType) literal = std::make_shared<Node::Literal>(token.boolValue);
-		else if(token.type == TokenType::IntType) literal = std::make_shared<Node::Literal>(token.intValue);
-		else literal = std::make_shared<Node::Literal>(token.floatValue);
+		std::shared_ptr<Nodes::Literal> literal;
+		if(token.type == TokenType::BoolType) literal = std::make_shared<Nodes::Literal>(token.boolValue);
+		else if(token.type == TokenType::IntType) literal = std::make_shared<Nodes::Literal>(token.intValue);
+		else literal = std::make_shared<Nodes::Literal>(token.floatValue);
 		literal->line = token.line;
 		literal->pos = token.pos;
 		return literal;
@@ -668,7 +668,7 @@ Node::NodePtr Parser::P()
 
 		if(ParenthesesL())
 		{
-			auto call = std::make_shared<Node::Call>();
+			auto call = std::make_shared<Nodes::Call>();
 			call->name = id;
 			call->pos = tokens[t].pos;
 			call->line = tokens[t].line;
@@ -687,8 +687,8 @@ Node::NodePtr Parser::P()
 		}
 		else if(BracketL())
 		{
-			auto node = std::make_shared<Node::Identifier>(id);
-			auto array = std::make_shared<Node::ArrayExpr>();
+			auto node = std::make_shared<Nodes::Identifier>(id);
+			auto array = std::make_shared<Nodes::ArrayExpr>();
 			node->children.push_back(array);
 			node->line = tokens[t].line;
 			node->pos = tokens[t].pos;
@@ -707,7 +707,7 @@ Node::NodePtr Parser::P()
 			return node;
 		}
 
-		auto node = std::make_shared<Node::Identifier>(id);
+		auto node = std::make_shared<Nodes::Identifier>(id);
 		node->line = tokens[t].line;
 		node->pos = tokens[t].pos;
 		return node;

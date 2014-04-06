@@ -2,4 +2,4 @@
 
 #include "node.h"
 
-void ReplaceBooleanOperators(Node::NodePtr root);
+void ReplaceBooleanOperators(Nodes::NodePtr root);

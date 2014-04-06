@@ -3,7 +3,7 @@
 #include "replace_boolops.h"
 #include "traverse.h"
 
-using namespace Node;
+using namespace Nodes;
 
 
 void ReplaceBooleanOperators(NodePtr root)
@@ -32,6 +32,7 @@ void ReplaceBooleanOperators(NodePtr root)
 		}
 		else if(binaryOp->op == Operator::Multiply && binaryOp->type == Type::Bool)
 		{
+			// a * b = a ? b : (b ? false : false)
 			auto first = std::make_shared<Ternary>();
 			auto second = std::make_shared<Ternary>();
 
@@ -46,6 +47,7 @@ void ReplaceBooleanOperators(NodePtr root)
 		}
 		else if(binaryOp->op == Operator::Add && binaryOp->type == Type::Bool)
 		{
+			// a + b = a ? (b ? true : true) : b
 			auto first = std::make_shared<Ternary>();
 			auto second = std::make_shared<Ternary>();
 

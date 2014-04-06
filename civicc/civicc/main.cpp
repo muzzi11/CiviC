@@ -11,6 +11,7 @@
 #include "seperation.h"
 #include "replace_boolops.h"
 #include "analysis.h"
+#include "assembly.h"
 
 
 int main(int argc, char* argv[])
@@ -28,6 +29,7 @@ int main(int argc, char* argv[])
 		Token token;
 		std::vector<Token> tokens;
 		Parser parser(tokens);
+		AssemblyGenerator assemblyGenerator;
 
 		if(file.is_open())
 		{
@@ -44,7 +46,7 @@ int main(int argc, char* argv[])
 
 		try
 		{
-			auto root = std::make_shared<Node::BaseNode>();
+			auto root = std::make_shared<Nodes::Root>();
 			parser.ParseProgram(root);
 
 			SeperateDecAndInit(root);
@@ -52,6 +54,10 @@ int main(int argc, char* argv[])
 			ReplaceBooleanOperators(root);
 
 			std::cout << TreeToJSON(root) << "\n";
+			std::cout << "-------------------------------------\n";
+			std::cout << "Assembly\n";
+			std::cout << "-------------------------------------\n";
+			std::cout << assemblyGenerator.Generate(root) << "\n";
 		}
 		catch(ParseException e)
 		{

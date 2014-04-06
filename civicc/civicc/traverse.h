@@ -9,11 +9,11 @@
 
 // bool func(node, parent) - return false to terminate traversel
 template<class T>
-void TraverseBreadth(Node::NodePtr root, std::function<bool(std::shared_ptr<T>, Node::NodePtr)> func, Node::NodePtr parent = nullptr)
+void TraverseBreadth(Nodes::NodePtr root, std::function<bool(std::shared_ptr<T>, Nodes::NodePtr)> func, Nodes::NodePtr parent = nullptr)
 {
 	if(root)
 	{
-		if(root->Family() == T::Family() && parent == nullptr)
+		if(root->Family() & T::Family() && parent == nullptr)
 		{
 			if(!func(std::static_pointer_cast<T>(root), parent)) return;
 		}
@@ -33,21 +33,24 @@ void TraverseBreadth(Node::NodePtr root, std::function<bool(std::shared_ptr<T>, 
 }
 
 template<class T>
-void TraverseDepth(Node::NodePtr root, std::function<bool(std::shared_ptr<T>, Node::NodePtr)> func, Node::NodePtr parent = nullptr)
+void TraverseDepth(Nodes::NodePtr root, std::function<bool(std::shared_ptr<T>, Nodes::NodePtr)> func, Nodes::NodePtr parent = nullptr)
 {
 	if(root)
 	{
 		size_t i = 0;
 		while(i < root->children.size()) TraverseDepth(root->children[i++], func, root);
-		if(root->Family() == T::Family())
+		if(root->Family() & T::Family())
 		{
 			if(!func(std::static_pointer_cast<T>(root), parent)) return;
 		}
 	}
 }
 
+void TraverseBreadth(Nodes::NodePtr root, std::function<bool(Nodes::NodePtr, Nodes::NodePtr)> func, Nodes::NodePtr parent = nullptr);
+void TraverseDepth(Nodes::NodePtr root, std::function<bool(Nodes::NodePtr, Nodes::NodePtr)> func, Nodes::NodePtr parent = nullptr);
+
 template<class T>
-void Replace(Node::NodePtr& root, std::function<Node::NodePtr(std::shared_ptr<T>)> func)
+void Replace(Nodes::NodePtr& root, std::function<Nodes::NodePtr(std::shared_ptr<T>)> func)
 {
 	if(root)
 	{
@@ -60,7 +63,7 @@ void Replace(Node::NodePtr& root, std::function<Node::NodePtr(std::shared_ptr<T>
 // -1 for unlimited depth
 /*
 template<class T>
-void Traverse(Node::NodePtr root, std::function<void(std::shared_ptr<T>)> func, int depth)
+void Traverse(Nodes::NodePtr root, std::function<void(std::shared_ptr<T>)> func, int depth)
 {
 	if(root)
 	{
@@ -77,19 +80,20 @@ void Traverse(Node::NodePtr root, std::function<void(std::shared_ptr<T>)> func, 
 			}
 		}
 	}
-}
+}*/
 
 template<class T>
-int Count(Node::NodePtr root, int depth = -1)
+int Count(Nodes::NodePtr root)
 {
 	int count = 0;
 
-	Traverse<T>(root, [&](std::shared_ptr<T>)
+	TraverseBreadth<T>(root, [&](std::shared_ptr<T>, NodePtr)
 	{
 		count++;
-	}, depth);
+		return true;
+	});
 
 	return count;
-}*/
+}
 
-std::string TreeToJSON(Node::NodePtr root);
+std::string TreeToJSON(Nodes::NodePtr root);

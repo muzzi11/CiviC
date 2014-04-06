@@ -6,7 +6,7 @@
 #include "seperation.h"
 #include "traverse.h"
 
-using namespace Node;
+using namespace Nodes;
 
 
 void SeperateVarDecFromInit(NodePtr root)

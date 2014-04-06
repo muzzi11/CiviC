@@ -2,7 +2,7 @@
 
 #include "node.h"
 
-std::string Node::TypeToString(Type type)
+std::string Nodes::TypeToString(Type type)
 {
 	static const std::unordered_map<Type, std::string> map(
 	{
@@ -15,17 +15,17 @@ std::string Node::TypeToString(Type type)
 	return map.at(type);
 }
 
-using namespace Node;
+using namespace Nodes;
 
-int BaseNode::familyCounter_ = 0;
-std::unordered_map<int, std::string> BaseNode::familyNames_(1);
+uint32_t BaseNode::familyCounter_ = 0;
+std::unordered_map<uint32_t, std::string> BaseNode::familyNames_(1);
 
 std::string BaseNode::ToString() const
 {
 	return "";
 }
 
-int BaseNode::Family() const
+uint32_t BaseNode::Family() const
 {
 	return family_;
 }

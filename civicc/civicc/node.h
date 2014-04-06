@@ -4,11 +4,12 @@
 #include <string>
 #include <vector>
 #include <unordered_map>
-#include <typeindex>
+#include <cinttypes>
+#include <cassert>
 
 #include "token.h"
 
-namespace Node
+namespace Nodes
 {
 	enum class Type
 	{
@@ -46,19 +47,24 @@ namespace Node
 	class BaseNode
 	{
 	public:
+		int line, pos;
 		std::vector<NodePtr> children;
 
 		virtual std::string ToString() const;
 
-		int Family() const;
+		uint32_t Family() const;
 		std::string FamilyName() const;
 
-		int line, pos;
+		template<class T>
+		bool IsFamily() const
+		{
+			return Family() == T::Family();
+		}
 
 	protected:
-		int family_;
-		static int familyCounter_;
-		static std::unordered_map<int, std::string> familyNames_;
+		uint32_t family_ = ~0;
+		static uint32_t familyCounter_;
+		static std::unordered_map<uint32_t, std::string> familyNames_;
 	};
 
 	template<class T>
@@ -70,9 +76,10 @@ namespace Node
 			familyNames_[family_] = typeid(T).name();
 		}
 
-		static int Family()
+		static int32_t Family()
 		{
-			static int family = BaseNode::familyCounter_++;
+			assert(BaseNode::familyCounter_ < 32 && "Number of node types exceeded maximum of 32");
+			static uint32_t family = (1 << BaseNode::familyCounter_++);
 			return family;
 		}
 	};
@@ -105,6 +112,10 @@ namespace Node
 		int pos, line;
 		
 		std::string ToString() const;
+	};
+
+	struct Root : public Node<Root>
+	{
 	};
 
 	struct FunctionDec : public Node<FunctionDec>
@@ -154,6 +165,8 @@ namespace Node
 	struct Assignment : public Node<Assignment>
 	{
 		std::string name;
+		NodePtr dec;
+		Type type;
 
 		Assignment(const std::string& name) : name(name) {}
 		std::string ToString() const override;
@@ -184,6 +197,7 @@ namespace Node
 	struct UnaryOp : public Node<UnaryOp>
 	{
 		Operator op;
+		Type type;
 
 		UnaryOp(Operator op) : op(op) {}
 		std::string ToString() const override;

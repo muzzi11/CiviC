@@ -74,6 +74,29 @@ const std::string ArithInstr::Add(Instr::Type type)
 	return (type == Instr::Int) ? iAdd : fAdd;
 }
 
+const std::string ArithInstr::Sub(Instr::Type type)
+{
+	assert(type == Instr::Int || type == Instr::Float);
+	return (type == Instr::Int) ? iSub : fSub;
+}
+
+const std::string ArithInstr::Multiply(Instr::Type type)
+{
+	assert(type == Instr::Int || type == Instr::Float);
+	return (type == Instr::Int) ? iMul : fMul;
+}
+
+const std::string ArithInstr::Division(Instr::Type type)
+{
+	assert(type == Instr::Int || type == Instr::Float);
+	return (type == Instr::Int) ? iDiv : fDiv;
+}
+
+const std::string ArithInstr::Modulo()
+{
+	return iRem;
+}
+
 const std::string ArithInstr::Negation(Instr::Type type)
 {
 	assert(type == Instr::Int || type == Instr::Float);
@@ -288,7 +311,7 @@ const std::string VarInstr::StoreLocal(Instr::Type type, const int index)
 	return Instr::ParseInstr(instr, index);
 }
 
-const std::string VarInstr::LoadRelative(Instr::Type type, const int index, const int levels)
+const std::string VarInstr::LoadRelative(Instr::Type type, const int levels, const int index)
 {
 	assert(type == Instr::Int || type == Instr::Float || type == Instr::Bool || type == Instr::Array);
 	std::string instr;
@@ -297,10 +320,10 @@ const std::string VarInstr::LoadRelative(Instr::Type type, const int index, cons
 	else if (type == Instr::Bool) instr = bLoadN;
 	else instr = aLoadN;
 
-	return Instr::ParseInstr(instr, index, levels);
+	return Instr::ParseInstr(instr, levels, index);
 }
 
-const std::string VarInstr::StoreRelative(Instr::Type type, const int index, const int levels)
+const std::string VarInstr::StoreRelative(Instr::Type type, const int levels, const int index)
 {
 	assert(type == Instr::Int || type == Instr::Float || type == Instr::Bool);
 	std::string instr;
@@ -308,7 +331,7 @@ const std::string VarInstr::StoreRelative(Instr::Type type, const int index, con
 	else if (type == Instr::Float) instr = fStoreN;
 	else instr = bStoreN;
 
-	return Instr::ParseInstr(instr, index, levels);
+	return Instr::ParseInstr(instr, levels, index);
 }
 
 const std::string VarInstr::LoadGlobal(Instr::Type type, const int index)
@@ -338,11 +361,11 @@ const std::string VarInstr::StoreGlobal(Instr::Type type, const int index)
 const std::string VarInstr::LoadConstant(const int value)
 {
 	std::stringstream sstream;
-	if (value >= 0 && value <= 1)
+/*	if (value >= 0 && value <= 1)
 	{
 		sstream << iLoadC << "_" << value;
 		return sstream.str();
-	}
+	}*/
 	if (value == -1)
 	{
 		sstream << iLoadC << "_m1";
