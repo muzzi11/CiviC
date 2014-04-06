@@ -105,10 +105,12 @@ void SeperateForLoopInduction(NodePtr root)
 		upperVar->var.type = Type::Int;
 		upperVar->var.name = "_U" + lowerVar->var.name;
 		upperAss->children.push_back(forLoop->children[2]);
+		upperAss->name = upperVar->var.name;
 		stepVar->immutable = true;
 		stepVar->var.type = Type::Int;
 		stepVar->var.name = "_S" + lowerVar->var.name;
 		stepAss->children.push_back(forLoop->children[3]);
+		stepAss->name = stepVar->var.name;
 
 		map[parent].push_back(forLoop);
 		map[parent].push_back(lowerVar);
