@@ -9,7 +9,7 @@ Analyzer::Analyzer()
 	sheaf.InitializeScope();
 }
 
-void Analyzer::Analyse(Nodes::NodePtr root, bool checkGlobalDef)
+std::string Analyzer::Analyse(Nodes::NodePtr root, bool checkGlobalDef)
 {
 	if (!root->children.empty())
 	{
@@ -19,27 +19,28 @@ void Analyzer::Analyse(Nodes::NodePtr root, bool checkGlobalDef)
 			TypeCheck(child);
 		}
 	}
+	return errors.str();
 }
 
 void Analyzer::TypeCheck(Nodes::NodePtr node)
 {
-	if (node->Family() == Nodes::Assignment::Family())
+	if (node->IsFamily<Nodes::Assignment>())
 	{
 		TypeCheckAssigment(node);
 	}
-	else if(node->Family() == Nodes::UnaryOp::Family())
+	else if (node->IsFamily<Nodes::UnaryOp>())
 	{
 		TypeCheckUnary(node);
 	}
-	else if (node->Family() == Nodes::BinaryOp::Family())
+	else if (node->IsFamily<Nodes::BinaryOp>())
 	{
 		TypeCheckBinOp(node);
 	}
-	else if (node->Family() == Nodes::Call::Family())
+	else if (node->IsFamily<Nodes::Call>())
 	{
 		TypeCheckFuncArgs(node);
 	}
-	else if (node->Family() == Nodes::Return::Family())
+	else if (node->IsFamily<Nodes::Return>())
 	{
 		TypeCheckFuncReturn(node);
 	}
@@ -53,8 +54,8 @@ void Analyzer::TypeCheckAssigment(Nodes::NodePtr node)
 	{
 		if (record->immutable && record->initialized)
 		{
-			std::cout << "The identifier " << ass->name << " is immutable at line " << node->line << " column " << node->pos << std::endl;
-
+			PrintErrorInfo(node->pos, node->line);
+			errors << "The identifier " << ass->name << " is immutable" << std::endl;
 		}
 		else
 		{
@@ -75,14 +76,26 @@ void Analyzer::TypeCheckBinOp(Nodes::NodePtr node)
 
 	auto leftType = GetType(left);
 	auto rightType = GetType(right);
-	if (leftType != rightType) std::cout << "Operator types differ at line " << left->line << " column " << left->pos << std::endl;
-	else binOp->type = leftType;
+	if (leftType != rightType)
+	{
+		PrintErrorInfo(left->pos, left->line);
+		errors << "The operator's operands are of different types" << std::endl;
+	}
+	else if (binOp->op == Nodes::Operator::Modulo && (leftType != Nodes::Type::Int && leftType != Nodes::Type::Int))
+	{
+		PrintErrorInfo(left->pos, left->line);
+		errors << "Both operands of the modulo operator need to be of type int." << std::endl;
+	}
+	else
+	{
+		binOp->type = leftType;
+	}
 }
 
 void Analyzer::TypeCheckUnary(Nodes::NodePtr node)
 {
 	auto unOp = std::static_pointer_cast<Nodes::UnaryOp>(node);
-	unOp->type = GetType(unOp->children[0]);
+	unOp->type = GetType(unOp);
 }
 
 void Analyzer::TypeCheckFuncArgs(Nodes::NodePtr node)
@@ -94,7 +107,8 @@ void Analyzer::TypeCheckFuncArgs(Nodes::NodePtr node)
 	{
 		if (record->funcArgs.size() != funcCall->children.size())
 		{
-			std::cout << "Arg count does not match function definition at line " << node->line << " column " << node->pos << std::endl;
+			PrintErrorInfo(node->pos, node->line);
+			errors << "Arg count does not match function definition" << std::endl;
 			return;
 		}
 		for (size_t i = 0; i < funcCall->children.size(); ++i)
@@ -113,6 +127,7 @@ void Analyzer::TypeCheckFuncReturn(Nodes::NodePtr node)
 		for(auto child : returnVal->children)
 			TypeCheck(child, record->type);
 	}
+	returnVal->type = GetType(returnVal);
 }
 
 Nodes::Type Analyzer::GetType(Nodes::NodePtr node)
@@ -161,32 +176,43 @@ void Analyzer::TypeCheck(Nodes::NodePtr node, Nodes::Type type)
 	{
 		auto lit = std::static_pointer_cast<Nodes::Literal>(node);
 		if (lit->type != type)
-			std::cout << "Literal is not of type " << Nodes::TypeToString(type) << " at line " << lit->line << " column " << lit->pos << std::endl;
+		{
+			PrintErrorInfo(node->pos, node->line);
+			errors << "Literal is not of type " << Nodes::TypeToString(type) << std::endl;
+		}
 	}
 	else if(node->IsFamily<Nodes::Identifier>())
 	{
 		auto id = std::static_pointer_cast<Nodes::Identifier>(node);
 		auto record = sheaf.LookUp(id->name);
 		if (record && record->type != type)
-			std::cout << "Identifier " << id->name << " is not of type " << Nodes::TypeToString(type) << " at line " << node->line << " column " << node->pos << std::endl;
+		{
+			PrintErrorInfo(node->pos, node->line);
+			errors << "Identifier " << id->name << " is not of type " << Nodes::TypeToString(type) << std::endl;
+		}
 	}
 	else if(node->IsFamily<Nodes::Cast>())
 	{
 		auto cast = std::static_pointer_cast<Nodes::Cast>(node);
 		if (cast->type != type)
-			std::cout << "Cast is not of type " << Nodes::TypeToString(type) << std::endl;
+		{
+			PrintErrorInfo(node->pos, node->line);
+			errors << "Cast is not of type " << Nodes::TypeToString(type) << std::endl;
+		}
 	}
 	else if(node->IsFamily<Nodes::Call>())
 	{
 		auto call = std::static_pointer_cast<Nodes::Call>(node);
 		auto record = sheaf.LookUp(call->name);
 		if (record && record->type != type)
-			std::cout << "Function call " << call->name << " does not return of type " << Nodes::TypeToString(type) << " at line " << node->line << " column " << node->pos << std::endl;
+		{
+			PrintErrorInfo(node->pos, node->line);
+			errors << "Function call " << call->name << " does not return of type " << Nodes::TypeToString(type) << std::endl;
+		}
 	}
 	else if(node->IsFamily<Nodes::ArrayExpr>())
 	{
-		auto arrayExpr = std::static_pointer_cast<Nodes::Call>(node);
-	
+		auto arrayExpr = std::static_pointer_cast<Nodes::Call>(node);	
 	}
 }
 
@@ -305,9 +331,14 @@ void Analyzer::LookUpCall(Nodes::NodePtr node)
 	auto funCall = std::static_pointer_cast<Nodes::Call>(node);
 	auto record = sheaf.LookUp(funCall->name);
 	if (!record)
-		std::cout << "Unkown function " << funCall->name << " at line " << node->line << " column " << node->pos << std::endl;
+	{
+		PrintErrorInfo(node->pos, node->line);
+		errors << "Unkown function " << funCall->name << std::endl;
+	}
 	else
+	{
 		funCall->decPtr = record->decPtr;
+	}
 }
 
 void Analyzer::LookUpIdentifier(Nodes::NodePtr node)
@@ -315,9 +346,14 @@ void Analyzer::LookUpIdentifier(Nodes::NodePtr node)
 	auto identifier = std::static_pointer_cast<Nodes::Identifier>(node);
 	auto record = sheaf.LookUp(identifier->name);
 	if (!record)
-		std::cout << "Unkown identifier " << identifier->name << " at line " << node->line << " column " << node->pos << std::endl;
+	{
+		PrintErrorInfo(node->pos, node->line);
+		errors << "Unkown identifier " << identifier->name << std::endl;
+	}
 	else
+	{
 		identifier->defOrDec = record->decPtr;
+	}
 }
 
 void Analyzer::LookUpAssignment(Nodes::NodePtr node)
@@ -329,7 +365,11 @@ void Analyzer::LookUpAssignment(Nodes::NodePtr node)
 		assignment->dec = record->decPtr;
 		assignment->type = record->type;
 	}
-	else std::cout << "Unknown identifier " << assignment->name << " at line " << node->line << " column " << node->pos << std::endl;
+	else
+	{
+		PrintErrorInfo(node->pos, node->line);
+		errors << "Unknown identifier " << assignment->name << std::endl;
+	}
 }
 
 void Analyzer::ProcesInitFunc(std::shared_ptr<Nodes::FunctionDef> funcDef)
@@ -348,5 +388,13 @@ void Analyzer::CheckGlobalDef(Nodes::NodePtr node)
 {	
 	auto identifier = std::static_pointer_cast<Nodes::Identifier>(node);
 	if (std::find(globalDefs.begin(), globalDefs.end(), identifier->name) != globalDefs.end())
-		std::cout << "Unkown identifier " << identifier->name << " at line " << node->line << " column " << node->pos << std::endl;
+	{
+		PrintErrorInfo(node->pos, node->line);
+		errors << "Unkown identifier " << identifier->name << std::endl;
+	}
+}
+
+void Analyzer::PrintErrorInfo(const int pos, const int line)
+{
+	errors << "Error at line " << line << " column " << pos << ": ";
 }

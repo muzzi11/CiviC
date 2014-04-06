@@ -50,10 +50,13 @@ int main(int argc, char* argv[])
 			parser.ParseProgram(root);
 
 			SeperateDecAndInit(root);
-			Analyzer().Analyse(root);
-			ReplaceBooleanOperators(root);
-
 			std::cout << TreeToJSON(root) << "\n";
+
+			auto errors = Analyzer().Analyse(root);
+			std::cout << errors;
+			if (errors.size() > 0) return 0;
+
+			ReplaceBooleanOperators(root);
 			std::cout << "-------------------------------------\n";
 			std::cout << "Assembly\n";
 			std::cout << "-------------------------------------\n";
