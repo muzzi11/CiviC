@@ -1,5 +1,8 @@
 #pragma once
 
+#include <sstream>
+#include <string>
+
 #include "node.h"
 #include "symboltable.h"
 
@@ -7,7 +10,7 @@ class Analyzer
 {
 public:
 	Analyzer::Analyzer();
-	void Analyse(Nodes::NodePtr root, bool = false);
+	std::string Analyse(Nodes::NodePtr root, bool = false);
 
 private:
 	void ConsultTable(Nodes::NodePtr node, bool = false);
@@ -27,11 +30,14 @@ private:
 	void TypeCheckBinOp(Nodes::NodePtr);
 	void TypeCheckFuncArgs(Nodes::NodePtr);
 	void TypeCheckFuncReturn(Nodes::NodePtr);
+	void TypeCheckUnary(Nodes::NodePtr);
 	void CheckGlobalDef(Nodes::NodePtr);
 
 	void TypeCheck(Nodes::NodePtr, Nodes::Type type);
 	Nodes::Type GetType(Nodes::NodePtr);
+	void PrintErrorInfo(const int pos, const int line);
 
 	std::vector<std::string> globalDefs;
 	SymbolTable::Sheaf sheaf;
+	std::stringstream errors;
 };

@@ -5,7 +5,7 @@ int foo()
 
 int test(int a, int b)
 {
-	int i = foo() + 2 * 3;
-
+	float k = 0.0;
+	int b = 1.0 % 3.0;
 	return i;
 }
