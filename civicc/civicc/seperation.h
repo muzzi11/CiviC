@@ -2,4 +2,4 @@
 
 #include "node.h"
 
-void SeperateVarDecFromInit(Node::NodePtr root);
+void SeperateDecAndInit(Node::NodePtr root);

@@ -9,10 +9,12 @@
 #include "traverse.h"
 #include "symboltable.h"
 #include "seperation.h"
+#include "replace_boolops.h"
+#include "analysis.h"
 
 
 int main(int argc, char* argv[])
-{	
+{		
 	if(argc < 2)
 	{
 		std::cout << "No input files suplied.\n";
@@ -45,8 +47,10 @@ int main(int argc, char* argv[])
 			auto root = std::make_shared<Node::BaseNode>();
 			parser.ParseProgram(root);
 
-			SeperateVarDecFromInit(root);
-			
+			SeperateDecAndInit(root);
+			Analyzer().Analyse(root);
+			ReplaceBooleanOperators(root);
+
 			std::cout << TreeToJSON(root) << "\n";
 		}
 		catch(ParseException e)

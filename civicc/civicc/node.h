@@ -18,6 +18,7 @@ namespace Node
 		Float,
 		Void
 	};
+	std::string TypeToString(Type type);
 
 	enum class Operator
 	{
@@ -37,7 +38,7 @@ namespace Node
 		Negate,
 		Not
 	};
-
+	
 	class BaseNode;
 
 	typedef std::shared_ptr<BaseNode> NodePtr;
@@ -51,6 +52,8 @@ namespace Node
 
 		int Family() const;
 		std::string FamilyName() const;
+
+		int line, pos;
 
 	protected:
 		int family_;
@@ -76,9 +79,11 @@ namespace Node
 
 	struct Variable
 	{
+		bool array = false;
 		Type type;
 		std::string name;
-
+		int pos, line;
+		
 		std::string ToString() const;
 	};
 
@@ -87,6 +92,7 @@ namespace Node
 		Type type;
 		std::string name;
 		std::vector<std::string> dim;
+		int pos, line;
 
 		std::string ToString() const;
 	};
@@ -96,7 +102,8 @@ namespace Node
 		Type returnType;
 		std::string name;
 		std::vector<Param> params;
-
+		int pos, line;
+		
 		std::string ToString() const;
 	};
 
@@ -127,13 +134,16 @@ namespace Node
 		bool exp;
 		Variable var;
 
+		bool HasAssignment() const;
 		std::string ToString() const override;
 	};
 
 	struct VarDec : public Node<VarDec>
 	{
+		bool immutable = false;
 		Variable var;
 
+		bool HasAssignment() const;
 		std::string ToString() const override;
 	};
 
@@ -151,6 +161,7 @@ namespace Node
 
 	struct Return : public Node<Return>
 	{
+		std::string functionName;
 	};
 
 	struct Call : public Node<Call>
@@ -160,15 +171,13 @@ namespace Node
 		std::string ToString() const override;
 	};
 
-	/*struct Expr : public Node<Expr>
-	{
-	};*/
-
 	struct BinaryOp : public Node<BinaryOp>
 	{
 		Operator op;
+		Type type;
 
 		BinaryOp(Operator op) : op(op) {}
+		std::string ToString() const override;
 	};
 
 	struct UnaryOp : public Node<UnaryOp>
@@ -176,6 +185,7 @@ namespace Node
 		Operator op;
 
 		UnaryOp(Operator op) : op(op) {}
+		std::string ToString() const override;
 	};
 
 	struct Cast : public Node<Cast>
@@ -207,6 +217,11 @@ namespace Node
 		std::string name;
 
 		Identifier(const std::string& name) : name(name) {}
+		std::string ToString() const override;
+	};
+
+	struct Ternary : public Node<Ternary>
+	{
 		std::string ToString() const override;
 	};
 

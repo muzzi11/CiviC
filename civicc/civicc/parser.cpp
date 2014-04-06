@@ -36,7 +36,7 @@ void Parser::ParseProgram(Node::NodePtr node)
 	{
 		if(!Declaration())
 		{
-			throw ParseException("Unexpected token", tokens[t]);
+			throw ParseException("Invalid declaration", tokens[t]);
 		}
 	}
 }
@@ -79,6 +79,8 @@ void ExtractParameters(int start, const std::vector<Token>& stack, std::vector<N
 		}
 
 		out.back().name = stack[i].readString;
+		out.back().pos = stack[i].pos;
+		out.back().line = stack[i].line;
 	}
 }
 
@@ -88,6 +90,8 @@ void Parser::AddFunctionDec()
 
 	node->header.returnType = TokenToType(stack[0]);
 	node->header.name = stack[1].readString;
+	node->line = stack[1].line;
+	node->pos = stack[1].pos;
 	ExtractParameters(2, stack, node->header.params);
 
 	root->children.push_back(node);
@@ -133,6 +137,7 @@ void Parser::AddGlobalDef()
 
 	if(!scopes.empty() && scopes.back()->Family() == Node::ArrayExpr::Family())
 	{
+		node->var.array = true;
 		node->children.push_back(scopes.back());
 		scopes.pop_back();
 	}
@@ -145,6 +150,8 @@ void Parser::AddGlobalDef()
 void Parser::AddReturn()
 {
 	auto node = std::make_shared<Node::Return>();
+	auto funDef = std::static_pointer_cast<Node::FunctionDef>(scopes.back());
+	node->functionName = funDef->header.name;
 	scopes.back()->children.push_back(node);
 	scopes.push_back(node);
 }
@@ -158,6 +165,7 @@ void Parser::AddVarDec()
 
 	if(scopes.back()->Family() == Node::ArrayExpr::Family())
 	{
+		node->var.array = true;
 		node->children.push_back(scopes.back());
 		scopes.pop_back();
 	}
@@ -188,6 +196,7 @@ std::shared_ptr<Node::Call> Parser::AddCall()
 	node->name = stack[0].readString;
 
 	scopes.back()->children.push_back(node);
+	scopes.push_back(node);
 	stack.clear();
 
 	return node;
@@ -310,7 +319,9 @@ bool Parser::GlobalDef()
 
 bool Parser::FunDef()
 {
-	BraceL(true); FunBody(); BraceR();
+	BraceL(true); FunBody();
+	if(Type()) throw ParseException("Unexpected variable declaration or function definition", tokens[t - 1]);
+	BraceR();
 	scopes.pop_back();
 	return true;
 }
@@ -370,7 +381,9 @@ bool Parser::LocalFun(bool error)
 	if(FunHeader(error))
 	{
 		AddFunctionDef();
-		BraceL(true); FunBody(); BraceR();
+		BraceL(true); FunBody();
+		if(Type()) throw ParseException("Unexpected variable declaration or function definition", tokens[t - 1]);
+		BraceR();
 		scopes.pop_back();
 		return true;
 	}
@@ -389,8 +402,9 @@ bool Parser::LocalFuns()
 		if(ArrayExpr()) throw ParseException("Unexpected array expression(variable declarations should precede function definitions)", tokens[t - 1]);
 		else if(Id(true))
 		{
-			if(AssignOpt() || Semicolon()) throw ParseException("Variable declaration should precede function definitions", tokens[t - 1]);
-			return LocalFun(true) && LocalFuns();
+			if(LocalFun()) return LocalFuns();
+			else if(AssignOpt() || Semicolon()) throw ParseException("Variable declaration should precede function definitions", tokens[t - 1]);
+			else(LocalFun(true));
 		}
 	}
 
@@ -434,7 +448,11 @@ bool Parser::Statement()
 		else if(ParenthesesL())
 		{
 			AddCall();
-			if(ParenthesesR() && Semicolon()) return true;
+			if(ParenthesesR(false) && Semicolon())
+			{
+				scopes.pop_back();
+				return true;
+			}
 			else
 			{
 				Expr(); Exprs();
@@ -651,12 +669,14 @@ Node::NodePtr Parser::P()
 		else if(BracketL())
 		{
 			auto node = std::make_shared<Node::Identifier>(id);
+			auto array = std::make_shared<Node::ArrayExpr>();
+			node->children.push_back(array);
 
 			bool comma = false;
 			do
 			{
 				auto expr = Expr(1);
-				if(expr != nullptr) node->children.push_back(expr);
+				if(expr != nullptr) array->children.push_back(expr);
 				else if(comma) throw ParseException("Expected an expression after ','", tokens[t - 1]);
 				comma = true;
 			} while(Comma());
@@ -805,9 +825,13 @@ bool Parser::ParenthesesL(bool error)
 	return true;
 }
 
-bool Parser::ParenthesesR()
+bool Parser::ParenthesesR(bool error)
 {
-	if(!Symbol(ReservedSymbol::ParenthesesR)) throw ParseException("Expected a ')' ", tokens[t]);
+	if(!Symbol(ReservedSymbol::ParenthesesR))
+	{
+		if(error) throw ParseException("Expected a ')' ", tokens[t]);
+		return false;
+	}
 	return true;
 }
 
