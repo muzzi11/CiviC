@@ -32,7 +32,8 @@ private:
 	void TypeCheckFuncReturn(Nodes::NodePtr);
 	void TypeCheckUnary(Nodes::NodePtr);
 	void CheckGlobalDef(Nodes::NodePtr);
-
+	void CheckRedefinition(Nodes::NodePtr, std::string name, bool result);
+	//CHECK RETURN VOID
 	void TypeCheck(Nodes::NodePtr, Nodes::Type type);
 	Nodes::Type GetType(Nodes::NodePtr);
 	void PrintErrorInfo(const int pos, const int line);
