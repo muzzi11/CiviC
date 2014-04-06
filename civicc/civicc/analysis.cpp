@@ -102,30 +102,32 @@ void Analyzer::TypeCheckFuncReturn(Nodes::NodePtr node)
 {
 	auto returnVal = std::static_pointer_cast<Nodes::Return>(node);
 	auto record = sheaf.LookUp(returnVal->functionName);
-	if (record)
-		for (auto child : returnVal->children)
+	if(record)
+	{
+		for(auto child : returnVal->children)
 			TypeCheck(child, record->type);
+	}
 }
 
 Nodes::Type Analyzer::GetType(Nodes::NodePtr node)
 {	
-	if (node->Family() == Nodes::Literal::Family())
+	if (node->IsFamily<Nodes::Literal>())
 	{
 		auto lit = std::static_pointer_cast<Nodes::Literal>(node);
 		return lit->type;
 	}
-	else if (node->Family() == Nodes::Identifier::Family())
+	else if (node->IsFamily<Nodes::Identifier>())
 	{
 		auto id = std::static_pointer_cast<Nodes::Identifier>(node);
 		auto record = sheaf.LookUp(id->name);
 		if (record) return record->type;
 	}
-	else if (node->Family() == Nodes::Cast::Family())
+	else if(node->IsFamily<Nodes::Cast>())
 	{
 		auto cast = std::static_pointer_cast<Nodes::Cast>(node);
 		return cast->type;
 	}
-	else if (node->Family() == Nodes::Call::Family())
+	else if(node->IsFamily<Nodes::Call>())
 	{
 		auto call = std::static_pointer_cast<Nodes::Call>(node);
 		auto record = sheaf.LookUp(call->name);
@@ -143,39 +145,39 @@ Nodes::Type Analyzer::GetType(Nodes::NodePtr node)
 
 void Analyzer::TypeCheck(Nodes::NodePtr node, Nodes::Type type)
 {
-	if (node->Family() == Nodes::BinaryOp::Family())
+	if (node->IsFamily<Nodes::BinaryOp>())
 	{
 		auto binOp = std::static_pointer_cast<Nodes::BinaryOp>(node);
 		for (auto child : binOp->children)
 			TypeCheck(child, type);
 	}
-	else if (node->Family() == Nodes::Literal::Family())
+	else if(node->IsFamily<Nodes::Literal>())
 	{
 		auto lit = std::static_pointer_cast<Nodes::Literal>(node);
 		if (lit->type != type)
 			std::cout << "Literal is not of type " << Nodes::TypeToString(type) << " at line " << lit->line << " column " << lit->pos << std::endl;
 	}
-	else if (node->Family() == Nodes::Identifier::Family())
+	else if(node->IsFamily<Nodes::Identifier>())
 	{
 		auto id = std::static_pointer_cast<Nodes::Identifier>(node);
 		auto record = sheaf.LookUp(id->name);
 		if (record && record->type != type)
 			std::cout << "Identifier " << id->name << " is not of type " << Nodes::TypeToString(type) << " at line " << node->line << " column " << node->pos << std::endl;
 	}
-	else if (node->Family() == Nodes::Cast::Family())
+	else if(node->IsFamily<Nodes::Cast>())
 	{
 		auto cast = std::static_pointer_cast<Nodes::Cast>(node);
 		if (cast->type != type)
 			std::cout << "Cast is not of type " << Nodes::TypeToString(type) << std::endl;
 	}
-	else if (node->Family() == Nodes::Call::Family())
+	else if(node->IsFamily<Nodes::Call>())
 	{
 		auto call = std::static_pointer_cast<Nodes::Call>(node);
 		auto record = sheaf.LookUp(call->name);
 		if (record && record->type != type)
 			std::cout << "Function call " << call->name << " does not return of type " << Nodes::TypeToString(type) << " at line " << node->line << " column " << node->pos << std::endl;
 	}
-	else if (node->Family() == Nodes::ArrayExpr::Family())
+	else if(node->IsFamily<Nodes::ArrayExpr>())
 	{
 		auto arrayExpr = std::static_pointer_cast<Nodes::Call>(node);
 	
