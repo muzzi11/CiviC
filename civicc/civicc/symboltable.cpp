@@ -13,7 +13,7 @@ void SymbolTable::Sheaf::InitializeScope()
 	if (tables.size() == 0 || tables.find(level) == tables.end())
 		tables[level] = Table();
 	
-	tables[level].Clear();
+	tables[level];
 }
 
 void SymbolTable::Sheaf::FinalizeScope()

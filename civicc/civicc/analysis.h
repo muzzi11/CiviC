@@ -26,7 +26,6 @@ private:
 	void TypeCheckBinOp(Node::NodePtr);
 	void TypeCheckFuncArgs(Node::NodePtr);
 	void TypeCheckFuncReturn(Node::NodePtr);
-	void CheckImmutable(Node::NodePtr);
 	void CheckGlobalDef(Node::NodePtr);
 
 	void TypeCheck(Node::NodePtr, Node::Type type);

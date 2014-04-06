@@ -42,7 +42,7 @@ namespace Node
 	class BaseNode;
 
 	typedef std::shared_ptr<BaseNode> NodePtr;
-
+	
 	class BaseNode
 	{
 	public:
@@ -167,6 +167,7 @@ namespace Node
 	struct Call : public Node<Call>
 	{
 		std::string name;
+		NodePtr decPtr;
 
 		std::string ToString() const override;
 	};
@@ -215,7 +216,7 @@ namespace Node
 	struct Identifier : public Node<Identifier>
 	{
 		std::string name;
-
+		NodePtr defOrDec;
 		Identifier(const std::string& name) : name(name) {}
 		std::string ToString() const override;
 	};

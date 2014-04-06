@@ -1,4 +1,4 @@
-int[2, 2+1] array = [[1, 2], [3, 4, 5]];
+//int[2, 2+1] array = [[1, 2], [3, 4, 5]];
 //int intGlobal = 1 + 2 * bla(3 + 5, 9, 4);
 //float fl=1337.0 + intGlobal + foo;
 
@@ -9,10 +9,15 @@ extern void external();
 
 int test(int loel)
 {
-	int inner(int coel)
+	float inner(int coel)
 	{
+		//int a = 1.0;
+		for(int i = 0, 1, 2.0)
+		{
+			//i = 1;
+		}
 		return coel;
 	}
-	return (int)1.0 + 3;
+	return inner((int)1.0) + 3;
 }
 
