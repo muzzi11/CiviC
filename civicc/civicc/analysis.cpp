@@ -48,12 +48,19 @@ void Analyzer::TypeCheckAssigment(Nodes::NodePtr node)
 		}
 		else
 		{
-			//Check array dimensions of assignment with declaration
-			auto arrayExpr = Nodes::StaticCast<Nodes::ArrayExpr>(ass->children[0]);
-			if (arrayExpr)
+			Nodes::NodePtr arrayExpr = nullptr;
+			//Check array on the right hand side of the assignment, compare dimensions of assignment with declaration
+			arrayExpr = Nodes::StaticCast<Nodes::ArrayExpr>(ass->children[0]);
+			if (arrayExpr && ass->children.size() == 1)
 			{
 				CheckArrayDimensions(node, record->arrayDimensions);
 				CheckArrayType(node, record->type);
+			}
+			//Check array on the left hand side, type always int
+			else if (arrayExpr)
+			{
+				CheckArrayDimensions(node, record->arrayDimensions);
+				CheckArrayType(node, Nodes::Type::Int);
 			}
 			else
 			{
@@ -127,7 +134,7 @@ void Analyzer::TypeCheckFuncArgs(Nodes::NodePtr node)
 	auto record = sheaf.LookUp(funcCall->name);		
 	if (record)
 	{
-		if (record->funcArgs.size() != funcCall->children.size())
+		if (record->params.size() != funcCall->children.size())
 		{
 			PrintErrorInfo(node->pos, node->line);
 			errors << "Arg count does not match function definition" << std::endl;
@@ -135,7 +142,25 @@ void Analyzer::TypeCheckFuncArgs(Nodes::NodePtr node)
 		}
 		for (size_t i = 0; i < funcCall->children.size(); ++i)
 		{
-			TypeCheck(funcCall->children[i], record->funcArgs[i]);
+			auto arg = funcCall->children[i];
+			auto param = record->params[i];
+			TypeCheck(arg, param.type);
+
+			auto id = Nodes::StaticCast<Nodes::Identifier>(arg);
+			if (!id) continue;
+
+			auto record = sheaf.LookUp(id->name);
+			if (record->dim.size() > 0)
+			{
+				for (int i = 0; i < record->dim.size(); ++i)
+				{
+					if (record->dim[i].compare(param.dim[i]) != 0)
+					{
+						PrintErrorInfo(node->pos, node->line);
+						errors << "Incompatible array dimensions" << std::endl;
+					}
+				}
+			}
 		}
 	}	
 }
@@ -270,6 +295,7 @@ void Analyzer::InsertGlobalDef(Nodes::NodePtr node)
 
 	if (globDef->var.array)
 	{
+		CheckArrayType(node, Nodes::Type::Int);
 		for (auto child : globDef->children[0]->children)
 		{
 			auto lit = Nodes::StaticCast<Nodes::Literal>(child);
@@ -292,6 +318,7 @@ void Analyzer::InsertGlobalDec(Nodes::NodePtr node)
 	if (!globDec) return;
 
 	auto record = SymbolTable::Record(false, globDec->param.type, node);
+	record.dim = globDec->param.dim;
 	CheckRedefinition(node, globDec->param.name, sheaf.Insert(globDec->param.name, record));		
 }
 
@@ -307,8 +334,7 @@ void Analyzer::InsertFuncDef(Nodes::NodePtr node)
 	}
 	
 	auto funcRecord = SymbolTable::Record(false, funDef->header.returnType, node);		
-	for (auto param : funDef->header.params)	
-		funcRecord.funcArgs.push_back(param.type);
+	funcRecord.params = funDef->header.params;
 	CheckRedefinition(node, funDef->header.name, sheaf.Insert(funDef->header.name, funcRecord));
 
 	//Create new scope
@@ -318,6 +344,16 @@ void Analyzer::InsertFuncDef(Nodes::NodePtr node)
 	{
 		auto record = SymbolTable::Record(false, param.type, node);
 		CheckRedefinition(node, param.name, sheaf.Insert(param.name, record));
+
+		//Add array dimension variables to the table
+		if (param.dim.size() > 0)
+		{
+			for (auto dim : param.dim)
+			{
+				auto record = SymbolTable::Record(false, Nodes::Type::Int, node);
+				CheckRedefinition(node, dim, sheaf.Insert(dim, record));
+			}			
+		}		
 	}
 		
 	//Add the declarations/definitions inside the function body to the scope
@@ -346,8 +382,7 @@ void Analyzer::InsertFuncDec(Nodes::NodePtr node)
 	if (!funDec) return;
 
 	auto record = SymbolTable::Record(false, funDec->header.returnType, node);	
-	for (auto param : funDec->header.params)
-		record.funcArgs.push_back(param.type);
+	record.params = funDec->header.params;
 	CheckRedefinition(node, funDec->header.name, sheaf.Insert(funDec->header.name, record));
 }
 
@@ -360,6 +395,7 @@ void Analyzer::InsertVarDec(Nodes::NodePtr node)
 
 	if (varDec->var.array)
 	{	
+		CheckArrayType(node, Nodes::Type::Int);
 		for (auto child : varDec->children[0]->children)
 		{
 			auto lit = Nodes::StaticCast<Nodes::Literal>(child);
@@ -487,8 +523,9 @@ bool Analyzer::isBoolOp(const Nodes::NodePtr node)
 
 void Analyzer::CheckArrayDimensions(Nodes::NodePtr node, std::vector<int> dimensions)
 {
-	int level = 0, skip = 0;
+	if (dimensions.size() == 0) return;
 
+	int level = 0, skip = 0;
 	TraverseBreadth<Nodes::ArrayExpr>(node, [&](std::shared_ptr<Nodes::ArrayExpr> arrayExpr, Nodes::NodePtr)
 	{
 		--skip;
@@ -513,6 +550,6 @@ void Analyzer::CheckArrayType(Nodes::NodePtr node, Nodes::Type type)
 	TraverseBreadth<Nodes::ArrayExpr>(node, [&](std::shared_ptr<Nodes::ArrayExpr> arrayExpr, Nodes::NodePtr)
 	{
 		for (auto child : arrayExpr->children)
-			TypeCheck(arrayExpr, type);
+			TypeCheck(child, type);
 	});
 }

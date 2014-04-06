@@ -51,7 +51,9 @@ namespace SymbolTable
 		bool initialized;
 		Nodes::Type type;
 		Nodes::NodePtr decPtr;
-		std::vector<Nodes::Type> funcArgs;
+		std::vector<Nodes::Param> params;
+
 		std::vector<int> arrayDimensions;
+		std::vector<std::string> dim;
 	};
 };

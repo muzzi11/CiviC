@@ -425,9 +425,12 @@ bool Parser::ArrayExpr()
 	if(BracketL())
 	{
 		stack.pop_back();
+
+		auto copy = stack;
+		stack.clear();
 		scopes.push_back(std::make_shared<Nodes::ArrayExpr>());
 		Expr(); Exprs(); BracketR();
-		stack.pop_back();
+		stack.swap(copy);
 		return true;
 	}
 	return false;

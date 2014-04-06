@@ -9,7 +9,7 @@ std::string Nodes::TypeToString(Type type)
 		{ Type::Bool, "bool" },
 		{ Type::Int, "int" },
 		{ Type::Float, "float" },
-		{ Type::Void, "void" },
+		{ Type::Void, "void", },
 	});
 
 	return map.at(type);

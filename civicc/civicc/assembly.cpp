@@ -75,10 +75,9 @@ std::string AssemblyGenerator::FunDef(std::shared_ptr<FunctionDef> root)
 		sstream << Assign(assign);
 	});
 
-	if(root->children.back()->IsFamily<Return>())
+	if (root->children.size() > 0 && root->children.back()->IsFamily<Return>())
 	{
 		auto ret = std::static_pointer_cast<Return>(root->children.back());
-
 	}
 
 	return sstream.str();
