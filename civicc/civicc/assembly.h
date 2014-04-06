@@ -20,8 +20,9 @@ private:
 	std::unordered_map<Nodes::NodePtr, int> globalIndexTable;
 	std::unordered_map<Nodes::NodePtr, LocalVarEntry> localTable;
 	std::unordered_map<Nodes::NodePtr, int> assignFrameTable;
+	std::unordered_map<Nodes::NodePtr, int> functionNestingTable;
 
-	void BuildVariableTables(Nodes::NodePtr root);
+	void BuildTables(Nodes::NodePtr root);
 
 	std::string FunDef(std::shared_ptr<Nodes::FunctionDef> root);
 	std::string Assign(std::shared_ptr<Nodes::Assignment> root);

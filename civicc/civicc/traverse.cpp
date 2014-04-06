@@ -3,28 +3,25 @@
 using namespace Nodes;
 
 
-void TraverseBreadth(NodePtr root, std::function<bool(NodePtr, NodePtr)> func, NodePtr parent)
+void TraverseBreadth(NodePtr root, std::function<void(NodePtr, NodePtr)> func, NodePtr parent)
 {
 	if(root)
 	{
-		if(parent == nullptr && !func(root, parent)) return;
+		if(parent == nullptr) func(root, parent);
 		size_t i = 0;
-		while(i < root->children.size())
-		{
-			if(!func(root->children[i++], root)) return;
-		}
+		while(i < root->children.size()) func(root->children[i++], root);
 		i = 0;
 		while(i < root->children.size()) TraverseBreadth(root->children[i++], func, root);
 	}
 }
 
-void TraverseDepth(NodePtr root, std::function<bool(NodePtr, NodePtr)> func, NodePtr parent)
+void TraverseDepth(NodePtr root, std::function<void(NodePtr, NodePtr)> func, NodePtr parent)
 {
 	if(root)
 	{
 		size_t i = 0;
 		while(i < root->children.size()) TraverseDepth(root->children[i++], func, root);
-		if(!func(root, parent)) return;
+		func(root, parent);
 	}
 }
 
