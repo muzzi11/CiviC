@@ -247,12 +247,12 @@ const std::string CntrlFlwInstr::Jump(const std::string label)
 
 const std::string CntrlFlwInstr::Branch(bool condition, const int offset)
 {
-	return (condition) ? Instr::ParseInstr(branch_t, offset) : Instr::ParseInstr(branch_t, offset);
+	return (condition) ? Instr::ParseInstr(branch_t, offset) : Instr::ParseInstr(branch_f, offset);
 }
 
 const std::string CntrlFlwInstr::Branch(bool condition, const std::string label)
 {
-	return (condition) ? Instr::ParseInstr(branch_t, label) : Instr::ParseInstr(branch_t, label);
+	return (condition) ? Instr::ParseInstr(branch_t, label) : Instr::ParseInstr(branch_f, label);
 }
 
 std::vector<std::tuple<std::string, std::string>> VarInstr::constants;

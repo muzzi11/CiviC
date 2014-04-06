@@ -11,6 +11,7 @@ void ReplaceBooleanOperators(NodePtr root)
 	{
 		if(binaryOp->op == Operator::And)
 		{
+			// a && b = a ? b : false
 			auto ternary = std::make_shared<Ternary>();
 
 			ternary->children.push_back(binaryOp->children[0]);
@@ -21,6 +22,7 @@ void ReplaceBooleanOperators(NodePtr root)
 		}
 		else if(binaryOp->op == Operator::Or)
 		{
+			// a || b = a ? true : b
 			auto ternary = std::make_shared<Ternary>();
 
 			ternary->children.push_back(binaryOp->children[0]);

@@ -484,6 +484,7 @@ bool Parser::Statement()
 		While() && ParenthesesL(true) && Expr() && ParenthesesR() && Block() ||
 		Do() && Block() && While(true) && ParenthesesL(true) && Expr() && ParenthesesR() && Semicolon())
 	{
+		scopes.pop_back();
 		return true;
 	}
 	else if(For() && ParenthesesL(true) && Int() && Id(true))
@@ -492,6 +493,7 @@ bool Parser::Statement()
 		if (!Assign()) throw ParseException("Missing initialization of loop counter.", tokens[t]);
 		scopes.pop_back(); 
 		Comma(true); Expr(); Step(); ParenthesesR(); Block();
+		scopes.pop_back();
 		return true;
 	}
 
@@ -521,12 +523,12 @@ bool Parser::Block()
 	if(BraceL())
 	{
 		Statements(); BraceR();
-		scopes.pop_back();
+		//scopes.pop_back();
 		return true;
 	}
 	else if(Statement())
 	{
-		scopes.pop_back();
+		//scopes.pop_back();
 		return true;
 	}
 	return false;
@@ -534,7 +536,9 @@ bool Parser::Block()
 
 bool Parser::ElseBlock()
 {
-	return Else() && Block() || true;
+	if(Else()) Block();
+	scopes.pop_back();
+	return true;
 }
 
 bool Parser::Return()

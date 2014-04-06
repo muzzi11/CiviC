@@ -86,14 +86,7 @@ std::string AssemblyGenerator::FunDef(std::shared_ptr<FunctionDef> root)
 
 	TraverseBreadth(root, [&](NodePtr node, NodePtr parent)
 	{
-		if(parent == root)
-		{
-			auto assign = StaticCast<Assignment>(node);
-			if(assign) sstream << Assign(assign, parent);
-
-			auto call = StaticCast<Call>(node);
-			if(call) sstream << FunCall(call, false);
-		}
+		if(parent == root) sstream << Statements(node);
 	});
 
 	if(!root->children.empty())
@@ -107,7 +100,7 @@ std::string AssemblyGenerator::FunDef(std::shared_ptr<FunctionDef> root)
 	return sstream.str();
 }
 
-std::string AssemblyGenerator::Assign(std::shared_ptr<Assignment> root, NodePtr parent)
+std::string AssemblyGenerator::Assign(std::shared_ptr<Assignment> root)
 {
 	std::stringstream sstream;
 	Instr::Type type = NodeTypeToInstrType(root->type);
@@ -207,7 +200,7 @@ std::string AssemblyGenerator::Expression(NodePtr root)
 	});
 
 	NodePtr funcDef;
-	TraverseDepth(root, [&](NodePtr node, NodePtr parent)
+	TraverseBreadth(root, [&](NodePtr node, NodePtr parent)
 	{
 		if(parent && parent->IsFamily<Call>()) return;
 
@@ -216,9 +209,12 @@ std::string AssemblyGenerator::Expression(NodePtr root)
 		auto literal = StaticCast<Literal>(node);
 		if(literal)
 		{
-			if(literal->type == Type::Int) sstream << '\t' << VarInstr::LoadConstant(literal->intValue) << '\n';
-			else if(literal->type == Type::Float) sstream << '\t' << VarInstr::LoadConstant(literal->floatValue) << '\n';
-			else sstream << '\t' << VarInstr::LoadConstant(literal->boolValue) << '\n';
+			if(!parent || parent && !parent->IsFamily<Ternary>())
+			{
+				if(literal->type == Type::Int) sstream << '\t' << VarInstr::LoadConstant(literal->intValue) << '\n';
+				else if(literal->type == Type::Float) sstream << '\t' << VarInstr::LoadConstant(literal->floatValue) << '\n';
+				else sstream << '\t' << VarInstr::LoadConstant(literal->boolValue) << '\n';
+			}
 		}
 
 		auto unOp = StaticCast<UnaryOp>(node);
@@ -235,6 +231,24 @@ std::string AssemblyGenerator::Expression(NodePtr root)
 		{
 			if(cast->type == Type::Int) sstream << '\t' << CastInstr::Float2Int() << '\n';
 			else sstream << '\t' << CastInstr::Int2Float() << '\n';
+		}
+
+		auto ternary = StaticCast<Ternary>(node);
+		if(ternary)
+		{
+			std::string branch, end;
+			std::stringstream label;
+			label << labelCounter++;
+			branch = label.str() + "_false_expr";
+			end = label.str() + "_end";
+
+			sstream << Expression(ternary->children[0]);
+			sstream << '\t' << CntrlFlwInstr::Branch(false, branch) << '\n';
+			sstream << Expression(ternary->children[1]);
+			sstream << '\t' << CntrlFlwInstr::Jump(end) << '\n';
+			sstream << branch << ":\n";
+			sstream << Expression(ternary->children[2]);
+			sstream << end << ":\n";
 		}
 
 		auto id = StaticCast<Identifier>(node);
@@ -271,6 +285,60 @@ std::string AssemblyGenerator::Expression(NodePtr root)
 			}
 		}
 	});
+
+	return sstream.str();
+}
+
+std::string AssemblyGenerator::Statements(NodePtr root)
+{
+	std::stringstream sstream;
+
+	auto ifStatement = StaticCast<If>(root);
+	if(ifStatement) 
+		sstream << IfElse(ifStatement);
+
+	auto assign = StaticCast<Assignment>(root);
+	if(assign) sstream << Assign(assign);
+
+	auto call = StaticCast<Call>(root);
+	if(call) sstream << FunCall(call, false);
+
+	return sstream.str();
+}
+
+std::string AssemblyGenerator::IfElse(NodePtr root)
+{
+	std::stringstream sstream;
+
+	auto ifStatement = StaticCast<If>(root);
+	if(ifStatement)
+	{
+		std::string branch, end;
+		std::stringstream label;
+		label << labelCounter++;
+		branch = label.str() + "_else";
+		end = label.str() + "_end";
+
+		if(ifStatement->children.back()->IsFamily<Else>())
+		{
+			auto elseStatement = StaticCast<Else>(ifStatement->children.back());
+
+			sstream << Expression(ifStatement->children[0]);
+			sstream << '\t' << CntrlFlwInstr::Branch(false, branch) << '\n';
+			for(size_t i = 1; i < ifStatement->children.size() - 1; ++i) sstream << Statements(ifStatement->children[i]);
+			sstream << '\t' << CntrlFlwInstr::Jump(end) <<'\n';
+			sstream << branch << ":\n";
+			for(auto child : elseStatement->children) sstream << Statements(child);
+			sstream << end << ":\n";
+		}
+		else
+		{
+			sstream << Expression(ifStatement->children[0]);
+			sstream << '\t' << CntrlFlwInstr::Branch(false, branch) << '\n';
+			for(size_t i = 1; i < ifStatement->children.size(); ++i) sstream << Statements(ifStatement->children[i]);
+			sstream << branch << ":\n";
+		}
+	}
 
 	return sstream.str();
 }

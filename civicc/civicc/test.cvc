@@ -6,21 +6,13 @@ return 3;
 
 int test(int a, int b)
 {
-	int i = foo(1.0) + 2 * 3;
-	
-	void local()
+	if(true + false)
 	{
-		void moreLocal()
-		{
-			int m = 1;
-			test(66, 99);
-			local();
-		}
-		
-		moreLocal();
-		local();
+		foo(1.0);
 	}
-	
-	foo(2.0);
+	else
+	{
+		foo(2.0);
+	}
 	return 0;
 }
