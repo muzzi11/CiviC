@@ -3,19 +3,20 @@
 
 #include "analysis.h"
 #include "symboltable.h"
+#include "traverse.h"
 
 Analyzer::Analyzer()
 {
 	sheaf.InitializeScope();
 }
 
-std::string Analyzer::Analyse(Nodes::NodePtr root, bool checkGlobalDef)
+std::string Analyzer::Analyse(Nodes::NodePtr root)
 {
 	if (!root->children.empty())
 	{
 		for (auto child : root->children)
 		{
-			ConsultTable(child, checkGlobalDef);
+			ConsultTable(child);
 			TypeCheck(child);
 		}
 	}
@@ -39,6 +40,7 @@ void Analyzer::TypeCheckAssigment(Nodes::NodePtr node)
 	auto record = sheaf.LookUp(ass->name);
 	if (record)
 	{
+		//Check assigment of immutables (for loop counters)
 		if (record->immutable && record->initialized)
 		{
 			PrintErrorInfo(node->pos, node->line);
@@ -46,12 +48,21 @@ void Analyzer::TypeCheckAssigment(Nodes::NodePtr node)
 		}
 		else
 		{
-			record->initialized = true;
-			for (auto child : ass->children)
+			//Check array dimensions of assignment with declaration
+			auto arrayExpr = Nodes::StaticCast<Nodes::ArrayExpr>(ass->children[0]);
+			if (arrayExpr)
 			{
-				if (isBoolOp(child)) return;
-				TypeCheck(child, record->type);
+				CheckArrayDimensions(node, record->arrayDimensions);
+				CheckArrayType(node, record->type);
 			}
+			else
+			{
+				record->initialized = true;
+				for (auto child : ass->children)
+				{
+					TypeCheck(child, record->type);
+				}
+			}			
 		}		
 	}		
 }
@@ -180,8 +191,19 @@ void Analyzer::TypeCheck(Nodes::NodePtr node, Nodes::Type type)
 	auto binOp = Nodes::StaticCast<Nodes::BinaryOp>(node);
 	if (binOp)
 	{
-		for (auto child : binOp->children)
-			TypeCheck(child, type);
+		if (isBoolOp(binOp))
+		{
+			if (type != Nodes::Type::Bool)
+			{
+				PrintErrorInfo(node->pos, node->line);
+				errors << "Inappropiate use of boolean operator " << std::endl;
+			}			
+		}
+		else
+		{
+			for (auto child : binOp->children)
+				TypeCheck(child, type);
+		}		
 	}	
 		
 	auto lit = Nodes::StaticCast<Nodes::Literal>(node);
@@ -223,7 +245,7 @@ void Analyzer::TypeCheck(Nodes::NodePtr node, Nodes::Type type)
 	//auto arrayExpr = std::static_pointer_cast<Nodes::Call>(node);	
 }
 
-void Analyzer::ConsultTable(Nodes::NodePtr node, bool checkGlobalDef)
+void Analyzer::ConsultTable(Nodes::NodePtr node)
 {	
 	InsertGlobalDef(node);
 	InsertGlobalDec(node);
@@ -233,11 +255,10 @@ void Analyzer::ConsultTable(Nodes::NodePtr node, bool checkGlobalDef)
 	LookUpCall(node);
 	LookUpAssignment(node);
 	LookUpIdentifier(node);
-	if (checkGlobalDef) CheckGlobalDef(node);
 
 	// Function def traversal is done in the InsertFunDef function
 	if(!node->IsFamily<Nodes::FunctionDef>())
-		Analyse(node, checkGlobalDef);
+		Analyse(node);
 }
 
 void Analyzer::InsertGlobalDef(Nodes::NodePtr node)
@@ -246,6 +267,21 @@ void Analyzer::InsertGlobalDef(Nodes::NodePtr node)
 	if (!globDef) return;
 
 	auto record = SymbolTable::Record(false, globDef->var.type, node);
+
+	if (globDef->var.array)
+	{
+		for (auto child : globDef->children[0]->children)
+		{
+			auto lit = Nodes::StaticCast<Nodes::Literal>(child);
+			if (!lit)
+			{
+				record.arrayDimensions.clear();
+				break;
+			}
+			record.arrayDimensions.push_back(lit->intValue);
+		}
+	}
+
 	CheckRedefinition(node, globDef->var.name, sheaf.Insert(globDef->var.name, record));
 	globalDefs.push_back(globDef->var.name);
 }
@@ -321,6 +357,20 @@ void Analyzer::InsertVarDec(Nodes::NodePtr node)
 	if (!varDec) return;
 
 	auto record = SymbolTable::Record(varDec->immutable, varDec->var.type, node);
+
+	if (varDec->var.array)
+	{	
+		for (auto child : varDec->children[0]->children)
+		{
+			auto lit = Nodes::StaticCast<Nodes::Literal>(child);
+			if (!lit)
+			{
+				record.arrayDimensions.clear();
+				break;
+			}
+			record.arrayDimensions.push_back(lit->intValue);
+		}
+	}
 	CheckRedefinition(node, varDec->var.name, sheaf.Insert(varDec->var.name, record));
 }
 
@@ -383,20 +433,27 @@ void Analyzer::ProcesInitFunc(std::shared_ptr<Nodes::FunctionDef> funcDef)
 	
 	for (auto child : funcDef->children)
 	{		
-		ConsultTable(child, true);
+		ConsultTable(child);
 		TypeCheck(child);
+		 CheckGlobalDef(child);
 	}
 	sheaf.FinalizeScope();
 }
 
 void Analyzer::CheckGlobalDef(Nodes::NodePtr node)
 {	
-	auto identifier = Nodes::StaticCast<Nodes::Identifier>(node);
-	if (identifier && std::find(globalDefs.begin(), globalDefs.end(), identifier->name) != globalDefs.end())
+	auto ass = Nodes::StaticCast<Nodes::Assignment>(node);
+	if (!ass) return;
+
+	TraverseBreadth<Nodes::Identifier>(node, [&](std::shared_ptr<Nodes::Identifier> id, Nodes::NodePtr)
 	{
-		PrintErrorInfo(node->pos, node->line);
-		errors << "Unkown identifier " << identifier->name << std::endl;
-	}
+		//The identifier in the right hand side of the assignment has to be declared before, the one on the left.
+		if (std::find(globalDefs.begin(), globalDefs.end(), ass->name) < (std::find(globalDefs.begin(), globalDefs.end(), id->name)))
+		{
+			PrintErrorInfo(node->pos, node->line);
+			errors << "Unkown identifier " << id->name << std::endl;
+		}
+	});	
 }
 
 void Analyzer::PrintErrorInfo(const int pos, const int line)
@@ -427,4 +484,36 @@ bool Analyzer::isBoolOp(const Nodes::NodePtr node)
 		op->op == Nodes::Operator::LessEqual || op->op == Nodes::Operator::More ||
 		op->op == Nodes::Operator::MoreEqual || op->op == Nodes::Operator::Less ||
 		op->op == Nodes::Operator::NotEqual || op->op == Nodes::Operator::Or;
+}
+
+void Analyzer::CheckArrayDimensions(Nodes::NodePtr node, std::vector<int> dimensions)
+{
+	int level = 0, skip = 0;
+
+	TraverseBreadth<Nodes::ArrayExpr>(node, [&](std::shared_ptr<Nodes::ArrayExpr> arrayExpr, Nodes::NodePtr)
+	{
+		--skip;
+		if (skip > 0 || (level > 0 && Nodes::StaticCast<Nodes::Literal>(arrayExpr->children[0]))) return;
+
+		if (dimensions[level] && dimensions[level] == arrayExpr->children.size())
+		{
+			skip = dimensions[level];
+			level++;
+		}
+	});
+
+	if (level != dimensions.size())
+	{
+		PrintErrorInfo(node->pos, node->line);
+		errors << "Incompatible array dimensions" << std::endl;
+	}
+}
+
+void Analyzer::CheckArrayType(Nodes::NodePtr node, Nodes::Type type)
+{
+	TraverseBreadth<Nodes::ArrayExpr>(node, [&](std::shared_ptr<Nodes::ArrayExpr> arrayExpr, Nodes::NodePtr)
+	{
+		for (auto child : arrayExpr->children)
+			TypeCheck(arrayExpr, type);
+	});
 }

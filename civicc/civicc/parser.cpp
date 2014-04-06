@@ -602,7 +602,8 @@ Nodes::NodePtr Parser::Expr(int precedence)
 		auto op = std::make_shared<Nodes::BinaryOp>(TokenToBinaryOp(token));
 		op->children.push_back(left);
 		op->children.push_back(right);
-		
+		op->pos = token.pos;
+		op->line = token.line;
 		left = op;
 	}
 
