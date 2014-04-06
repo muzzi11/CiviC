@@ -20,6 +20,8 @@ void SeperateVarDecFromInit(NodePtr root)
 		if(it != list.end())
 		{
 			auto assignment = std::make_shared<Assignment>(varDec->var.name);
+			assignment->pos = varDec->pos;
+			assignment->line = varDec->line;
 			assignment->children.push_back(varDec->children.back());
 			list.insert(++it, assignment);
 			varDec->children.pop_back();
@@ -39,6 +41,8 @@ void SeperateGlobalDefFromInit(NodePtr root)
 		if(!globalDef->HasAssignment()) return;
 
 		auto assignment = std::make_shared<Assignment>(globalDef->var.name);
+		assignment->pos = globalDef->pos;
+		assignment->line = globalDef->line;
 		assignment->children.push_back(globalDef->children.back());
 		init->children.push_back(assignment);
 		globalDef->children.pop_back();

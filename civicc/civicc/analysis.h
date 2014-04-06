@@ -10,16 +10,17 @@ class Analyzer
 {
 public:
 	Analyzer::Analyzer();
-	std::string Analyse(Nodes::NodePtr root, bool = false);
+	std::string Analyse(Nodes::NodePtr root);
 
 private:
-	void ConsultTable(Nodes::NodePtr node, bool = false);
+	void ConsultTable(Nodes::NodePtr node);
 
 	void InsertGlobalDef(Nodes::NodePtr node);
 	void InsertGlobalDec(Nodes::NodePtr node);
 	void InsertFuncDef(Nodes::NodePtr node);
 	void InsertFuncDec(Nodes::NodePtr node);
 	void InsertVarDec(Nodes::NodePtr node);
+
 	void LookUpCall(Nodes::NodePtr node);
 	void LookUpIdentifier(Nodes::NodePtr node);
 	void LookUpAssignment(Nodes::NodePtr node);
@@ -31,9 +32,12 @@ private:
 	void TypeCheckFuncArgs(Nodes::NodePtr);
 	void TypeCheckFuncReturn(Nodes::NodePtr);
 	void TypeCheckUnary(Nodes::NodePtr);
+
 	void CheckGlobalDef(Nodes::NodePtr);
 	void CheckRedefinition(Nodes::NodePtr, std::string name, bool result);
-	
+	void CheckArrayDimensions(Nodes::NodePtr node, std::vector<int>);
+	void CheckArrayType(Nodes::NodePtr, Nodes::Type);
+
 	void TypeCheck(Nodes::NodePtr, Nodes::Type type);
 	Nodes::Type GetType(Nodes::NodePtr);
 
