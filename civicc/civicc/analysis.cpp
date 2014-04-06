@@ -48,7 +48,10 @@ void Analyzer::TypeCheckAssigment(Nodes::NodePtr node)
 		{
 			record->initialized = true;
 			for (auto child : ass->children)
+			{
+				if (isBoolOp(child)) return;
 				TypeCheck(child, record->type);
+			}
 		}		
 	}		
 }
@@ -61,18 +64,23 @@ void Analyzer::TypeCheckBinOp(Nodes::NodePtr node)
 	Nodes::Type type = Nodes::Type::None;	
 	auto left = binOp->children[0];
 	auto right = binOp->children[1];
-
 	auto leftType = GetType(left);
 	auto rightType = GetType(right);
-	if (leftType != rightType)
-	{
-		PrintErrorInfo(left->pos, left->line);
-		errors << "The operator's operands are of different types" << std::endl;
-	}
-	else if (binOp->op == Nodes::Operator::Modulo && (leftType != Nodes::Type::Int && leftType != Nodes::Type::Int))
+
+	if (binOp->op == Nodes::Operator::Modulo && (!IsNumber(leftType) || !IsNumber(rightType)))
 	{
 		PrintErrorInfo(left->pos, left->line);
 		errors << "Both operands of the modulo operator must be of type int" << std::endl;
+	}
+	else if (binOp->op == Nodes::Operator::Divide && (!IsNumber(leftType) || !IsNumber(rightType)))
+	{
+		PrintErrorInfo(left->pos, left->line);
+		errors << "Both operands of the division operator must be of type int or float" << std::endl;
+	}
+	else if (leftType != rightType)
+	{
+		PrintErrorInfo(left->pos, left->line);
+		errors << "The operator's operands are of different types" << std::endl;
 	}
 	else
 	{
@@ -84,7 +92,20 @@ void Analyzer::TypeCheckUnary(Nodes::NodePtr node)
 {
 	auto unOp = Nodes::StaticCast<Nodes::UnaryOp>(node);
 	if (!unOp) return;
-	unOp->type = GetType(unOp);
+
+	auto operandType = GetType(unOp);
+	if (unOp->op == Nodes::Operator::Not && operandType != Nodes::Type::Bool)
+	{
+		PrintErrorInfo(node->pos, node->line);
+		errors << "The operand of the negation operator must be of type bool" << std::endl;
+	}
+	else if (unOp->op == Nodes::Operator::Negate && operandType != Nodes::Type::Int && operandType != Nodes::Type::Float)
+	{
+		PrintErrorInfo(node->pos, node->line);
+		errors << "The operand of the negation operator must be of type int or float" << std::endl;
+	}
+
+	unOp->type = operandType;
 }
 
 void Analyzer::TypeCheckFuncArgs(Nodes::NodePtr node)
@@ -248,7 +269,7 @@ void Analyzer::InsertFuncDef(Nodes::NodePtr node)
 		ProcesInitFunc(funDef);
 		return;
 	}
-
+	
 	auto funcRecord = SymbolTable::Record(false, funDef->header.returnType, node);		
 	for (auto param : funDef->header.params)	
 		funcRecord.funcArgs.push_back(param.type);
@@ -269,6 +290,17 @@ void Analyzer::InsertFuncDef(Nodes::NodePtr node)
 		ConsultTable(child);
 		TypeCheck(child);
 	}
+
+	//Check if the function body contains a return statement
+	if (funDef->header.returnType != Nodes::Type::Void)
+	{
+		if (funDef->children.empty() || !Nodes::StaticCast<Nodes::Return>(funDef->children.back()))
+		{
+			PrintErrorInfo(node->pos, node->line);
+			errors << "Missing return statement" << std::endl;
+		}
+	}
+
 	sheaf.FinalizeScope();
 }
 
@@ -278,6 +310,8 @@ void Analyzer::InsertFuncDec(Nodes::NodePtr node)
 	if (!funDec) return;
 
 	auto record = SymbolTable::Record(false, funDec->header.returnType, node);	
+	for (auto param : funDec->header.params)
+		record.funcArgs.push_back(param.type);
 	CheckRedefinition(node, funDec->header.name, sheaf.Insert(funDec->header.name, record));
 }
 
@@ -328,6 +362,7 @@ void Analyzer::LookUpAssignment(Nodes::NodePtr node)
 {
 	auto assignment = Nodes::StaticCast<Nodes::Assignment>(node);
 	if (!assignment) return;
+
 	auto record = sheaf.LookUp(assignment->name);
 	if(record)
 	{
@@ -375,4 +410,20 @@ void Analyzer::CheckRedefinition(Nodes::NodePtr node, std::string name, bool suc
 		PrintErrorInfo(node->pos, node->line);
 		errors << "Redefinition of " << name << std::endl;
 	}
+}
+
+bool Analyzer::IsNumber(const Nodes::Type type)
+{
+	return type == Nodes::Type::Int || type == Nodes::Type::Float;
+}
+
+bool Analyzer::isBoolOp(const Nodes::NodePtr node)
+{
+	auto op = Nodes::StaticCast<Nodes::BinaryOp>(node);
+	if (!op) return false;
+
+	return op->op == Nodes::Operator::And || op->op == Nodes::Operator::Equal ||
+		op->op == Nodes::Operator::LessEqual || op->op == Nodes::Operator::More ||
+		op->op == Nodes::Operator::MoreEqual || op->op == Nodes::Operator::Less ||
+		op->op == Nodes::Operator::NotEqual || op->op == Nodes::Operator::Or;
 }

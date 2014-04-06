@@ -54,6 +54,9 @@
     <ClCompile Include="assembly.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="nested_func_renaming.cpp">
+      <Filter>Passes</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="tokenizer.h">
@@ -88,6 +91,9 @@
     </ClInclude>
     <ClInclude Include="assembly.h">
       <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="nested_func_renaming.h">
+      <Filter>Passes</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

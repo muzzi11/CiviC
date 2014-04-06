@@ -1,11 +1,4 @@
-int foo()
-{
-	return 2;
-}
-
-int test(int a, int b)
-{
-	float k = 0.0;
-	int b = 1.0 % 3.0;
-	return i;
+void foo() {
+    int[3] a = [[1, 2], 3];
+    int[3] b = [[1, 2], [[3]]];
 }

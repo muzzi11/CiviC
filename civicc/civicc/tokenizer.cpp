@@ -1,6 +1,7 @@
 #include <cctype>
 #include <algorithm>
 #include <sstream>
+#include <iostream>
 
 #include "tokenizer.h"
 

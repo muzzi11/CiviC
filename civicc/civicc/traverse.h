@@ -52,6 +52,21 @@ void Replace(Nodes::NodePtr& root, std::function<Nodes::NodePtr(std::shared_ptr<
 		if(root->Family() == T::Family()) root = func(std::static_pointer_cast<T>(root));
 	}
 }
+template<class T>
+void ReplaceBreadth(Nodes::NodePtr& root, std::function<Nodes::NodePtr(std::shared_ptr<T>, std::shared_ptr<T> parent)> func)
+{
+	if (root)
+	{
+		size_t i = 0;
+		while (i < root->children.size())
+		{
+			auto child = root->children[i++];
+			if (child->Family() == T::Family()) child = func(std::static_pointer_cast<T>(child), std::static_pointer_cast<T>(root));
+		}
+		i = 0;
+		while (i < root->children.size()) ReplaceBreadth(root->children[i++], func);
+	}
+}
 
 // -1 for unlimited depth
 /*
