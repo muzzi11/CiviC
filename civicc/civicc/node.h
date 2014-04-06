@@ -175,6 +175,7 @@ namespace Nodes
 	struct Return : public Node<Return>
 	{
 		std::string functionName;
+		Type type;
 	};
 
 	struct Call : public Node<Call>
