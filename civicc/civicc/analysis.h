@@ -27,6 +27,7 @@ private:
 	void TypeCheckBinOp(Nodes::NodePtr);
 	void TypeCheckFuncArgs(Nodes::NodePtr);
 	void TypeCheckFuncReturn(Nodes::NodePtr);
+	void TypeCheckUnary(Nodes::NodePtr);
 	void CheckGlobalDef(Nodes::NodePtr);
 
 	void TypeCheck(Nodes::NodePtr, Nodes::Type type);

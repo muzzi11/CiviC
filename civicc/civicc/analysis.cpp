@@ -29,7 +29,7 @@ void Analyzer::TypeCheck(Nodes::NodePtr node)
 	}
 	else if(node->Family() == Nodes::UnaryOp::Family())
 	{
-		// unary type check
+		TypeCheckUnary(node);
 	}
 	else if (node->Family() == Nodes::BinaryOp::Family())
 	{
@@ -77,6 +77,12 @@ void Analyzer::TypeCheckBinOp(Nodes::NodePtr node)
 	auto rightType = GetType(right);
 	if (leftType != rightType) std::cout << "Operator types differ at line " << left->line << " column " << left->pos << std::endl;
 	else binOp->type = leftType;
+}
+
+void Analyzer::TypeCheckUnary(Nodes::NodePtr node)
+{
+	auto unOp = std::static_pointer_cast<Nodes::UnaryOp>(node);
+	unOp->type = GetType(unOp->children[0]);
 }
 
 void Analyzer::TypeCheckFuncArgs(Nodes::NodePtr node)
