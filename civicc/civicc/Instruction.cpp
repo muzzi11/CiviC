@@ -86,21 +86,28 @@ const std::string ArithInstr::Multiply(Instr::Type type)
 	return (type == Instr::Int) ? iMul : fMul;
 }
 
-const std::string ArithInstr::Division(Instr::Type type)
+const std::string ArithInstr::Divide(Instr::Type type)
 {
 	assert(type == Instr::Int || type == Instr::Float);
 	return (type == Instr::Int) ? iDiv : fDiv;
 }
 
-const std::string ArithInstr::Modulo()
+const std::string ArithInstr::Modulo(Instr::Type type)
 {
+	assert(type == Instr::Int);
 	return iRem;
 }
 
-const std::string ArithInstr::Negation(Instr::Type type)
+const std::string ArithInstr::Negate(Instr::Type type)
 {
 	assert(type == Instr::Int || type == Instr::Float);
 	return (type == Instr::Int) ? iNeg : fNeg;
+}
+
+const std::string ArithInstr::Not(Instr::Type type)
+{
+	assert(type == Instr::Bool);
+	return bNot;
 }
 
 const std::string ArithInstr::Increment(const std::string local, const int constant)

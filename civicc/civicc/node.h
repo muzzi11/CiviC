@@ -84,6 +84,12 @@ namespace Nodes
 		}
 	};
 
+	template<class T>
+	std::shared_ptr<T> StaticCast(NodePtr node)
+	{
+		return node->IsFamily<T>() ? std::static_pointer_cast<T>(node) : nullptr;
+	}
+
 	struct Variable
 	{
 		bool array = false;

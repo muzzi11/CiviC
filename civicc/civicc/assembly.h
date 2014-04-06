@@ -25,5 +25,5 @@ private:
 
 	std::string FunDef(std::shared_ptr<Nodes::FunctionDef> root);
 	std::string Assign(std::shared_ptr<Nodes::Assignment> root);
-	std::string BinOp(std::shared_ptr<Nodes::BinaryOp> root);
+	std::string Expression(Nodes::NodePtr root);
 };

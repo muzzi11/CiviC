@@ -1,9 +1,11 @@
+int foo()
+{
+	return 2;
+}
+
 int test(int a, int b)
 {
 	float k = 0.0;
 	int b = 1.0 % 3.0;
-	for (int j = 0, k, 1.1)
-	{
-	}
 	return i;
 }

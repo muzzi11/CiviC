@@ -78,6 +78,12 @@ std::string AssemblyGenerator::FunDef(std::shared_ptr<FunctionDef> root)
 		return false;
 	});
 
+	if(root->children.back()->IsFamily<Return>())
+	{
+		auto ret = std::static_pointer_cast<Return>(root->children.back());
+
+	}
+
 	return sstream.str();
 }
 
@@ -85,19 +91,7 @@ std::string AssemblyGenerator::Assign(std::shared_ptr<Assignment> root)
 {
 	std::stringstream sstream;
 
-	TraverseBreadth<Literal>(root, [&](std::shared_ptr<Literal> literal, NodePtr parent)
-	{
-		if(literal->type == Type::Int) sstream << '\t' << VarInstr::LoadConstant(literal->intValue) << "\n";
-		if(literal->type == Type::Float) sstream << '\t' << VarInstr::LoadConstant(literal->floatValue) << "\n";
-		return true;
-	});
-
-	TraverseDepth<BinaryOp>(root, [&](std::shared_ptr<BinaryOp> op, NodePtr parent)
-	{
-		if(op->op == Operator::Multiply) sstream << '\t' << ArithInstr::Multiply(NodeTypeToInstrType(op->type)) << "\n";
-		else if(op->op == Operator::Add) sstream << '\t' << ArithInstr::Add(NodeTypeToInstrType(op->type)) << "\n";
-		return true;
-	});
+	sstream << Expression(root);
 
 	if(root->dec->IsFamily<GlobalDec>() || root->dec->IsFamily<GlobalDef>())
 	{
@@ -113,6 +107,48 @@ std::string AssemblyGenerator::Assign(std::shared_ptr<Assignment> root)
 		int frame = assignFrameTable[root] - localTable[root->dec].frame;
 		sstream << '\t' << VarInstr::StoreRelative(NodeTypeToInstrType(root->type), index, frame);
 	}
+
+	return sstream.str();
+}
+
+std::string AssemblyGenerator::Expression(NodePtr root)
+{
+	std::stringstream sstream;
+	std::unordered_map<Operator, std::function<std::string(Instr::Type)>> arithOpMap(
+	{
+		{ Operator::Add, &ArithInstr::Add },
+		{ Operator::Subtract, &ArithInstr::Sub },
+		{ Operator::Multiply, &ArithInstr::Multiply },
+		{ Operator::Divide, &ArithInstr::Divide },
+		{ Operator::Modulo, &ArithInstr::Modulo },
+		{ Operator::Not, &ArithInstr::Not },
+		{ Operator::Negate, &ArithInstr::Negate }
+	});
+
+	TraverseBreadth<Literal>(root, [&](std::shared_ptr<Literal> literal, NodePtr parent)
+	{
+		if(literal->type == Type::Int) sstream << '\t' << VarInstr::LoadConstant(literal->intValue) << '\n';
+		else if(literal->type == Type::Float) sstream << '\t' << VarInstr::LoadConstant(literal->floatValue) << '\n';
+		else sstream << '\t' << VarInstr::LoadConstant(literal->boolValue) << '\n';
+		return true;
+	});
+
+	TraverseDepth(root, [&](NodePtr node, NodePtr parent)
+	{
+		auto unOp = StaticCast<UnaryOp>(node);
+		if(unOp) sstream << '\t' << arithOpMap[unOp->op](NodeTypeToInstrType(unOp->type)) << '\n';
+
+		auto binOp = StaticCast<BinaryOp>(node);
+		if(binOp) sstream << '\t' << arithOpMap[binOp->op](NodeTypeToInstrType(binOp->type)) << '\n';
+
+		auto call = StaticCast<Call>(node);
+		if(call)
+		{
+
+		}
+
+		return true;
+	});
 
 	return sstream.str();
 }
