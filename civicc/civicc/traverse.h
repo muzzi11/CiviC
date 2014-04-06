@@ -9,23 +9,16 @@
 
 // bool func(node, parent) - return false to terminate traversel
 template<class T>
-void TraverseBreadth(Nodes::NodePtr root, std::function<bool(std::shared_ptr<T>, Nodes::NodePtr)> func, Nodes::NodePtr parent = nullptr)
+void TraverseBreadth(Nodes::NodePtr root, std::function<void(std::shared_ptr<T>, Nodes::NodePtr)> func, Nodes::NodePtr parent = nullptr)
 {
 	if(root)
 	{
-		if(root->Family() & T::Family() && parent == nullptr)
-		{
-			if(!func(std::static_pointer_cast<T>(root), parent)) return;
-		}
+		if(root->Family() & T::Family() && parent == nullptr) func(std::static_pointer_cast<T>(root), parent);
 		size_t i = 0;
 		while(i < root->children.size())
 		{
 			auto child = root->children[i++];
-
-			if(child->Family() == T::Family())
-			{
-				if(!func(std::static_pointer_cast<T>(child), root)) return;
-			}
+			if(child->Family() == T::Family()) func(std::static_pointer_cast<T>(child), root);
 		}
 		i = 0;
 		while(i < root->children.size()) TraverseBreadth(root->children[i++], func, root);
@@ -33,7 +26,7 @@ void TraverseBreadth(Nodes::NodePtr root, std::function<bool(std::shared_ptr<T>,
 }
 
 template<class T>
-void TraverseDepth(Nodes::NodePtr root, std::function<bool(std::shared_ptr<T>, Nodes::NodePtr)> func, Nodes::NodePtr parent = nullptr)
+void TraverseDepth(Nodes::NodePtr root, std::function<void(std::shared_ptr<T>, Nodes::NodePtr)> func, Nodes::NodePtr parent = nullptr)
 {
 	if(root)
 	{
@@ -41,13 +34,13 @@ void TraverseDepth(Nodes::NodePtr root, std::function<bool(std::shared_ptr<T>, N
 		while(i < root->children.size()) TraverseDepth(root->children[i++], func, root);
 		if(root->Family() & T::Family())
 		{
-			if(!func(std::static_pointer_cast<T>(root), parent)) return;
+			func(std::static_pointer_cast<T>(root), parent);
 		}
 	}
 }
 
-void TraverseBreadth(Nodes::NodePtr root, std::function<bool(Nodes::NodePtr, Nodes::NodePtr)> func, Nodes::NodePtr parent = nullptr);
-void TraverseDepth(Nodes::NodePtr root, std::function<bool(Nodes::NodePtr, Nodes::NodePtr)> func, Nodes::NodePtr parent = nullptr);
+void TraverseBreadth(Nodes::NodePtr root, std::function<void(Nodes::NodePtr, Nodes::NodePtr)> func, Nodes::NodePtr parent = nullptr);
+void TraverseDepth(Nodes::NodePtr root, std::function<void(Nodes::NodePtr, Nodes::NodePtr)> func, Nodes::NodePtr parent = nullptr);
 
 template<class T>
 void Replace(Nodes::NodePtr& root, std::function<Nodes::NodePtr(std::shared_ptr<T>)> func)
@@ -90,7 +83,6 @@ int Count(Nodes::NodePtr root)
 	TraverseBreadth<T>(root, [&](std::shared_ptr<T>, NodePtr)
 	{
 		count++;
-		return true;
 	});
 
 	return count;

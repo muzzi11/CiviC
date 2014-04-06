@@ -13,7 +13,7 @@ void SeperateVarDecFromInit(NodePtr root)
 {
 	TraverseBreadth<VarDec>(root, [](std::shared_ptr<VarDec> varDec, NodePtr parent)
 	{
-		if(!varDec->HasAssignment()) return true;
+		if(!varDec->HasAssignment()) return;
 
 		auto& list = parent->children;
 		auto it = std::find(list.begin(), list.end(), varDec);
@@ -24,8 +24,6 @@ void SeperateVarDecFromInit(NodePtr root)
 			list.insert(++it, assignment);
 			varDec->children.pop_back();
 		}
-
-		return true;
 	});
 }
 
@@ -38,14 +36,12 @@ void SeperateGlobalDefFromInit(NodePtr root)
 
 	TraverseBreadth<GlobalDef>(root, [&](std::shared_ptr<GlobalDef> globalDef, NodePtr parent)
 	{
-		if(!globalDef->HasAssignment()) return true;
+		if(!globalDef->HasAssignment()) return;
 
 		auto assignment = std::make_shared<Assignment>(globalDef->var.name);
 		assignment->children.push_back(globalDef->children.back());
 		init->children.push_back(assignment);
 		globalDef->children.pop_back();
-
-		return true;
 	});
 
 	if(!init->children.empty()) root->children.push_back(init);
@@ -67,20 +63,16 @@ void ReplaceNamesInFor(NodePtr root)
 			TraverseBreadth<Assignment>(forLoop->children[i], [&](std::shared_ptr<Assignment> assignment, NodePtr)
 			{
 				if(assignment->name == it->var.name) assignment->name = newName.str();
-				return true;
 			});
 
 			TraverseBreadth<Identifier>(forLoop->children[i], [&](std::shared_ptr<Identifier> id, NodePtr)
 			{
 				if(id->name == it->var.name) id->name = newName.str();
-				return true;
 			});
 		}
 
 		it->var.name = newName.str();
 		lower->name = newName.str();
-
-		return true;
 	});
 }
 
@@ -119,8 +111,6 @@ void SeperateForLoopInduction(NodePtr root)
 		map[parent].push_back(upperAss);
 		map[parent].push_back(stepVar);
 		map[parent].push_back(stepAss);
-
-		return true;
 	});
 
 	for(auto pair : map)

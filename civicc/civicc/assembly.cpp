@@ -26,7 +26,7 @@ std::string AssemblyGenerator::Generate(NodePtr root)
 {
 	std::stringstream sstream;
 
-	BuildVariableTables(root);
+	BuildTables(root);
 
 	TraverseBreadth(root, [&](NodePtr node, NodePtr parent)
 	{
@@ -34,8 +34,6 @@ std::string AssemblyGenerator::Generate(NodePtr root)
 		{
 			sstream << FunDef(std::static_pointer_cast<FunctionDef>(node));
 		}
-
-		return true;
 	});
 
 	sstream << "\n; globals:\n";
@@ -44,24 +42,24 @@ std::string AssemblyGenerator::Generate(NodePtr root)
 	return sstream.str();
 }
 
-void AssemblyGenerator::BuildVariableTables(Nodes::NodePtr root)
+void AssemblyGenerator::BuildTables(Nodes::NodePtr root)
 {
 	int frame = 0, index = 0;
 	NodePtr cur = nullptr;
 
 	TraverseBreadth(root, [&](NodePtr node, NodePtr parent)
 	{
-		if(node->IsFamily<FunctionDef>() && cur != parent)
+		auto funDef = StaticCast<FunctionDef>(node);
+		if(funDef && cur != parent)
 		{
 			frame++;
-			index = std::static_pointer_cast<FunctionDef>(node)->header.params.size();
+			index = funDef->header.params.size();
+			functionNestingTable[funDef] = frame;
 		}
 
 		if(node->IsFamily<GlobalDec>() || node->IsFamily<GlobalDef>()) globalIndexTable[node] = globalIndexTable.size();
 		if(node->IsFamily<VarDec>()) localTable[node] = { frame, index };
 		if(node->IsFamily<Assignment>()) assignFrameTable[node] = frame;
-
-		return true;
 	});
 }
 
@@ -75,7 +73,6 @@ std::string AssemblyGenerator::FunDef(std::shared_ptr<FunctionDef> root)
 	TraverseBreadth<Assignment>(root, [&](std::shared_ptr<Assignment> assign, NodePtr parent)
 	{
 		sstream << Assign(assign);
-		return false;
 	});
 
 	if(root->children.back()->IsFamily<Return>())
@@ -130,7 +127,6 @@ std::string AssemblyGenerator::Expression(NodePtr root)
 		if(literal->type == Type::Int) sstream << '\t' << VarInstr::LoadConstant(literal->intValue) << '\n';
 		else if(literal->type == Type::Float) sstream << '\t' << VarInstr::LoadConstant(literal->floatValue) << '\n';
 		else sstream << '\t' << VarInstr::LoadConstant(literal->boolValue) << '\n';
-		return true;
 	});
 
 	TraverseDepth(root, [&](NodePtr node, NodePtr parent)
@@ -146,8 +142,6 @@ std::string AssemblyGenerator::Expression(NodePtr root)
 		{
 
 		}
-
-		return true;
 	});
 
 	return sstream.str();
