@@ -13,13 +13,15 @@ public:
 	std::string Analyse(Nodes::NodePtr root);
 
 private:
-	void ConsultTable(Nodes::NodePtr node);
+	void BuildTable(Nodes::NodePtr node);
 
 	void InsertGlobalDef(Nodes::NodePtr node);
 	void InsertGlobalDec(Nodes::NodePtr node);
 	void InsertFuncDef(Nodes::NodePtr node);
 	void InsertFuncDec(Nodes::NodePtr node);
 	void InsertVarDec(Nodes::NodePtr node);
+
+	void InsertFuncBody(Nodes::NodePtr);
 
 	void LookUpCall(Nodes::NodePtr node);
 	void LookUpIdentifier(Nodes::NodePtr node);

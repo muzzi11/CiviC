@@ -20,12 +20,11 @@ namespace SymbolTable
 		void FinalizeScope();
 
 		Record* LookUp(const std::string name);
-		Record* LookUp(const std::string name, const int level, const int scope);
 		bool Insert(const std::string name, const Record record);
 
 	private:
 		int level;
-		std::unordered_map<int, Table> tables;
+		std::unordered_map<int, std::vector<Table>> tables;
 	};
 		
 	class Table
@@ -38,6 +37,7 @@ namespace SymbolTable
 		void Clear();
 
 	private:
+		Table* parent;
 		std::unordered_map<std::string, Record> records;
 	};
 

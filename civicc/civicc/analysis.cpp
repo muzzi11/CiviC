@@ -14,11 +14,7 @@ std::string Analyzer::Analyse(Nodes::NodePtr root)
 {
 	if (!root->children.empty())
 	{
-		for (auto child : root->children)
-		{
-			ConsultTable(child);
-			TypeCheck(child);
-		}
+		BuildTable(root);
 	}
 	return errors.str();
 }
@@ -265,214 +261,7 @@ void Analyzer::TypeCheck(Nodes::NodePtr node, Nodes::Type type)
 			PrintErrorInfo(node->pos, node->line);
 			errors << "Function call " << call->name << " does not return of type " << Nodes::TypeToString(type) << std::endl;
 		}
-	}
-		
-	//auto arrayExpr = std::static_pointer_cast<Nodes::Call>(node);	
-}
-
-void Analyzer::ConsultTable(Nodes::NodePtr node)
-{	
-	InsertGlobalDef(node);
-	InsertGlobalDec(node);
-	InsertFuncDef(node);
-	InsertFuncDec(node);	
-	InsertVarDec(node);
-	LookUpCall(node);
-	LookUpAssignment(node);
-	LookUpIdentifier(node);
-
-	// Function def traversal is done in the InsertFunDef function
-	if(!node->IsFamily<Nodes::FunctionDef>())
-		Analyse(node);
-}
-
-void Analyzer::InsertGlobalDef(Nodes::NodePtr node)
-{
-	auto globDef = Nodes::StaticCast<Nodes::GlobalDef>(node);
-	if (!globDef) return;
-
-	auto record = SymbolTable::Record(false, globDef->var.type, node);
-
-	if (globDef->var.array)
-	{
-		CheckArrayType(node, Nodes::Type::Int);
-		for (auto child : globDef->children[0]->children)
-		{
-			auto lit = Nodes::StaticCast<Nodes::Literal>(child);
-			if (!lit)
-			{
-				record.arrayDimensions.clear();
-				break;
-			}
-			record.arrayDimensions.push_back(lit->intValue);
-		}
-	}
-
-	CheckRedefinition(node, globDef->var.name, sheaf.Insert(globDef->var.name, record));
-	globalDefs.push_back(globDef->var.name);
-}
-
-void Analyzer::InsertGlobalDec(Nodes::NodePtr node)
-{
-	auto globDec = Nodes::StaticCast<Nodes::GlobalDec>(node);
-	if (!globDec) return;
-
-	auto record = SymbolTable::Record(false, globDec->param.type, node);
-	record.dim = globDec->param.dim;
-	CheckRedefinition(node, globDec->param.name, sheaf.Insert(globDec->param.name, record));		
-}
-
-void Analyzer::InsertFuncDef(Nodes::NodePtr node)
-{
-	auto funDef = Nodes::StaticCast<Nodes::FunctionDef>(node);
-	if (!funDef) return;
-
-	if (funDef->header.name.compare("__init") == 0)
-	{
-		ProcesInitFunc(funDef);
-		return;
-	}
-	
-	auto funcRecord = SymbolTable::Record(false, funDef->header.returnType, node);		
-	funcRecord.params = funDef->header.params;
-	CheckRedefinition(node, funDef->header.name, sheaf.Insert(funDef->header.name, funcRecord));
-
-	//Create new scope
-	sheaf.InitializeScope();
-	//Add every parameter to the newly created scope
-	for (auto param : funDef->header.params)
-	{
-		auto record = SymbolTable::Record(false, param.type, node);
-		CheckRedefinition(node, param.name, sheaf.Insert(param.name, record));
-
-		//Add array dimension variables to the table
-		if (param.dim.size() > 0)
-		{
-			for (auto dim : param.dim)
-			{
-				auto record = SymbolTable::Record(false, Nodes::Type::Int, node);
-				CheckRedefinition(node, dim, sheaf.Insert(dim, record));
-			}			
-		}		
-	}
-		
-	//Add the declarations/definitions inside the function body to the scope
-	for (auto child : funDef->children)
-	{
-		ConsultTable(child);
-		TypeCheck(child);
-	}
-
-	//Check if the function body contains a return statement
-	if (funDef->header.returnType != Nodes::Type::Void)
-	{
-		if (funDef->children.empty() || !Nodes::StaticCast<Nodes::Return>(funDef->children.back()))
-		{
-			PrintErrorInfo(node->pos, node->line);
-			errors << "Missing return statement" << std::endl;
-		}
-	}
-
-	sheaf.FinalizeScope();
-}
-
-void Analyzer::InsertFuncDec(Nodes::NodePtr node)
-{
-	auto funDec = Nodes::StaticCast<Nodes::FunctionDec>(node);
-	if (!funDec) return;
-
-	auto record = SymbolTable::Record(false, funDec->header.returnType, node);	
-	record.params = funDec->header.params;
-	CheckRedefinition(node, funDec->header.name, sheaf.Insert(funDec->header.name, record));
-}
-
-void Analyzer::InsertVarDec(Nodes::NodePtr node)
-{
-	auto varDec = Nodes::StaticCast<Nodes::VarDec>(node);
-	if (!varDec) return;
-
-	auto record = SymbolTable::Record(varDec->immutable, varDec->var.type, node);
-
-	if (varDec->var.array)
-	{	
-		CheckArrayType(node, Nodes::Type::Int);
-		for (auto child : varDec->children[0]->children)
-		{
-			auto lit = Nodes::StaticCast<Nodes::Literal>(child);
-			if (!lit)
-			{
-				record.arrayDimensions.clear();
-				break;
-			}
-			record.arrayDimensions.push_back(lit->intValue);
-		}
-	}
-	CheckRedefinition(node, varDec->var.name, sheaf.Insert(varDec->var.name, record));
-}
-
-void Analyzer::LookUpCall(Nodes::NodePtr node)
-{
-	auto funCall = Nodes::StaticCast<Nodes::Call>(node);
-	if (!funCall) return;
-
-	auto record = sheaf.LookUp(funCall->name);
-	if (!record)
-	{
-		PrintErrorInfo(node->pos, node->line);
-		errors << "Unkown function " << funCall->name << std::endl;
-	}
-	else
-	{
-		funCall->decPtr = record->decPtr;
-	}
-}
-
-void Analyzer::LookUpIdentifier(Nodes::NodePtr node)
-{	
-	auto identifier = Nodes::StaticCast<Nodes::Identifier>(node);
-	if (!identifier) return;
-
-	auto record = sheaf.LookUp(identifier->name);
-	if (!record)
-	{
-		PrintErrorInfo(node->pos, node->line);
-		errors << "Unkown identifier " << identifier->name << std::endl;
-	}
-	else
-	{
-		identifier->defOrDec = record->decPtr;
-	}
-}
-
-void Analyzer::LookUpAssignment(Nodes::NodePtr node)
-{
-	auto assignment = Nodes::StaticCast<Nodes::Assignment>(node);
-	if (!assignment) return;
-
-	auto record = sheaf.LookUp(assignment->name);
-	if(record)
-	{
-		assignment->dec = record->decPtr;
-		assignment->type = record->type;
-	}
-	else
-	{
-		PrintErrorInfo(node->pos, node->line);
-		errors << "Unknown identifier " << assignment->name << std::endl;
-	}
-}
-
-void Analyzer::ProcesInitFunc(std::shared_ptr<Nodes::FunctionDef> funcDef)
-{
-	auto funcRecord = SymbolTable::Record(false, funcDef->header.returnType, funcDef);
-	
-	for (auto child : funcDef->children)
-	{		
-		ConsultTable(child);
-		TypeCheck(child);
-		 CheckGlobalDef(child);
-	}
-	sheaf.FinalizeScope();
+	}		
 }
 
 void Analyzer::CheckGlobalDef(Nodes::NodePtr node)
@@ -552,4 +341,214 @@ void Analyzer::CheckArrayType(Nodes::NodePtr node, Nodes::Type type)
 		for (auto child : arrayExpr->children)
 			TypeCheck(child, type);
 	});
+}
+
+void Analyzer::BuildTable(Nodes::NodePtr root)
+{
+	for (auto child : root->children)
+	{
+		InsertFuncDec(child);
+		InsertFuncDef(child);
+	}
+
+	for (auto child : root->children)
+	{
+		InsertFuncBody(child);
+		InsertGlobalDef(child);
+		InsertGlobalDec(child);
+		InsertVarDec(child);
+
+		LookUpCall(child);
+		LookUpAssignment(child);
+		LookUpIdentifier(child);
+	}
+}
+
+
+void Analyzer::InsertFuncDec(Nodes::NodePtr node)
+{
+	auto funDec = Nodes::StaticCast<Nodes::FunctionDec>(node);
+	if (!funDec) return;
+
+	auto record = SymbolTable::Record(false, funDec->header.returnType, node);
+	record.params = funDec->header.params;
+	CheckRedefinition(node, funDec->header.name, sheaf.Insert(funDec->header.name, record));
+}
+
+void Analyzer::InsertFuncDef(Nodes::NodePtr node)
+{
+	auto funDef = Nodes::StaticCast<Nodes::FunctionDef>(node);
+	if (!funDef) return;
+
+	if (funDef->header.name.compare("__init") == 0)
+	{
+		ProcesInitFunc(funDef);
+		return;
+	}
+
+	auto funcRecord = SymbolTable::Record(false, funDef->header.returnType, node);
+	funcRecord.params = funDef->header.params;
+	CheckRedefinition(node, funDef->header.name, sheaf.Insert(funDef->header.name, funcRecord));
+}
+
+void Analyzer::InsertFuncBody(Nodes::NodePtr node)
+{
+	auto funDef = Nodes::StaticCast<Nodes::FunctionDef>(node);
+	if (!funDef) return;
+
+	sheaf.InitializeScope();
+	//Add every parameter to the newly created scope
+	for (auto param : funDef->header.params)
+	{
+		auto record = SymbolTable::Record(false, param.type, node);
+		CheckRedefinition(node, param.name, sheaf.Insert(param.name, record));
+
+		//Add array dimension variables to the table
+		if (param.dim.size() > 0)
+		{
+			for (auto dim : param.dim)
+			{
+				auto record = SymbolTable::Record(false, Nodes::Type::Int, node);
+				CheckRedefinition(node, dim, sheaf.Insert(dim, record));
+			}
+		}
+	}
+
+	BuildTable(node);
+
+	//Check if the function body contains a return statement
+	if (funDef->header.returnType != Nodes::Type::Void)
+	{
+		if (funDef->children.empty() || !Nodes::StaticCast<Nodes::Return>(funDef->children.back()))
+		{
+			PrintErrorInfo(node->pos, node->line);
+			errors << "Missing return statement" << std::endl;
+		}
+	}
+
+	sheaf.FinalizeScope();
+}
+
+void Analyzer::ProcesInitFunc(std::shared_ptr<Nodes::FunctionDef> funcDef)
+{
+	auto funcRecord = SymbolTable::Record(false, funcDef->header.returnType, funcDef);
+
+	for (auto child : funcDef->children)
+	{
+		BuildTable(child);
+		TypeCheck(child);
+		CheckGlobalDef(child);
+	}
+}
+
+void Analyzer::InsertGlobalDef(Nodes::NodePtr node)
+{
+	auto globDef = Nodes::StaticCast<Nodes::GlobalDef>(node);
+	if (!globDef) return;
+
+	auto record = SymbolTable::Record(false, globDef->var.type, node);
+
+	if (globDef->var.array)
+	{
+		CheckArrayType(node, Nodes::Type::Int);
+		for (auto child : globDef->children[0]->children)
+		{
+			auto lit = Nodes::StaticCast<Nodes::Literal>(child);
+			if (!lit)
+			{
+				record.arrayDimensions.clear();
+				break;
+			}
+			record.arrayDimensions.push_back(lit->intValue);
+		}
+	}
+
+	CheckRedefinition(node, globDef->var.name, sheaf.Insert(globDef->var.name, record));
+	globalDefs.push_back(globDef->var.name);
+}
+
+void Analyzer::InsertGlobalDec(Nodes::NodePtr node)
+{
+	auto globDec = Nodes::StaticCast<Nodes::GlobalDec>(node);
+	if (!globDec) return;
+
+	auto record = SymbolTable::Record(false, globDec->param.type, node);
+	record.dim = globDec->param.dim;
+	CheckRedefinition(node, globDec->param.name, sheaf.Insert(globDec->param.name, record));
+}
+
+void Analyzer::InsertVarDec(Nodes::NodePtr node)
+{
+	auto varDec = Nodes::StaticCast<Nodes::VarDec>(node);
+	if (!varDec) return;
+
+	auto record = SymbolTable::Record(varDec->immutable, varDec->var.type, node);
+
+	if (varDec->var.array)
+	{
+		CheckArrayType(node, Nodes::Type::Int);
+		for (auto child : varDec->children[0]->children)
+		{
+			auto lit = Nodes::StaticCast<Nodes::Literal>(child);
+			if (!lit)
+			{
+				record.arrayDimensions.clear();
+				break;
+			}
+			record.arrayDimensions.push_back(lit->intValue);
+		}
+	}
+	CheckRedefinition(node, varDec->var.name, sheaf.Insert(varDec->var.name, record));
+}
+
+void Analyzer::LookUpCall(Nodes::NodePtr node)
+{
+	auto funCall = Nodes::StaticCast<Nodes::Call>(node);
+	if (!funCall) return;
+
+	auto record = sheaf.LookUp(funCall->name);
+	if (!record)
+	{
+		PrintErrorInfo(node->pos, node->line);
+		errors << "Unkown function " << funCall->name << std::endl;
+	}
+	else
+	{
+		funCall->decPtr = record->decPtr;
+	}
+}
+
+void Analyzer::LookUpIdentifier(Nodes::NodePtr node)
+{
+	auto identifier = Nodes::StaticCast<Nodes::Identifier>(node);
+	if (!identifier) return;
+
+	auto record = sheaf.LookUp(identifier->name);
+	if (!record)
+	{
+		PrintErrorInfo(node->pos, node->line);
+		errors << "Unkown identifier " << identifier->name << std::endl;
+	}
+	else
+	{
+		identifier->defOrDec = record->decPtr;
+	}
+}
+
+void Analyzer::LookUpAssignment(Nodes::NodePtr node)
+{
+	auto assignment = Nodes::StaticCast<Nodes::Assignment>(node);
+	if (!assignment) return;
+
+	auto record = sheaf.LookUp(assignment->name);
+	if (record)
+	{
+		assignment->dec = record->decPtr;
+		assignment->type = record->type;
+	}
+	else
+	{
+		PrintErrorInfo(node->pos, node->line);
+		errors << "Unknown identifier " << assignment->name << std::endl;
+	}
 }
