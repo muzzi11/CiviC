@@ -112,6 +112,7 @@ std::string AssemblyGenerator::FunDef(std::shared_ptr<FunctionDef> root)
 	});
 	sstream << '\t' << CntrlFlwInstr::EnterSub(varCount) << "\n";
 
+
 	TraverseBreadth(root, [&](NodePtr node, NodePtr parent)
 	{
 		if(parent == root) sstream << Statements(node);

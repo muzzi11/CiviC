@@ -1,4 +1,6 @@
-void test()
+void test(int a, int b)
 {
-	if(true){}
+	for(int i = 0, a, b)
+	{
+	}
 }
