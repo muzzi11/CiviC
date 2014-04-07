@@ -297,6 +297,8 @@ std::string AssemblyGenerator::Statements(NodePtr root)
 	if(ifStatement) 
 		sstream << IfElse(ifStatement);
 
+	sstream << DoWhileLoop(root);
+
 	auto assign = StaticCast<Assignment>(root);
 	if(assign) sstream << Assign(assign);
 
@@ -338,6 +340,25 @@ std::string AssemblyGenerator::IfElse(NodePtr root)
 			for(size_t i = 1; i < ifStatement->children.size(); ++i) sstream << Statements(ifStatement->children[i]);
 			sstream << branch << ":\n";
 		}
+	}
+
+	return sstream.str();
+}
+
+std::string AssemblyGenerator::DoWhileLoop(NodePtr root)
+{
+	std::stringstream sstream;
+
+	auto doWhile = StaticCast<DoWhile>(root);
+	if(doWhile)
+	{
+		std::stringstream label;
+		label << labelCounter++ << "_do_while";
+
+		sstream << label.str() << ":\n";
+		for(size_t i = 0; i < doWhile->children.size() - 1; ++i) sstream << Statements(doWhile->children[i]);
+		sstream << Expression(doWhile->children.back());
+		sstream << CntrlFlwInstr::Branch(true, label.str()) << '\n';
 	}
 
 	return sstream.str();

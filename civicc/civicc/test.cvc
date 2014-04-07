@@ -6,13 +6,15 @@ return 3;
 
 int test(int a, int b)
 {
-	if(true + false)
+	while(true)
 	{
 		foo(1.0);
 	}
-	else
+
+	do
 	{
-		foo(2.0);
-	}
+		foo(1.0);
+	} while(true);
+
 	return 0;
 }

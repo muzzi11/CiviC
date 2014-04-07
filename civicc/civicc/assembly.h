@@ -32,4 +32,5 @@ private:
 	std::string Expression(Nodes::NodePtr root);
 	std::string Statements(Nodes::NodePtr root);
 	std::string IfElse(Nodes::NodePtr root);
+	std::string DoWhileLoop(Nodes::NodePtr root);
 };
