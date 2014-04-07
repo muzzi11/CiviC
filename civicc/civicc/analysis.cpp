@@ -233,6 +233,7 @@ void Analyzer::TypeCheck(Nodes::NodePtr node)
 	TypeCheckFuncArgs(node);
 	TypeCheckFuncReturn(node);
 	TypeCheckCast(node);
+	TypeCheckConditional(node);
 }
 
 void Analyzer::TypeCheckAssigment(Nodes::NodePtr node)
@@ -297,6 +298,11 @@ void Analyzer::TypeCheckBinOp(Nodes::NodePtr node)
 	{
 		PrintErrorInfo(left->pos, left->line);
 		errors << "Both operands of the division operator must be of type int or float" << std::endl;
+	}
+	else if (IsNumberComp(node) && (!IsNumber(leftType) || !IsNumber(rightType)))
+	{
+		PrintErrorInfo(node->pos, node->line);
+		errors << "Both operands of this comparison operator must be of type int or float" << std::endl;
 	}
 	else if (leftType != rightType)
 	{
@@ -388,6 +394,72 @@ void Analyzer::TypeCheckCast(Nodes::NodePtr node)
 {
 	auto cast = Nodes::StaticCast<Nodes::Cast>(node);
 	if (cast) cast->castFrom = GetType(cast->children[0]);
+}
+
+void Analyzer::TypeCheckConditional(Nodes::NodePtr node)
+{
+	auto whileLoop = Nodes::StaticCast<Nodes::While>(node);
+	if (whileLoop) TypeCheckExpression(whileLoop->children.back(), Nodes::Type::Bool);
+
+	auto doWhile = Nodes::StaticCast<Nodes::DoWhile>(node);
+	if (doWhile) TypeCheckExpression(doWhile->children.back(), Nodes::Type::Bool);
+
+	auto ifStatement = Nodes::StaticCast<Nodes::If>(node);
+	if (ifStatement) TypeCheckExpression(ifStatement->children.back(), Nodes::Type::Bool);
+}
+
+void Analyzer::TypeCheckExpression(Nodes::NodePtr node, Nodes::Type type)
+{
+	if (node->children.empty()) TypeCheck(node, type);
+
+	for (auto child : node->children)
+	{
+		auto lit = Nodes::StaticCast<Nodes::Literal>(node);
+		if (lit && lit->type != type)
+		{
+			PrintErrorInfo(node->pos, node->line);
+			errors << "Literal is not of type " << Nodes::TypeToString(type) << std::endl;
+			return;
+		}
+
+		auto binOp = Nodes::StaticCast<Nodes::BinaryOp>(node);
+		if (binOp && GetType(node) != type)
+		{			
+			if (type == Nodes::Type::Bool && isBoolOp(node)) return;
+			PrintErrorInfo(node->pos, node->line);
+			errors << "The expression is not of type " << Nodes::TypeToString(type) << std::endl;
+			return;
+		}				
+
+		auto id = Nodes::StaticCast<Nodes::Identifier>(node);
+		if (id)
+		{
+			auto record = sheaf.LookUp(id->name);
+			if (record && record->type != type)
+			{
+				PrintErrorInfo(node->pos, node->line);
+				errors << "Identifier " << id->name << " is not of type " << Nodes::TypeToString(type) << std::endl;
+			}
+		}
+
+		auto cast = Nodes::StaticCast<Nodes::Cast>(node);
+		if (cast && cast->type != type)
+		{
+			PrintErrorInfo(node->pos, node->line);
+			errors << "Cast is not of type " << Nodes::TypeToString(type) << std::endl;
+		}
+
+		auto call = Nodes::StaticCast<Nodes::Call>(node);
+		if (call)
+		{
+			auto record = sheaf.LookUp(call->name);
+			if (record && record->type != type)
+			{
+				PrintErrorInfo(node->pos, node->line);
+				errors << "Function call " << call->name << " does not return of type " << Nodes::TypeToString(type) << std::endl;
+			}
+		}
+	}
 }
 
 void Analyzer::TypeCheck(Nodes::NodePtr node, Nodes::Type type)
@@ -571,4 +643,13 @@ bool Analyzer::isBoolOp(const Nodes::NodePtr node)
 		op->op == Nodes::Operator::LessEqual || op->op == Nodes::Operator::More ||
 		op->op == Nodes::Operator::MoreEqual || op->op == Nodes::Operator::Less ||
 		op->op == Nodes::Operator::NotEqual || op->op == Nodes::Operator::Or;
+}
+
+bool Analyzer::IsNumberComp(const Nodes::NodePtr node)
+{
+	auto op = Nodes::StaticCast<Nodes::BinaryOp>(node);
+	if (!op) return false;
+
+	return op->op == Nodes::Operator::LessEqual || op->op == Nodes::Operator::More ||
+		op->op == Nodes::Operator::MoreEqual || op->op == Nodes::Operator::Less;
 }

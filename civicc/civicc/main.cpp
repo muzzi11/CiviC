@@ -51,7 +51,6 @@ int main(int argc, char* argv[])
 			parser.ParseProgram(root);
 
 			SeperateDecAndInit(root);
-
 			std::cout << TreeToJSON(root) << "\n";
 
 			auto errors = Analyzer().Analyse(root);

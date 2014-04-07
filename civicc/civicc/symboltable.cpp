@@ -11,9 +11,9 @@ void SymbolTable::Sheaf::InitializeScope()
 	++level;
 
 	if (tables.size() == 0 || tables.find(level) == tables.end())
-		tables[level] = std::vector<Table>();
+		tables[level] = Table();
 	
-	tables[level].push_back(Table());
+	tables[level].Clear();
 }
 
 void SymbolTable::Sheaf::FinalizeScope()
@@ -25,7 +25,7 @@ SymbolTable::Record* SymbolTable::Sheaf::LookUp(const std::string name)
 {
 	for (int i = level; i >= 0; --i)
 	{
-		auto& table = Sheaf::tables[i].back();
+		auto& table = Sheaf::tables[i];
 		Record* record = table.LookUp(name);
 		if (record != nullptr) return record;
 	}
@@ -34,7 +34,7 @@ SymbolTable::Record* SymbolTable::Sheaf::LookUp(const std::string name)
 
 bool SymbolTable::Sheaf::Insert(std::string name, Record record)
 {
-	return tables[level].back().Insert(name, record);
+	return tables[level].Insert(name, record);
 }
 
 SymbolTable::Record* SymbolTable::Table::LookUp(std::string name)
