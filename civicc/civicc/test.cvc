@@ -1,8 +1,4 @@
 void test()
 {
-	if (true)
-	{
-		test();
-	}
-	else{}
+	if(true){}
 }
