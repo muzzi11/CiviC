@@ -368,11 +368,11 @@ const std::string VarInstr::StoreGlobal(Instr::Type type, const int index)
 const std::string VarInstr::LoadConstant(const int value)
 {
 	std::stringstream sstream;
-/*	if (value >= 0 && value <= 1)
+	if (value >= 0 && value <= 1)
 	{
 		sstream << iLoadC << "_" << value;
 		return sstream.str();
-	}*/
+	}
 	if (value == -1)
 	{
 		sstream << iLoadC << "_m1";
@@ -386,7 +386,7 @@ const std::string VarInstr::LoadConstant(const int value)
 const std::string VarInstr::LoadConstant(const float value)
 {
 	std::stringstream sstream;
-	/*if (value == 0.0f)
+	if (value == 0.0f)
 	{
 		sstream << fLoadC << "_0";
 		return sstream.str();
@@ -395,7 +395,7 @@ const std::string VarInstr::LoadConstant(const float value)
 	{
 		sstream << fLoadC << "_1";
 		return sstream.str();
-	}*/
+	}
 	
 	sstream << value;
 	return LoadConstant(fLoadC, sstream.str(), Instr::TypeNames::Float);
