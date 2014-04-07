@@ -198,7 +198,7 @@ const std::string CntrlFlwInstr::jump = "jump";
 const std::string CntrlFlwInstr::branch_t = "branch_t";
 const std::string CntrlFlwInstr::branch_f = "branch_f";
 
-const std::string CntrlFlwInstr::InitiateSub(Scope scope, const int nestingLevels = 0)
+const std::string CntrlFlwInstr::InitiateSub(Scope scope, const int nestingLevels)
 {
 	if (scope == Current) return isr;
 	if (scope == Outer) return Instr::ParseInstr(isrn, nestingLevels);
@@ -247,12 +247,12 @@ const std::string CntrlFlwInstr::Jump(const std::string label)
 
 const std::string CntrlFlwInstr::Branch(bool condition, const int offset)
 {
-	return (condition) ? Instr::ParseInstr(branch_t, offset) : Instr::ParseInstr(branch_t, offset);
+	return (condition) ? Instr::ParseInstr(branch_t, offset) : Instr::ParseInstr(branch_f, offset);
 }
 
 const std::string CntrlFlwInstr::Branch(bool condition, const std::string label)
 {
-	return (condition) ? Instr::ParseInstr(branch_t, label) : Instr::ParseInstr(branch_t, label);
+	return (condition) ? Instr::ParseInstr(branch_t, label) : Instr::ParseInstr(branch_f, label);
 }
 
 std::vector<std::tuple<std::string, std::string>> VarInstr::constants;
@@ -275,7 +275,7 @@ const std::string VarInstr::aLoadG = "aloadg";
 const std::string VarInstr::iLoadC = "iloadc";
 const std::string VarInstr::fLoadC = "floadc";
 const std::string VarInstr::bLoadCF = "bloadc_f";
-const std::string VarInstr::bLoadCT = "bloadc_f";
+const std::string VarInstr::bLoadCT = "bloadc_t";
 
 const std::string VarInstr::iStore = "istore";
 const std::string VarInstr::fStore = "fstore";
@@ -386,7 +386,7 @@ const std::string VarInstr::LoadConstant(const int value)
 const std::string VarInstr::LoadConstant(const float value)
 {
 	std::stringstream sstream;
-	if (value == 0.0f)
+	/*if (value == 0.0f)
 	{
 		sstream << fLoadC << "_0";
 		return sstream.str();
@@ -395,7 +395,7 @@ const std::string VarInstr::LoadConstant(const float value)
 	{
 		sstream << fLoadC << "_1";
 		return sstream.str();
-	}
+	}*/
 	
 	sstream << value;
 	return LoadConstant(fLoadC, sstream.str(), Instr::TypeNames::Float);

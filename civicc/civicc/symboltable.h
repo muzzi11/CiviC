@@ -37,7 +37,6 @@ namespace SymbolTable
 		void Clear();
 
 	private:
-		Table* parent;
 		std::unordered_map<std::string, Record> records;
 	};
 

@@ -57,6 +57,9 @@
     <ClCompile Include="nested_func_renaming.cpp">
       <Filter>Passes</Filter>
     </ClCompile>
+    <ClCompile Include="replace_while.cpp">
+      <Filter>Passes</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="tokenizer.h">
@@ -93,6 +96,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="nested_func_renaming.h">
+      <Filter>Passes</Filter>
+    </ClInclude>
+    <ClInclude Include="replace_while.h">
       <Filter>Passes</Filter>
     </ClInclude>
   </ItemGroup>

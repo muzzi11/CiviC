@@ -95,12 +95,14 @@ int Count(Nodes::NodePtr root)
 {
 	int count = 0;
 
-	TraverseBreadth<T>(root, [&](std::shared_ptr<T>, NodePtr)
+	TraverseBreadth<T>(root, [&](std::shared_ptr<T>, Nodes::NodePtr)
 	{
 		count++;
 	});
 
 	return count;
 }
+
+int Count(Nodes::NodePtr root, Nodes::NodePtr val);
 
 std::string TreeToJSON(Nodes::NodePtr root);

@@ -11,6 +11,7 @@ void ReplaceBooleanOperators(NodePtr root)
 	{
 		if(binaryOp->op == Operator::And)
 		{
+			// a && b = a ? b : false
 			auto ternary = std::make_shared<Ternary>();
 
 			ternary->children.push_back(binaryOp->children[0]);
@@ -21,6 +22,7 @@ void ReplaceBooleanOperators(NodePtr root)
 		}
 		else if(binaryOp->op == Operator::Or)
 		{
+			// a || b = a ? true : b
 			auto ternary = std::make_shared<Ternary>();
 
 			ternary->children.push_back(binaryOp->children[0]);
@@ -67,7 +69,39 @@ void ReplaceBooleanOperators(NodePtr root)
 	{
 		if(cast->type == Type::Bool)
 		{
+			if(cast->castFrom == Type::Int)
+			{
+				auto unequal = std::make_shared<BinaryOp>(Operator::NotEqual);
+				unequal->children.push_back(cast->children[0]);
+				unequal->children.push_back(std::make_shared<Literal>(0));
+				return unequal;
+			}
+			else if(cast->castFrom == Type::Float)
+			{
+				auto unequal = std::make_shared<BinaryOp>(Operator::NotEqual);
+				unequal->children.push_back(cast->children[0]);
+				unequal->children.push_back(std::make_shared<Literal>(0.0f));
+				return unequal;
+			}
+		}
 
+		if(cast->castFrom == Type::Bool)
+		{
+			auto ternary = std::make_shared<Ternary>();
+			ternary->children.push_back(cast->children[0]);
+
+			if(cast->type == Type::Int)
+			{
+				ternary->children.push_back(std::make_shared<Literal>(1));
+				ternary->children.push_back(std::make_shared<Literal>(0));
+			}
+			else
+			{
+				ternary->children.push_back(std::make_shared<Literal>(1.0f));
+				ternary->children.push_back(std::make_shared<Literal>(0.0f));
+			}
+
+			return ternary;
 		}
 
 		return cast;

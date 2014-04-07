@@ -101,7 +101,7 @@ public:
 		Global
 	};
 
-	static const std::string InitiateSub(CntrlFlwInstr::Scope scope, const int nestingLevels);
+	static const std::string InitiateSub(CntrlFlwInstr::Scope scope, const int nestingLevels = 0);
 	static const std::string JumpSub(const int arguments, const int offset);
 	static const std::string JumpSub(const int arguments, const std::string label);
 	static const std::string JumpExtSub(const int index);
