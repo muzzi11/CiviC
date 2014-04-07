@@ -115,6 +115,10 @@ void SeperateForLoopInduction(NodePtr root)
 		map[parent].push_back(upperAss);
 		map[parent].push_back(stepVar);
 		map[parent].push_back(stepAss);
+
+		forLoop->lower = lowerVar;
+		forLoop->upper = upperVar;
+		forLoop->step = stepVar;
 	});
 
 	for(auto pair : map)
@@ -126,6 +130,7 @@ void SeperateForLoopInduction(NodePtr root)
 		{
 			NodePtr forLoop = newInserts[i];
 			auto it = std::find(parent->children.begin(), parent->children.end(), forLoop);
+
 			parent->children.insert(it, newInserts.begin() + i + 1, newInserts.begin() + i + 7);
 			forLoop->children.erase(forLoop->children.begin(), forLoop->children.begin() + 4);
 		}
