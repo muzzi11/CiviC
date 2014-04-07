@@ -24,7 +24,7 @@ namespace SymbolTable
 
 	private:
 		int level;
-		std::unordered_map<int, std::vector<Table>> tables;
+		std::unordered_map<int, Table> tables;
 	};
 		
 	class Table

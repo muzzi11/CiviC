@@ -29,13 +29,15 @@ private:
 	void LookUpAssignment(Nodes::NodePtr node);
 
 	void TypeCheck(Nodes::NodePtr);
-	void TypeCheck(Nodes::NodePtr, Nodes::Type type);
+	void TypeCheck(Nodes::NodePtr, Nodes::Type);
+	void TypeCheckExpression(Nodes::NodePtr, Nodes::Type);
 	void TypeCheckAssigment(Nodes::NodePtr);
 	void TypeCheckBinOp(Nodes::NodePtr);
 	void TypeCheckFuncArgs(Nodes::NodePtr);
 	void TypeCheckFuncReturn(Nodes::NodePtr);
 	void TypeCheckUnary(Nodes::NodePtr);
 	void TypeCheckCast(Nodes::NodePtr);
+	void TypeCheckConditional(Nodes::NodePtr node);
 
 	void CheckGlobalDef(Nodes::NodePtr);
 	void CheckRedefinition(Nodes::NodePtr, std::string name, bool result);
@@ -48,7 +50,7 @@ private:
 	void PrintErrorInfo(const int pos, const int line);
 	bool IsNumber(const Nodes::Type);
 	bool isBoolOp(const Nodes::NodePtr);
-
+	bool IsNumberComp(const Nodes::NodePtr);
 	std::vector<std::string> globalDefs;
 	SymbolTable::Sheaf sheaf;
 	std::stringstream errors;
