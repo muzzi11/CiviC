@@ -72,8 +72,9 @@ std::string Param::ToString() const
 		str += '[';
 		for(const auto& d : dim) str += d + ',';
 		str.pop_back();
+		str += ']';
 	}
-	return str + ']';
+	return str;
 }
 
 std::string FunctionHeader::ToString() const

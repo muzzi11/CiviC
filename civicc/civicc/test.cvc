@@ -1,6 +1,13 @@
-void test(int a, int b)
+extern void printInt(int i);
+
+export int a;
+
+int test(int a, int b)
 {
 	for(int i = 0, a, b)
 	{
+		printInt(i);
 	}
+
+	return a;
 }

@@ -14,6 +14,7 @@
 #include "assembly.h"
 #include "nested_func_renaming.h"
 #include "replace_while.h"
+#include "global_getset.h"
 
 int main(int argc, char* argv[])
 {		
@@ -61,6 +62,7 @@ int main(int argc, char* argv[])
 			ReplaceBooleanOperators(root);
 			ReplaceWhileLoops(root);
 			RenameNestedFunctions(root);
+			CreateGettersSetters(root);
 
 			std::cout << TreeToJSON(root) << "\n";
 			std::cout << "-------------------------------------\n";

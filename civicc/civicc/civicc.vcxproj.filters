@@ -60,6 +60,9 @@
     <ClCompile Include="replace_while.cpp">
       <Filter>Passes</Filter>
     </ClCompile>
+    <ClCompile Include="global_getset.cpp">
+      <Filter>Passes</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="tokenizer.h">
@@ -99,6 +102,9 @@
       <Filter>Passes</Filter>
     </ClInclude>
     <ClInclude Include="replace_while.h">
+      <Filter>Passes</Filter>
+    </ClInclude>
+    <ClInclude Include="global_getset.h">
       <Filter>Passes</Filter>
     </ClInclude>
   </ItemGroup>

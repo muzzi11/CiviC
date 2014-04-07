@@ -78,6 +78,7 @@
   <ItemGroup>
     <ClCompile Include="analysis.cpp" />
     <ClCompile Include="assembly.cpp" />
+    <ClCompile Include="global_getset.cpp" />
     <ClCompile Include="Instruction.cpp" />
     <ClCompile Include="nested_func_renaming.cpp" />
     <ClCompile Include="replace_boolops.cpp" />
@@ -94,6 +95,7 @@
   <ItemGroup>
     <ClInclude Include="analysis.h" />
     <ClInclude Include="assembly.h" />
+    <ClInclude Include="global_getset.h" />
     <ClInclude Include="instruction.h" />
     <ClInclude Include="nested_func_renaming.h" />
     <ClInclude Include="replace_boolops.h" />

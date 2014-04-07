@@ -34,11 +34,8 @@ std::string AssemblyGenerator::Generate(NodePtr root)
 		auto funDef = StaticCast<FunctionDef>(node);
 		if(funDef) sstream << FunDef(funDef);
 
-		auto globalDec = StaticCast<GlobalDec>(node);
-		if(globalDec) globals.push_back(TypeToString(globalDec->param.type));
-
-		//auto globalDef = StaticCast<GlobalDef>(node);
-		//if(globalDef) globals.push_back(TypeToString(globalDef->var.type));
+		auto globalDef = StaticCast<GlobalDef>(node);
+		if(globalDef) globals.push_back(TypeToString(globalDef->var.type));
 	});
 
 	sstream << "\n; globals:\n";
@@ -101,7 +98,7 @@ std::string AssemblyGenerator::FunDef(std::shared_ptr<FunctionDef> root)
 	{
 		std::string exportStr = ".export \"" + root->header.name + "\" " + TypeToString(root->header.returnType);
 		for(const auto& param : root->header.params) exportStr += " " + TypeToString(param.type);
-		exportStr += root->header.name;
+		exportStr += " " + root->header.name;
 		exports.push_back(exportStr);
 	}
 
@@ -176,7 +173,7 @@ std::string AssemblyGenerator::FunCall(std::shared_ptr<Call> call, bool expr)
 	{
 		sstream << '\t' << CntrlFlwInstr::InitiateSub(CntrlFlwInstr::Scope::Global) << '\n';
 		for(auto child : call->children) sstream << Expression(child);
-		sstream << '\t' << CntrlFlwInstr::JumpExtSub(importIndex[funDec]);
+		sstream << '\t' << CntrlFlwInstr::JumpExtSub(importIndex[funDec]) << '\n';
 
 		if(!expr && funDec->header.returnType != Type::Void)
 		{
