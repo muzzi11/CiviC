@@ -16,7 +16,12 @@ private:
 	{
 		int frame, index;
 	};
+
 	int labelCounter = 0;
+
+	std::vector<std::string> exports, imports, globals;
+
+	std::unordered_map<Nodes::NodePtr, int> importIndex;
 	std::unordered_map<Nodes::NodePtr, int> globalIndexTable;
 	std::unordered_map<Nodes::NodePtr, LocalVarEntry> localTable;
 	std::unordered_map<Nodes::NodePtr, int> assignFrameTable;

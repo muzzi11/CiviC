@@ -539,8 +539,11 @@ bool Parser::Block()
 
 bool Parser::ElseBlock()
 {
-	if(Else()) Block();
-	scopes.pop_back();
+	if(Else())
+	{
+		Block();
+		scopes.pop_back();
+	}
 	return true;
 }
 

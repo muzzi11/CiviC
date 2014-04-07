@@ -33,10 +33,20 @@ std::string AssemblyGenerator::Generate(NodePtr root)
 	{
 		auto funDef = StaticCast<FunctionDef>(node);
 		if(funDef) sstream << FunDef(funDef);
+
+		auto globalDec = StaticCast<GlobalDec>(node);
+		if(globalDec) globals.push_back(TypeToString(globalDec->param.type));
+
+		//auto globalDef = StaticCast<GlobalDef>(node);
+		//if(globalDef) globals.push_back(TypeToString(globalDef->var.type));
 	});
 
 	sstream << "\n; globals:\n";
 	sstream << VarInstr::GetConstantTable();
+
+	for(const auto& global : globals) sstream << ".global " << global << '\n';
+	for(const auto& imp : imports) sstream << imp << '\n';
+	for(const auto& exp : exports) sstream << exp << '\n';
 
 	return sstream.str();
 }
@@ -63,6 +73,15 @@ void AssemblyGenerator::BuildTables(Nodes::NodePtr root)
 			functionNestingTable[funDef] = frame;
 		}
 
+		auto funDec = StaticCast<FunctionDec>(node);
+		if(funDec)
+		{
+			std::string import = ".import \"" + funDec->header.name + "\" " + TypeToString(funDec->header.returnType);
+			for(const auto& param : funDec->header.params) import += " " + TypeToString(param.type);
+			imports.push_back(import);
+			importIndex[node] = importIndex.size();
+		}
+
 		if(node->IsFamily<GlobalDec>() || node->IsFamily<GlobalDef>()) globalIndexTable[node] = globalIndexTable.size();
 		if(node->IsFamily<VarDec>()) localTable[node] = { frame, index++ };
 		if(node->IsFamily<Assignment>()) assignFrameTable[node] = frame;
@@ -77,6 +96,14 @@ void AssemblyGenerator::BuildTables(Nodes::NodePtr root)
 std::string AssemblyGenerator::FunDef(std::shared_ptr<FunctionDef> root)
 {
 	std::stringstream sstream;
+
+	if(root->exp)
+	{
+		std::string exportStr = ".export \"" + root->header.name + "\" " + TypeToString(root->header.returnType);
+		for(const auto& param : root->header.params) exportStr += " " + TypeToString(param.type);
+		exportStr += root->header.name;
+		exports.push_back(exportStr);
+	}
 
 	sstream << root->header.name << ":\n";
 	int varCount = std::count_if(root->children.begin(), root->children.end(), [](NodePtr node)
@@ -149,7 +176,8 @@ std::string AssemblyGenerator::FunCall(std::shared_ptr<Call> call, bool expr)
 	{
 		sstream << '\t' << CntrlFlwInstr::InitiateSub(CntrlFlwInstr::Scope::Global) << '\n';
 		for(auto child : call->children) sstream << Expression(child);
-		//!!!!!!!CntrlFlwInstr::JumpExtSub();
+		sstream << '\t' << CntrlFlwInstr::JumpExtSub(importIndex[funDec]);
+
 		if(!expr && funDec->header.returnType != Type::Void)
 		{
 			sstream << '\t' << StackInstr::Pop(NodeTypeToInstrType(funDec->header.returnType)) << '\n';
