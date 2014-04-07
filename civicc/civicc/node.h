@@ -267,5 +267,6 @@ namespace Nodes
 
 	struct For : public Node<For>
 	{
+		std::shared_ptr<VarDec> lower, upper, step;
 	};
 }

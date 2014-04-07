@@ -5,6 +5,7 @@
 #include "instruction.h"
 #include "assembly.h"
 #include "traverse.h"
+#include "replace_while.h"
 
 using namespace Nodes;
 
@@ -299,6 +300,7 @@ std::string AssemblyGenerator::Statements(NodePtr root)
 		sstream << IfElse(ifStatement);
 
 	sstream << DoWhileLoop(root);
+	sstream << ForLoop(root);
 
 	auto assign = StaticCast<Assignment>(root);
 	if(assign) sstream << Assign(assign);
@@ -360,6 +362,36 @@ std::string AssemblyGenerator::DoWhileLoop(NodePtr root)
 		for(size_t i = 0; i < doWhile->children.size() - 1; ++i) sstream << Statements(doWhile->children[i]);
 		sstream << Expression(doWhile->children.back());
 		sstream << CntrlFlwInstr::Branch(true, label.str()) << '\n';
+	}
+
+	return sstream.str();
+}
+
+std::string AssemblyGenerator::ForLoop(NodePtr root)
+{
+	std::stringstream sstream;
+
+	auto forLoop = StaticCast<For>(root);
+	if(forLoop)
+	{
+		std::string start, end;
+		std::stringstream count;
+		count << labelCounter++;
+		start = count.str() + "_for";
+		end = count.str() + "_end_for";
+
+		sstream << start << ":\n";
+		sstream << '\t' << VarInstr::LoadLocal(Instr::Int, localTable[forLoop->lower].index) << '\n';
+		sstream << '\t' << VarInstr::LoadLocal(Instr::Int, localTable[forLoop->upper].index) << '\n';
+		sstream << '\t' << CompInstr::Less(Instr::Int) << '\n';
+		sstream << '\t' << CntrlFlwInstr::Branch(false, end) << '\n';
+		for(auto child : forLoop->children) sstream << Statements(child);
+		sstream << '\t' << VarInstr::LoadLocal(Instr::Int, localTable[forLoop->lower].index) << '\n';
+		sstream << '\t' << VarInstr::LoadLocal(Instr::Int, localTable[forLoop->step].index) << '\n';
+		sstream << '\t' << ArithInstr::Add(Instr::Int) << '\n';
+		sstream << '\t' << VarInstr::StoreLocal(Instr::Int, localTable[forLoop->lower].index) << '\n';
+		sstream << '\t' << CntrlFlwInstr::Jump(start) << '\n';
+		sstream << end << ":\n";
 	}
 
 	return sstream.str();

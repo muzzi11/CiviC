@@ -33,4 +33,5 @@ private:
 	std::string Statements(Nodes::NodePtr root);
 	std::string IfElse(Nodes::NodePtr root);
 	std::string DoWhileLoop(Nodes::NodePtr root);
+	std::string ForLoop(Nodes::NodePtr root);
 };
