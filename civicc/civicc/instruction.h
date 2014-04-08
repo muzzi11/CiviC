@@ -15,7 +15,7 @@ public:
 		Void,
 		Array
 	};
-	static class TypeNames
+	class TypeNames
 	{
 	public:
 		static const std::string Int;

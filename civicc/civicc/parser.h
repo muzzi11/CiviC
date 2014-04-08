@@ -12,7 +12,7 @@ class ParseException : public std::exception
 public:
 	ParseException(const std::string& msg);
 	ParseException(const std::string& msg, const Token& token);
-	const char* what() const override;
+	const char* what() const throw() override;
 
 private:
 	std::string msg;

@@ -39,7 +39,7 @@ bool SymbolTable::Sheaf::Insert(std::string name, Record record)
 
 SymbolTable::Record* SymbolTable::Table::LookUp(std::string name)
 {
-	auto& it = records.find(name);
+	auto it = records.find(name);
 	if (it == records.end()) return nullptr;
 	return &(it->second);
 }

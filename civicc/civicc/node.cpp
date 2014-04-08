@@ -1,10 +1,12 @@
 #include <sstream>
+#include <map>
 
 #include "node.h"
 
+
 std::string Nodes::TypeToString(Type type)
 {
-	static const std::unordered_map<Type, std::string> map(
+	static const std::map<Type, std::string> map(
 	{
 		{ Type::Bool, "bool" },
 		{ Type::Int, "int" },
@@ -37,7 +39,7 @@ std::string BaseNode::FamilyName() const
 
 std::string OperatorToString(Operator op)
 {
-	static const std::unordered_map<Operator, std::string> map(
+	static const std::map<Operator, std::string> map(
 	{
 		{ Operator::Add, "+" },
 		{ Operator::Subtract, "-" },

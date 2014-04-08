@@ -7,11 +7,36 @@
 #include "node.h"
 
 namespace SymbolTable
-{	
-	class Record;
-	class FuncArg;
-	class Table;
+{
+	class Record
+	{
+	public:
+		Record() { }
+		Record(bool immutable, Nodes::Type node, Nodes::NodePtr ptr) : immutable(immutable), initialized(false), type(node), decPtr(ptr) { }
 
+		bool immutable;
+		bool initialized;
+		Nodes::Type type;
+		Nodes::NodePtr decPtr;
+		std::vector<Nodes::Param> params;
+
+		std::vector<int> arrayDimensions;
+		std::vector<std::string> dim;
+	};
+	
+		class Table
+	{
+	public:
+		Table() { }
+
+		Record* LookUp(const std::string name);
+		bool Insert(const std::string name, const Record record);
+		void Clear();
+
+	private:
+		std::unordered_map<std::string, Record> records;
+	};
+	
 	class Sheaf
 	{
 	public:
@@ -27,32 +52,7 @@ namespace SymbolTable
 		std::unordered_map<int, Table> tables;
 	};
 		
-	class Table
-	{
-	public:
-		Table() { }
 
-		Record* LookUp(const std::string name);
-		bool Insert(const std::string name, const Record record);
-		void Clear();
 
-	private:
-		std::unordered_map<std::string, Record> records;
-	};
 
-	class Record
-	{
-	public:
-		Record() { }
-		Record(bool immutable, Nodes::Type node, Nodes::NodePtr ptr) : immutable(immutable), type(node), initialized(false), decPtr(ptr) { }
-
-		bool immutable;
-		bool initialized;
-		Nodes::Type type;
-		Nodes::NodePtr decPtr;
-		std::vector<Nodes::Param> params;
-
-		std::vector<int> arrayDimensions;
-		std::vector<std::string> dim;
-	};
 };

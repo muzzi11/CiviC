@@ -1,5 +1,5 @@
 #include <sstream>
-#include <unordered_map>
+#include <map>
 #include <algorithm>
 
 #include "instruction.h"
@@ -12,7 +12,7 @@ using namespace Nodes;
 
 Instr::Type NodeTypeToInstrType(Type type)
 {
-	static const std::unordered_map<Type, Instr::Type> map(
+	static const std::map<Type, Instr::Type> map(
 	{
 		{ Type::Bool, Instr::Type::Bool },
 		{ Type::Int, Instr::Type::Int },
@@ -213,7 +213,7 @@ std::string AssemblyGenerator::FunCall(std::shared_ptr<Call> call, bool expr)
 std::string AssemblyGenerator::Expression(NodePtr root)
 {
 	std::stringstream sstream;
-	std::unordered_map<Operator, std::function<std::string(Instr::Type)>> arithOpMap(
+	std::map<Operator, std::function<std::string(Instr::Type)>> arithOpMap(
 	{
 		{ Operator::Add, &ArithInstr::Add },
 		{ Operator::Subtract, &ArithInstr::Sub },

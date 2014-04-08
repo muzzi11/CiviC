@@ -283,7 +283,6 @@ void Analyzer::TypeCheckBinOp(Nodes::NodePtr node)
 	auto binOp = Nodes::StaticCast<Nodes::BinaryOp>(node);
 	if (!binOp) return;
 
-	Nodes::Type type = Nodes::Type::None;
 	auto left = binOp->children[0];
 	auto right = binOp->children[1];
 	auto leftType = GetType(left);
@@ -558,7 +557,7 @@ void Analyzer::CheckArrayDimensions(Nodes::NodePtr node, std::vector<int> dimens
 			cur = parent;
 			++level;
 		}
-		succes = succes && (dimensions[level] && dimensions[level] == arrayExpr->children.size());
+		succes = succes && (dimensions[level] && dimensions[level] == (int)arrayExpr->children.size());
 	});
 
 	if (!succes)
