@@ -63,6 +63,9 @@
     <ClCompile Include="global_getset.cpp">
       <Filter>Passes</Filter>
     </ClCompile>
+    <ClCompile Include="array_reduction.cpp">
+      <Filter>Passes</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="tokenizer.h">
@@ -105,6 +108,9 @@
       <Filter>Passes</Filter>
     </ClInclude>
     <ClInclude Include="global_getset.h">
+      <Filter>Passes</Filter>
+    </ClInclude>
+    <ClInclude Include="array_reduction.h">
       <Filter>Passes</Filter>
     </ClInclude>
   </ItemGroup>

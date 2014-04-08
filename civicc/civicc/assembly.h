@@ -36,6 +36,7 @@ private:
 	std::string FunCall(std::shared_ptr<Nodes::Call> call, bool expr);
 	std::string Expression(Nodes::NodePtr root);
 	std::string Statements(Nodes::NodePtr root);
+	std::string ArrayDec(Nodes::NodePtr root);
 	std::string IfElse(Nodes::NodePtr root);
 	std::string DoWhileLoop(Nodes::NodePtr root);
 	std::string ForLoop(Nodes::NodePtr root);

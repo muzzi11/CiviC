@@ -112,7 +112,11 @@ std::string AssemblyGenerator::FunDef(std::shared_ptr<FunctionDef> root)
 
 	TraverseBreadth(root, [&](NodePtr node, NodePtr parent)
 	{
-		if(parent == root) sstream << Statements(node);
+		if(parent == root)
+		{
+			sstream << ArrayDec(node);
+			sstream << Statements(node);
+		}
 	});
 
 	if(!root->children.empty())
@@ -226,12 +230,9 @@ std::string AssemblyGenerator::Expression(NodePtr root)
 		{ Operator::LessEqual, &CompInstr::LessEqual },
 	});
 
-	NodePtr funcDef;
-	TraverseBreadth(root, [&](NodePtr node, NodePtr parent)
+	TraverseDepth(root, [&](NodePtr node, NodePtr parent)
 	{
 		if(parent && parent->IsFamily<Call>()) return;
-
-		if(node->IsFamily<FunctionDef>()) funcDef = node;
 
 		auto literal = StaticCast<Literal>(node);
 		if(literal)
@@ -332,6 +333,19 @@ std::string AssemblyGenerator::Statements(NodePtr root)
 
 	auto call = StaticCast<Call>(root);
 	if(call) sstream << FunCall(call, false);
+
+	return sstream.str();
+}
+
+std::string AssemblyGenerator::ArrayDec(NodePtr root)
+{
+	std::stringstream sstream;
+
+	auto alloc = StaticCast<AllocateArray>(root);
+	if(alloc)
+	{
+		sstream << '\t' << ArrayInstr::New(NodeTypeToInstrType(alloc->type), 1) << '\n';
+	}
 
 	return sstream.str();
 }

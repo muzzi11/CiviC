@@ -78,7 +78,7 @@ namespace Nodes
 
 		static int32_t Family()
 		{
-			assert(BaseNode::familyCounter_ < 32 && "Number of node types exceeded maximum of 32");
+			assert(familyCounter_ < 32 && "Number of node types exceeded maximum of 32");
 			static uint32_t family = (1 << BaseNode::familyCounter_++);
 			return family;
 		}
@@ -134,6 +134,7 @@ namespace Nodes
 	struct GlobalDec : public Node<GlobalDec>
 	{
 		Param param;
+		std::shared_ptr<FunctionDec> getter, setter;
 
 		std::string ToString() const override;
 	};
@@ -166,6 +167,14 @@ namespace Nodes
 
 	struct ArrayExpr : public Node<ArrayExpr>
 	{
+		Type type;
+	};
+
+	struct AllocateArray : public Node<AllocateArray>
+	{
+		Type type;
+
+		AllocateArray(Type type) : type(type) {}
 	};
 
 	struct Assignment : public Node<Assignment>

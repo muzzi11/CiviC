@@ -25,6 +25,12 @@ void SeperateVarDecFromInit(NodePtr root)
 			assignment->children.push_back(varDec->children.back());
 			list.insert(++it, assignment);
 			varDec->children.pop_back();
+
+			if(varDec->var.array)
+			{
+				it = std::find(list.begin(), list.end(), assignment);
+				list.insert(it, std::make_shared<AllocateArray>(varDec->var.type));
+			}
 		}
 	});
 }
@@ -39,6 +45,8 @@ void SeperateGlobalDefFromInit(NodePtr root)
 	TraverseBreadth<GlobalDef>(root, [&](std::shared_ptr<GlobalDef> globalDef, NodePtr parent)
 	{
 		if(!globalDef->HasAssignment()) return;
+
+		if(globalDef->var.array) init->children.push_back(std::make_shared<AllocateArray>(globalDef->var.type));
 
 		auto assignment = std::make_shared<Assignment>(globalDef->var.name);
 		assignment->pos = globalDef->pos;
