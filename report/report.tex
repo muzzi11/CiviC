@@ -45,11 +45,11 @@
 
 \section{Introduction}
 
-In order to learn as much as possible from all aspects of compiler construction, the decision was made to build everything from scratch. C++ was the language of choice for the reasons that memory management would be easier, templated code could be used to reduce boiler plate code and if required, the orignal framework could be mimicked.
+In order to learn as much as possible from all aspects of compiler construction, the decision was made to build everything from scratch. C++ was the language of choice for the reasons that memory management would be easier, templated code could be used to reduce boiler plate code and if required, the original framework could be mimicked.
 
 \section{Lexicographic Analysis}
 
-Instead of using a generated scanner, whether table-driven or direct-coded, it was decided to build a hand-coded scanner for the compiler. The choice to implement a hand-coded scanner proved to be an intelligent one. Understanding the usage of a third party tool would have taken more time than to implement our own scanner. The resulting scanner is easy to manage. Additional reserved words and symbols can easily be added to existing data structures. The scanner does not have any dependencies, since it does not rely on tools like lex.
+Instead of using a generated scanner, whether table-driven or direct-coded, we decided to build a hand-coded scanner for the compiler. The choice to implement a hand-coded scanner proved to be an intelligent one. Understanding the usage of a third party tool would have taken more time than to implement our own scanner. The resulting scanner is easy to manage. Additional reserved words and symbols can easily be added to existing data structures. The scanner does not have any dependencies, since it does not rely on tools like lex.
 
 The scanner does not simulate a deterministic finite automaton, but instead uses a more direct approach by pattern matching. While character-by-character scanning using a DFA comes from clean algorithmic formulations, it is far less natural to think and program in such way. An example of pattern matching a word is as follows:
 
@@ -65,11 +65,11 @@ void TokenizeWord(...)
 }
 \end{lstlisting}
 
-This is basically all that is required to tokenize words and it looks and feels very similar to what we as human beings do when we extract words out of text. This direct translation into code makes it easy to write and comprehend. Tokenzing numbers and symbols looks very similar.
+This is basically all that is required to tokenize words and it looks and feels very similar to what we as human beings do when we extract words out of text. This direct translation into code makes it easy to write and comprehend. Tokenizing numbers and symbols looks very similar.
 
 \section{Syntactic Analysis}
 
-Compiler compilers that generate parsers based on an analytic grammar are available. Yacc and Bison generate table driven parsers, where the parser logic is contained in the parser program's data and not so much in the code. It is comparable with a black box. To really understand the complexities that arise when designing a parser, it was decided to write a parser by hand.
+Compiler compilers that generate parsers based on an analytic grammar are available. Yacc and Bison generate table driven parsers, where the parser logic is contained in the parser program's data and not so much in the code. It is comparable with a black box. To really understand the complexities that arise when designing a parser, we decided to write a parser by hand.
 
 There are two parser types, the top-down parser and the bottom-up parser. Bottom-up parsers support a somewhat larger range of language grammars than the deterministic top-down parsers. From a programming standpoint, the top-down parser is easier to implement. The extra language support of the bottom-up parser was not required, so the choice fell on a top-down parser.  
 
@@ -77,7 +77,7 @@ The efficiency of a top-down parser depends critically on its ability to pick th
 
 The original grammar used left recursion. With left-recursion, the top-down parser can loop indefinitely. To avoid this problem the left-recursive grammar has been reformulated so that it uses right recursion. Not all grammars are backtrack free, including the original grammar. Backtracking has been eliminated by left factoring the rules.
 
-Expression parsing is a complex matter. The original grammar treats all of the arithmetic operators in the same way, without any regard for precedence. Precedence levels can be encoded into the grammar. But this greatly expands the amount of rules and thus the clarity of the parser. It was decided to use the Shunting-yard algorithm \cite{dijkstrashunting} to parse mathematical expressions, thus limiting the grammar size. 
+Expression parsing is a complex matter. The original grammar treats all of the arithmetic operators in the same way, without any regard for precedence. Precedence levels can be encoded into the grammar. But this greatly expands the amount of rules and thus the clarity of the parser. We decided to use the Shunting-yard algorithm \cite{dijkstrashunting} to parse mathematical expressions, thus limiting the grammar size. 
 
 The implementation of Shunting-yard was more complex than expected. Extending the original algorithm with support for function calls proved problematic. An alternative to Shunting-yard is the precedence climbing method \cite{richards1981bcpl}. The idea is that you "climb down" the precedence levels and create a tree along the way. Unlike the Shunting-yard algorithm this algorithm is not a pure operator-precedence parser, therefore implementing function call support was a trivial matter and thus we revised our earlier decision to use Shunting-yard.
 
@@ -88,7 +88,7 @@ bool FunHeader()
 	return ParenthesesL() && Param() && Params() && ParenthesesR();
 }
 \end{lstlisting}
-However, this elegancy was mostly lost when incorporating error logging and abstract syntax tree generation. Parsing errors are handled by throwing exceptions, which allows the error logging to be handled at a higher level. The once so elegant code turned into something far less comprehendable as exemplified below.
+However, this elegance was mostly lost when incorporating error logging and abstract syntax tree generation. Parsing errors are handled by throwing exceptions, which allows the error logging to be handled at a higher level. The once so elegant code turned into something far less comprehendable as exemplified below.
 \begin{lstlisting}
 bool Parser::LocalFuns()
 {
@@ -113,9 +113,17 @@ bool Parser::LocalFuns()
 
 Finding a way to reduce this complexity proved to be too challenging without prior experience of writing parsers.
 
-\section{Intermediate Representation}
+\section{Context-Sensitive Analysis}
 
-In order to perform any context-sensitive analysis or assembly code generation, an abstract syntax tree is used. The tree is generated during parsing, where tokens are pushed onto a stack until an AST node can be made. Nodes have a shared base class that contains a list of children, allowing for a tree like structure. Static polymorphism is used to allow for a clean and relatively typesafe way of dealing with nodes. Another great benefit of using static polymorphism is the automatic registration of nodes. The example below shows how each new node class automatically obtains a unique family identifier.
+There are two techniques for gathering context-sensitive knowledge: an automated approach based on attribute grammars \cite{paakki1995attribute} and an ad hoc approach that relies on similar concepts. It was briefly mentioned in the previous section that abstract syntax tree generation was incorporated in the parser. This is the result of implementing the ad hoc syntax-directed translation.
+
+The ad hoc approach is more commonly used in compilers and is more flexible than attribute grammars. The ad hoc approach does not restrict the programmer on how to gather context sensitive information. In contrast to the attribute-grammar where the information is saved in attributes assigned to production rules.
+
+The attribute approach has some problems. Not all languages can be cleanly mapped onto onto the attribute-grammar paradigm, particularly those languages with a complex pattern of information flow can be difficult to express as attribute grammars.
+
+\subsection{Intermediate Representation}
+
+In order to perform any context-sensitive analysis or assembly code generation, an abstract syntax tree is used. The tree is generated during parsing, where tokens are pushed onto a stack until an AST node can be made. Nodes have a shared base class that contains a list of children, allowing for a tree like structure. Static polymorphism is used to allow for a clean and relatively type safe way of dealing with nodes. Another great benefit of using static polymorphism is the automatic registration of nodes. The example below shows how each new node class automatically obtains a unique family identifier.
 
 \begin{lstlisting}
 class BaseNode
@@ -155,7 +163,7 @@ With some additions to our base nodes we can do the following:
 BaseNode* node = new BinaryOp();
 if(node->Family() == BinaryOp::Family()) print("This evaluates to true!");
 \end{lstlisting}
-This is a very powerful tool that we can leverage to traverse nodes of a specific type and even to get some form of typesafety when casting nodes from a base type to a parent type. Consider the following:
+This is a very powerful tool that we can leverage to traverse nodes of a specific type and even to get some form of type safety when casting nodes from a base type to a parent type. Consider the following:
 \begin{lstlisting}
 template<class T>
 T* StaticCast(BaseNode *node)
@@ -163,22 +171,32 @@ T* StaticCast(BaseNode *node)
 	return node->Family() == T::Family() ? static_cast<T>(node) : nullptr;
 }
 \end{lstlisting}
-We can now only cast a node to a non-null pointer if it's of the same family, guaranteeing us that we'll never cast to the wrong type and modify uninteded bytes.
+We can now only cast a node to a non-null pointer if it's of the same family, guaranteeing us that we'll never cast to the wrong type and modify unintended bytes.
 
-This technique is heavily used to create tree traversels for different node types with type safety and without code duplication.
+This technique is heavily used to create tree traversals for different node types with type safety and without code duplication.
 
-\section{Context-Sensitive Analysis}
+\subsection{Symbol table}
 
-There are two techniques for gathering context-sensitive knowledge: an automated approach based on attribute grammars \cite{paakki1995attribute} and an ad hoc approach that relies on similar concepts. It was decided to implement ad hoc syntax-directed translation.
+To perform context analysis the compiler has to derive information about the various entities manipulated by the program being translated. It must discover and store many distinct kinds of information. These facts have been recorded directly in the AST. For example the AST contains information about function parameter types and the return type of functions. The advantage of this approach is that it uses a single representation for the code being compiled. The disadvantage of this approach is that a lot of tree traversals have to be used to find some specific information. To eliminate this inefficiency, we have added pointers to identifier nodes to link back to the corresponding declaration. We have achieved this by using a symbol table to match an identifier with the correct declaration.
 
-The ad hoc approach is more commonly used in compilers and is more flexible than attribute grammars. The ad hoc approach does not restrict the programmer on how to gather context sensitive information. In contrast to the attribute-grammar where the information is saved in attributes assigned to production rules.
+Since Civic allows a program to declare names at multiple levels, we need to create a symbol table for each scope. A new scope is initialized by the following code:
 
-The attribute approach has some problems. Not all languages can be cleanly mapped onto onto the attribute-grammar paradigm, particularly those languages with a complex pattern of information flow can be difficult to express as attribute grammars.
+\begin{lstlisting}
+void SymbolTable::Sheaf::InitializeScope()
+{
+	++level;
 
-\subsection{Intermediate Representation}
+	if (tables.size() == 0 || tables.find(level) == tables.end())
+		tables[level] = Table();
+	
+	tables[level].Clear();
+}
+\end{lstlisting}
 
+The symbol table is built during a single pass of the AST tree. The first items that are inserted in the level zero symbol table are the global declarations and definitions. As these should be accessible throughout the entire file. When entering a new scope function declarations and definitions.  
 
-To represent the underlying code as a graph, it was decided to use an abstract syntax tree. The task of building an AST also fits neatly into an ad hoc syntax-directed translation scheme. The compiler generates assembly code, so the final version of the AST will be at or below the abstraction level of the Civic virtual machine's instruction set.
+\subsection{Analysis}
+
 
 \section{The Procedure Abstraction}
 
