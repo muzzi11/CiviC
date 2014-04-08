@@ -1,5 +1,5 @@
 #include <sstream>
-#include <unordered_map>
+#include <map>
 #include <algorithm>
 
 #include "instruction.h"
@@ -12,7 +12,7 @@ using namespace Nodes;
 
 Instr::Type NodeTypeToInstrType(Type type)
 {
-	static const std::unordered_map<Type, Instr::Type> map(
+	static const std::map<Type, Instr::Type> map(
 	{
 		{ Type::Bool, Instr::Type::Bool },
 		{ Type::Int, Instr::Type::Int },
@@ -112,7 +112,11 @@ std::string AssemblyGenerator::FunDef(std::shared_ptr<FunctionDef> root)
 
 	TraverseBreadth(root, [&](NodePtr node, NodePtr parent)
 	{
-		if(parent == root) sstream << Statements(node);
+		if(parent == root)
+		{
+			sstream << ArrayDec(node);
+			sstream << Statements(node);
+		}
 	});
 
 	if(!root->children.empty())
@@ -209,7 +213,7 @@ std::string AssemblyGenerator::FunCall(std::shared_ptr<Call> call, bool expr)
 std::string AssemblyGenerator::Expression(NodePtr root)
 {
 	std::stringstream sstream;
-	std::unordered_map<Operator, std::function<std::string(Instr::Type)>> arithOpMap(
+	std::map<Operator, std::function<std::string(Instr::Type)>> arithOpMap(
 	{
 		{ Operator::Add, &ArithInstr::Add },
 		{ Operator::Subtract, &ArithInstr::Sub },
@@ -226,12 +230,9 @@ std::string AssemblyGenerator::Expression(NodePtr root)
 		{ Operator::LessEqual, &CompInstr::LessEqual },
 	});
 
-	NodePtr funcDef;
-	TraverseBreadth(root, [&](NodePtr node, NodePtr parent)
+	TraverseDepth(root, [&](NodePtr node, NodePtr parent)
 	{
 		if(parent && parent->IsFamily<Call>()) return;
-
-		if(node->IsFamily<FunctionDef>()) funcDef = node;
 
 		auto literal = StaticCast<Literal>(node);
 		if(literal)
@@ -332,6 +333,19 @@ std::string AssemblyGenerator::Statements(NodePtr root)
 
 	auto call = StaticCast<Call>(root);
 	if(call) sstream << FunCall(call, false);
+
+	return sstream.str();
+}
+
+std::string AssemblyGenerator::ArrayDec(NodePtr root)
+{
+	std::stringstream sstream;
+
+	auto alloc = StaticCast<AllocateArray>(root);
+	if(alloc)
+	{
+		sstream << '\t' << ArrayInstr::New(NodeTypeToInstrType(alloc->type), 1) << '\n';
+	}
 
 	return sstream.str();
 }

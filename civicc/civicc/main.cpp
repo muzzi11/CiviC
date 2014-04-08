@@ -1,6 +1,7 @@
 #include <iostream>
 #include <fstream>
 #include <vector>
+#include <cstring>
 
 #include "tokenizer.h"
 #include "parser.h"
@@ -24,8 +25,16 @@ int main(int argc, char* argv[])
 		return 0;
 	}
 
+	bool verbose = false;
 	for(int i = 1; i < argc; ++i)
 	{
+		if(strcmp(argv[i], "-v") == 0) verbose = true;
+	}
+
+	for(int i = 1; i < argc; ++i)
+	{
+		if(strcmp(argv[i], "-v") == 0) continue;
+
 		std::ifstream file(argv[i]);
 		Tokenizer tokenizer(file);
 		Token token;
@@ -35,14 +44,7 @@ int main(int argc, char* argv[])
 
 		if(file.is_open())
 		{
-			while(tokenizer.GetNextToken(token))
-			{
-				tokens.push_back(token);
-				//std::cout << token.readString << "\n";
-			}
-
-			std::cout << "\nToken count: " << tokens.size() << "\n";
-
+			while(tokenizer.GetNextToken(token)) tokens.push_back(token);
 			file.close();
 		}
 
@@ -52,22 +54,37 @@ int main(int argc, char* argv[])
 			parser.ParseProgram(root);
 
 			SeperateDecAndInit(root);
-			std::cout << TreeToJSON(root) << "\n";
+			if(verbose) std::cout << "AST before:\n" << TreeToJSON(root) << "\n";
 
 			auto errors = Analyzer().Analyse(root);
 			std::cout << errors;
-			if (errors.size() > 0) return 0;
+			if(errors.size() > 0) return 0;
 
 			ReplaceBooleanOperators(root);
 			ReplaceWhileLoops(root);
 			RenameNestedFunctions(root);
 			CreateGettersSetters(root);
 
-			std::cout << TreeToJSON(root) << "\n";
-			std::cout << "-------------------------------------\n";
-			std::cout << "Assembly\n";
-			std::cout << "-------------------------------------\n";
-			std::cout << assemblyGenerator.Generate(root) << "\n";
+			std::string assembly = assemblyGenerator.Generate(root);
+			if(verbose)
+			{
+				std::cout << "AST after:\n" << TreeToJSON(root) << "\n";
+				std::cout << "-------------------------------------\n";
+				std::cout << "Assembly\n";
+				std::cout << "-------------------------------------\n";
+				std::cout << assembly << "\n";
+			}
+
+			std::string outputFileName = argv[i];
+			size_t pos = outputFileName.find_last_of('.');
+			outputFileName = outputFileName.substr(0, pos) + ".o";
+			std::ofstream output(outputFileName, std::ios::out | std::ios::trunc);
+			if(output.is_open())
+			{
+				output << assembly;
+				output.close();
+			}
+			else std::cout << "Could not write to " << outputFileName << '\n';
 		}
 		catch(ParseException e)
 		{

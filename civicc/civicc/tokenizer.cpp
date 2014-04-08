@@ -1,3 +1,4 @@
+#include <locale>
 #include <cctype>
 #include <algorithm>
 #include <sstream>
@@ -76,7 +77,7 @@ bool Tokenizer::GetNextToken(Token& token)
 void Tokenizer::TokenizeWord(Token& token)
 {
 	auto uppercase = line;
-	std::transform(uppercase.begin(), uppercase.end(), uppercase.begin(), std::toupper);
+	std::transform(uppercase.begin(), uppercase.end(), uppercase.begin(), ::toupper);
 	const size_t end = uppercase.find_first_not_of(identifierPattern, linePos);
 	token.readString = line.substr(linePos, end - linePos);
 

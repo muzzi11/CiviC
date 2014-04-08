@@ -9,7 +9,7 @@
 class Analyzer
 {
 public:
-	Analyzer::Analyzer();
+	Analyzer();
 	std::string Analyse(Nodes::NodePtr root);
 
 private:

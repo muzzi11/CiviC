@@ -1,5 +1,6 @@
 #include <sstream>
 #include <iostream>
+#include <map>
 
 #include "parser.h"
 
@@ -18,7 +19,7 @@ ParseException::ParseException(const std::string& str, const Token& token)
 	msg = sstream.str();
 }
 
-const char* ParseException::what() const
+const char* ParseException::what() const throw()
 {
 	return msg.c_str();
 }
@@ -571,7 +572,7 @@ bool Parser::AssignOpt()
 
 Nodes::Operator TokenToBinaryOp(const Token& token)
 {
-	static const std::unordered_map<ReservedSymbol, Nodes::Operator> map(
+	static const std::map<ReservedSymbol, Nodes::Operator> map(
 	{
 		{ ReservedSymbol::Plus, Nodes::Operator::Add },
 		{ ReservedSymbol::Minus, Nodes::Operator::Subtract },
