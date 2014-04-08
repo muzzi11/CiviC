@@ -1,0 +1,199 @@
+\documentclass[12pt]{article}
+
+\usepackage[english]{babel}
+\usepackage[fleqn]{amsmath}
+\usepackage{graphicx}
+\usepackage{enumerate}
+\usepackage{eurosym}
+\usepackage[normalem]{ulem}
+\usepackage{tikz}
+\usepackage{url}
+\usepackage{hyperref}
+\usetikzlibrary{automata,positioning}
+
+\usepackage{listings}
+\usepackage{color}
+
+\definecolor{dkgreen}{rgb}{0,0.6,0}
+\definecolor{gray}{rgb}{0.5,0.5,0.5}
+\definecolor{mauve}{rgb}{0.58,0,0.82}
+
+\lstset{frame=tb,
+  language=C++,
+  aboveskip=4mm,
+  belowskip=4mm,
+  showstringspaces=false,
+  columns=flexible,
+  basicstyle={\small\ttfamily},
+  numbers=none,
+  numberstyle=\tiny\color{gray},
+  keywordstyle=\color{blue},
+  commentstyle=\color{dkgreen},
+  stringstyle=\color{mauve},
+  breaklines=true,
+  breakatwhitespace=true,
+  tabsize=4
+}
+
+\title{UCC: Ultimate Civic Compiler}
+\author{Jos Bonsink (10172920) \& Mustafa Karaalioglu (10217665)}
+\begin{document}
+\maketitle
+
+\tableofcontents
+\newpage
+
+\section{Introduction}
+
+In order to learn as much as possible from all aspects of compiler construction, the decision was made to build everything from scratch. C++ was the language of choice for the reasons that memory management would be easier, templated code could be used to reduce boiler plate code and if required, the orignal framework could be mimicked.
+
+\section{Lexicographic Analysis}
+
+Instead of using a generated scanner, whether table-driven or direct-coded, it was decided to build a hand-coded scanner for the compiler. The choice to implement a hand-coded scanner proved to be an intelligent one. Understanding the usage of a third party tool would have taken more time than to implement our own scanner. The resulting scanner is easy to manage. Additional reserved words and symbols can easily be added to existing data structures. The scanner does not have any dependencies, since it does not rely on tools like lex.
+
+The scanner does not simulate a deterministic finite automaton, but instead uses a more direct approach by pattern matching. While character-by-character scanning using a DFA comes from clean algorithmic formulations, it is far less natural to think and program in such way. An example of pattern matching a word is as follows:
+
+\begin{lstlisting}
+char* wordPattern = "ABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890_";
+...
+if(first >= 'A' && first <= 'Z') TokenizeWord(...);
+...
+void TokenizeWord(...)
+{
+	end = line.find_first_not_of(wordPattern, start);
+	token.readString = line.substr(start, end - start);
+}
+\end{lstlisting}
+
+This is basically all that is required to tokenize words and it looks and feels very similar to what we as human beings do when we extract words out of text. This direct translation into code makes it easy to write and comprehend. Tokenzing numbers and symbols looks very similar.
+
+\section{Syntactic Analysis}
+
+Compiler compilers that generate parsers based on an analytic grammar are available. Yacc and Bison generate table driven parsers, where the parser logic is contained in the parser program's data and not so much in the code. It is comparable with a black box. To really understand the complexities that arise when designing a parser, it was decided to write a parser by hand.
+
+There are two parser types, the top-down parser and the bottom-up parser. Bottom-up parsers support a somewhat larger range of language grammars than the deterministic top-down parsers. From a programming standpoint, the top-down parser is easier to implement. The extra language support of the bottom-up parser was not required, so the choice fell on a top-down parser.  
+
+The efficiency of a top-down parser depends critically on its ability to pick the correct production each time that it expands a nonterminal. The cost of parsing rises when wrong choices are made. For some grammars, the worst case behaviour is that the parser does not terminate. To avoid these kinds of problems certain transformations have been made to the original Civic grammar.
+
+The original grammar used left recursion. With left-recursion, the top-down parser can loop indefinitely. To avoid this problem the left-recursive grammar has been reformulated so that it uses right recursion. Not all grammars are backtrack free, including the original grammar. Backtracking has been eliminated by left factoring the rules.
+
+Expression parsing is a complex matter. The original grammar treats all of the arithmetic operators in the same way, without any regard for precedence. Precedence levels can be encoded into the grammar. But this greatly expands the amount of rules and thus the clarity of the parser. It was decided to use the Shunting-yard algorithm \cite{dijkstrashunting} to parse mathematical expressions, thus limiting the grammar size. 
+
+The implementation of Shunting-yard was more complex than expected. Extending the original algorithm with support for function calls proved problematic. An alternative to Shunting-yard is the precedence climbing method \cite{richards1981bcpl}. The idea is that you "climb down" the precedence levels and create a tree along the way. Unlike the Shunting-yard algorithm this algorithm is not a pure operator-precedence parser, therefore implementing function call support was a trivial matter and thus we revised our earlier decision to use Shunting-yard.
+
+For the most part the grammar could be directly translated into code, which made it easy to write as shown below.
+\begin{lstlisting}
+bool FunHeader()
+{
+	return ParenthesesL() && Param() && Params() && ParenthesesR();
+}
+\end{lstlisting}
+However, this elegancy was mostly lost when incorporating error logging and abstract syntax tree generation. Parsing errors are handled by throwing exceptions, which allows the error logging to be handled at a higher level. The once so elegant code turned into something far less comprehendable as exemplified below.
+\begin{lstlisting}
+bool Parser::LocalFuns()
+{
+	if(Void() && Id(true) && LocalFun(true) && LocalFuns())
+	{
+		return true;
+	}
+	else if(Type())
+	{
+		if(ArrayExpr()) throw ParseException("Unexpected array expression(variable declarations should precede function definitions)"]);
+		else if(Id(true))
+		{
+			if(LocalFun()) return LocalFuns();
+			else if(AssignOpt() || Semicolon()) throw ParseException("Variable declaration should precede function definitions");
+			else(LocalFun(true));
+		}
+	}
+
+	return true;
+}
+\end{lstlisting}
+
+Finding a way to reduce this complexity proved to be too challenging without prior experience of writing parsers.
+
+\section{Intermediate Representation}
+
+In order to perform any context-sensitive analysis or assembly code generation, an abstract syntax tree is used. The tree is generated during parsing, where tokens are pushed onto a stack until an AST node can be made. Nodes have a shared base class that contains a list of children, allowing for a tree like structure. Static polymorphism is used to allow for a clean and relatively typesafe way of dealing with nodes. Another great benefit of using static polymorphism is the automatic registration of nodes. The example below shows how each new node class automatically obtains a unique family identifier.
+
+\begin{lstlisting}
+class BaseNode
+{
+public:
+	uint32_t Family() const;
+
+protected:
+	uint32_t family_ = ~0;
+	static uint32_t familyCounter_;
+};
+
+template<class T>
+struct Node : public BaseNode
+{
+	Node(){ family_ = Family(); }
+
+	static int32_t Family()
+	{
+		static uint32_t family = (1 << BaseNode::familyCounter_++);
+		return family;
+	}
+};
+
+struct UnaryOp : public Node<UnaryOp> {};
+struct BinaryOp : public Node<BinaryOp> {};
+\end{lstlisting}
+Because the UnaryOp and BinaryOp classes inherit from a templated class, the C++ compiler will create two classes of the templated Node class, one for UnaryOp and one for BinaryOp. As the Family() method is static, all instantations of a node will share the same method that is constructed at compile time. Because UnaryOp and BinaryOp each get their own version of the templated Node class, they now have a static Family() method that is unique to them. If we now write the following code:
+\begin{lstlisting}
+UnaryOp u1, u2;
+BinaryOp b1, b2;
+\end{lstlisting}
+Both u1 and u2 will be of the same family with number 1, and b1 and b2 will be of the same family with number 2.
+
+With some additions to our base nodes we can do the following:
+\begin{lstlisting}
+BaseNode* node = new BinaryOp();
+if(node->Family() == BinaryOp::Family()) print("This evaluates to true!");
+\end{lstlisting}
+This is a very powerful tool that we can leverage to traverse nodes of a specific type and even to get some form of typesafety when casting nodes from a base type to a parent type. Consider the following:
+\begin{lstlisting}
+template<class T>
+T* StaticCast(BaseNode *node)
+{
+	return node->Family() == T::Family() ? static_cast<T>(node) : nullptr;
+}
+\end{lstlisting}
+We can now only cast a node to a non-null pointer if it's of the same family, guaranteeing us that we'll never cast to the wrong type and modify uninteded bytes.
+
+This technique is heavily used to create tree traversels for different node types with type safety and without code duplication.
+
+\section{Context-Sensitive Analysis}
+
+There are two techniques for gathering context-sensitive knowledge: an automated approach based on attribute grammars \cite{paakki1995attribute} and an ad hoc approach that relies on similar concepts. It was decided to implement ad hoc syntax-directed translation.
+
+The ad hoc approach is more commonly used in compilers and is more flexible than attribute grammars. The ad hoc approach does not restrict the programmer on how to gather context sensitive information. In contrast to the attribute-grammar where the information is saved in attributes assigned to production rules.
+
+The attribute approach has some problems. Not all languages can be cleanly mapped onto onto the attribute-grammar paradigm, particularly those languages with a complex pattern of information flow can be difficult to express as attribute grammars.
+
+\subsection{Intermediate Representation}
+
+
+To represent the underlying code as a graph, it was decided to use an abstract syntax tree. The task of building an AST also fits neatly into an ad hoc syntax-directed translation scheme. The compiler generates assembly code, so the final version of the AST will be at or below the abstraction level of the Civic virtual machine's instruction set.
+
+\section{The Procedure Abstraction}
+
+\section{Code Shape}
+
+\section{Optimizations}
+
+\section{Instruction Selection}
+
+\newpage
+
+\bibliographystyle{plain}
+\bibliography{bib}
+
+\end{document}
+
+
+
