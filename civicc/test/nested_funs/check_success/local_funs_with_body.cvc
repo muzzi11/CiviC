@@ -1,0 +1,14 @@
+void testFunDecs()
+{
+  int c = 5;
+  int d = 2 + c;
+  int b;
+  int r;
+
+  void foo() {
+    int c = 3;
+    int p;
+  }
+
+  r = 3;
+}

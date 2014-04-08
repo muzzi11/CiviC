@@ -1,0 +1,85 @@
+extern void printInt( int val);
+extern void printSpaces( int num);
+extern void printNewlines( int num);
+
+void printvector(int[m] a)
+{
+	for(int i=0,m)
+	{
+		printInt(a[i]);
+		printSpaces(3);
+	}
+    printNewlines(1);
+}
+
+void quicksort(int[N] list,int m,int n)
+{
+	int key;
+	int i;
+	int j;
+	int k;
+	int temp;
+
+	if( m < n)
+	{
+
+		k = (m+n)/2;
+
+		//swap
+		temp=list[m];
+		list[m]=list[k];
+		list[k]=temp;
+
+		key = list[m];
+
+		i = m+1;
+
+		j = n;
+
+		while(i <= j)
+		{
+
+			while((i <= n) && (list[i] <= key))
+			{
+                i=i+1;
+			}
+			while((j >= m) && (list[j] > key))
+			{
+                j=j-1;
+			}
+			if( i < j)
+			{
+
+                temp=list[i];
+				list[i]=list[j];
+				list[j]=temp;
+			}
+
+		}
+
+		// swap two elements
+
+		temp=list[m];
+		list[m]=list[j];
+		list[j]=temp;
+
+		// recursively sort the lesser list
+
+		quicksort(list,m,j-1);
+
+		quicksort(list,j+1,n);
+
+	}
+
+}
+
+export int main()
+{
+	int[10] a = [2,10,5,4,9,7,8,6,1,2];
+
+	quicksort(a,0,9);
+	printvector(a);
+	return 0;
+}
+
+

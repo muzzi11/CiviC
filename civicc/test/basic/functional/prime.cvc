@@ -1,0 +1,30 @@
+extern void printInt(int val);
+extern void printNewlines(int num);
+
+int next_prime(int p) {
+    bool is_prime;
+
+    do {
+        p = p + 1;
+        is_prime = true;
+
+        for (int i = 2, p) {
+            if (p % i == 0)
+                is_prime = false;
+        }
+    } while(!is_prime);
+
+    return p;
+}
+
+export int main() {
+    int p = 2;
+
+    for (int i = 0, 25) {
+        printInt(p);
+        printNewlines(1);
+        p = next_prime(p);
+    }
+
+    return 0;
+}

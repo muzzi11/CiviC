@@ -1,0 +1,168 @@
+main:
+	esr 15
+	iloadc_0
+	istore 0
+	iloadc 0
+	istore 1
+	iloadc_1
+	istore 2
+0_for:
+	iload_0
+	iload_1
+	ilt
+	branch_f 0_end_for
+	isrg
+	iload_0
+	jsr 1
+	isrg
+	iloadc_1
+	jsr 2
+	iload_0
+	iload_2
+	iadd
+	istore 0
+	jump 0_for
+0_end_for:
+	isrg
+	iloadc_1
+	jsr 3
+	iloadc 0
+	istore 3
+	iloadc_0
+	istore 4
+	iloadc_1
+	ineg
+	istore 5
+1_for:
+	iload_3
+	iload 4
+	ilt
+	branch_f 1_end_for
+	isrg
+	iload_3
+	jsr 1
+	isrg
+	iloadc_1
+	jsr 2
+	iload_3
+	iload 5
+	iadd
+	istore 3
+	jump 1_for
+1_end_for:
+	isrg
+	iloadc_1
+	jsr 3
+	iloadc_0
+	istore 6
+	iloadc 0
+	istore 7
+	iloadc 1
+	istore 8
+2_for:
+	iload 6
+	iload 7
+	ilt
+	branch_f 2_end_for
+	isrg
+	iload 6
+	jsr 1
+	isrg
+	iloadc_1
+	jsr 2
+	iload 6
+	iload 8
+	iadd
+	istore 6
+	jump 2_for
+2_end_for:
+	isrg
+	iloadc_1
+	jsr 3
+	iloadc 2
+	istore 9
+	iloadc_0
+	istore 10
+	iloadc 3
+	ineg
+	istore 11
+3_for:
+	iload 9
+	iload 10
+	ilt
+	branch_f 3_end_for
+	isrg
+	iload 9
+	jsr 1
+	isrg
+	iloadc_1
+	jsr 2
+	iload 9
+	iload 11
+	iadd
+	istore 9
+	jump 3_for
+3_end_for:
+	iloadc_0
+	istore 12
+	iloadc 4
+	istore 13
+	iloadc_1
+	istore 14
+4_for:
+	iload 12
+	iload 13
+	ilt
+	branch_f 4_end_for
+	iloadc_0
+	istore 15
+	iloadc 5
+	istore 16
+	iloadc_1
+	istore 17
+5_for:
+	iload 15
+	iload 16
+	ilt
+	branch_f 5_end_for
+	isrg
+	iload 12
+	jsr 1
+	isrg
+	iloadc_1
+	jsr 2
+	isrg
+	iload 15
+	jsr 1
+	isrg
+	iloadc_1
+	jsr 2
+	iload 15
+	iload 17
+	iadd
+	istore 15
+	jump 5_for
+5_end_for:
+	isrg
+	iloadc_1
+	jsr 3
+	iload 12
+	iload 14
+	iadd
+	istore 12
+	jump 4_for
+4_end_for:
+	iloadc_0
+	ireturn
+
+; globals:
+.const int 10
+.const int 2
+.const int 7
+.const int 3
+.const int 5
+.const int 4
+.import "printInt" void int
+.import "printSpaces" void int
+.import "printNewlines" void int
+.export "main" int main

@@ -1,0 +1,4 @@
+// test parsing of one global function declaration with parameter.
+
+extern float calculate();
+

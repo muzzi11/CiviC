@@ -1,0 +1,7 @@
+void foo() {
+    bar(glob);  // Uses function and variable that are defined later than foo()
+}
+
+void bar(int a) {}
+
+int glob;

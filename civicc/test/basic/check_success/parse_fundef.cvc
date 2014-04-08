@@ -1,0 +1,6 @@
+void  vfoo() {}
+bool  bfoo() { return true; }
+int   ifoo(int arg) { return arg; }
+float ffoo(float arg1, float arg2) { return arg1 + arg2; }
+
+export int exported_fun() { return 1; }

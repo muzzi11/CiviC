@@ -1,0 +1,6 @@
+
+extern int n;
+extern int m;
+extern int k;
+
+int [n,m,k] global_int_array_def;

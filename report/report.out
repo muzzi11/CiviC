@@ -1,10 +1,11 @@
 \BOOKMARK [1][-]{section.1}{Introduction}{}% 1
 \BOOKMARK [1][-]{section.2}{Lexicographic Analysis}{}% 2
 \BOOKMARK [1][-]{section.3}{Syntactic Analysis}{}% 3
-\BOOKMARK [1][-]{section.4}{Intermediate Representation}{}% 4
-\BOOKMARK [1][-]{section.5}{Context-Sensitive Analysis}{}% 5
-\BOOKMARK [2][-]{subsection.5.1}{Intermediate Representation}{section.5}% 6
-\BOOKMARK [1][-]{section.6}{The Procedure Abstraction}{}% 7
-\BOOKMARK [1][-]{section.7}{Code Shape}{}% 8
-\BOOKMARK [1][-]{section.8}{Optimizations}{}% 9
-\BOOKMARK [1][-]{section.9}{Instruction Selection}{}% 10
+\BOOKMARK [1][-]{section.4}{Context-Sensitive Analysis}{}% 4
+\BOOKMARK [2][-]{subsection.4.1}{Intermediate Representation}{section.4}% 5
+\BOOKMARK [2][-]{subsection.4.2}{Symbol table}{section.4}% 6
+\BOOKMARK [2][-]{subsection.4.3}{Analysis}{section.4}% 7
+\BOOKMARK [1][-]{section.5}{The Procedure Abstraction}{}% 8
+\BOOKMARK [1][-]{section.6}{Code Shape}{}% 9
+\BOOKMARK [1][-]{section.7}{Optimizations}{}% 10
+\BOOKMARK [1][-]{section.8}{Instruction Selection}{}% 11

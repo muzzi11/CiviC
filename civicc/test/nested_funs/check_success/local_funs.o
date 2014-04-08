@@ -1,0 +1,22 @@
+func:
+	esr 2
+	iloadc 0
+	ineg
+	iloadc 1
+	iadd
+	istore 0
+	iloadc 0
+	iloadc 1
+	isub
+	istore 1
+	return
+func__f:
+	esr 0
+	return
+func__g:
+	esr 0
+	return
+
+; globals:
+.const int 2
+.const int 10

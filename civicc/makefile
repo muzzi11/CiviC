@@ -3,7 +3,7 @@ AS=g++ -std=c++11
 HEADERS=civicc/*.h
 SOURCES=civicc/*.cpp
 OBJECTS=*.o
-TARGET=civcc
+TARGET=bin/civicc
 
 all: $(TARGET)
 

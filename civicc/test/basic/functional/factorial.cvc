@@ -1,0 +1,26 @@
+extern void printInt(int val);
+extern void printNewlines(int num);
+
+int fac(int num) {
+	int input = num;
+	int output = 1;
+	int i = 1;
+
+	if (input == 0) {
+		output = 1;
+    } else {
+        while (i <= input) {
+			output = output * i;
+			i = i + 1;
+		}
+	}
+	return output;
+}
+
+export int main() {
+    printInt(fac(3));  printNewlines(1);
+    printInt(fac(5));  printNewlines(1);
+    printInt(fac(10)); printNewlines(1);
+	return 0;
+}
+

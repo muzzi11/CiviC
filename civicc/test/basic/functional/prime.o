@@ -1,0 +1,80 @@
+next_prime:
+	esr 1
+0_do_while:
+	iload_0
+	iloadc_1
+	iadd
+	istore 0
+	bloadc_t
+	bstore 0
+	iloadc 0
+	istore 1
+	iload_0
+	istore 2
+	iloadc_1
+	istore 3
+1_for:
+	iload_1
+	iload_2
+	ilt
+	branch_f 1_end_for
+	iload_0
+	iload_1
+	irem
+	iloadc_0
+	ieq
+	branch_f 2_else
+	bloadc_f
+	bstore 0
+2_else:
+	iload_1
+	iload_3
+	iadd
+	istore 1
+	jump 1_for
+1_end_for:
+	bload_0
+	bnot
+branch_t 0_do_while
+	iload_0
+	ireturn
+main:
+	esr 4
+	iloadc 0
+	istore 4
+	iloadc_0
+	istore 5
+	iloadc 1
+	istore 6
+	iloadc_1
+	istore 7
+3_for:
+	iload 5
+	iload 6
+	ilt
+	branch_f 3_end_for
+	isrg
+	iload 4
+	jsr 1
+	isrg
+	iloadc_1
+	jsr 2
+	isrg
+	iload 4
+	jsr 1 next_prime
+	istore 4
+	iload 5
+	iload 7
+	iadd
+	istore 5
+	jump 3_for
+3_end_for:
+	iloadc_0
+	ireturn
+
+; globals:
+.const int 2
+.const int 25
+.import "printInt" void int
+.import "printNewlines" void int
+.export "main" int main

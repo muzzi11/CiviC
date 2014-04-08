@@ -1,0 +1,47 @@
+main:
+	esr 5
+	iloadc 0
+	istore 0
+	iloadc 1
+	istore 1
+	iloadc_0
+	istore 2
+	iload_1
+	istore 3
+	iload_0
+	istore 4
+0_for:
+	iload_2
+	iload_3
+	ilt
+	branch_f 0_end_for
+	iload_0
+	iloadc_1
+	iadd
+	istore 0
+	iload_1
+	iloadc 2
+	iadd
+	istore 1
+	isrg
+	iload_2
+	jsr 1
+	isrg
+	iloadc_1
+	jsr 2
+	iload_2
+	iload 4
+	iadd
+	istore 2
+	jump 0_for
+0_end_for:
+	iloadc_0
+	ireturn
+
+; globals:
+.const int 10
+.const int 100
+.const int 5
+.import "printInt" void int
+.import "printNewlines" void int
+.export "main" int main

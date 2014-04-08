@@ -218,7 +218,7 @@ const std::string CntrlFlwInstr::JumpSub(const int arguments, const std::string 
 
 const std::string CntrlFlwInstr::JumpExtSub(const int index)
 {
-	return Instr::ParseInstr(jsr, index);
+	return Instr::ParseInstr(jsre, index);
 }
 
 const std::string CntrlFlwInstr::EnterSub(const int elements)
