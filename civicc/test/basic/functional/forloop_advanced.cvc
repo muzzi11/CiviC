@@ -1,0 +1,14 @@
+extern void printInt(int val);
+extern void printNewlines(int num);
+
+export int main() {
+    int x = 10;
+    int y = 100;
+    for(int i = 0, y, x) {
+        x = x + 1;
+        y = y + 5;
+        printInt(i);
+        printNewlines(1);
+    }
+    return 0;
+}

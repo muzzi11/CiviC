@@ -1,0 +1,24 @@
+extern void printFloat(float val);
+extern void printNewlines(int num);
+
+float computePi() {
+    float pi = 0.0;
+    int n = 75;
+
+    for(int x=-n, n+1) {
+        for(int y=-n, n+1) {
+            if(x*x + y*y <= n*n) {
+                pi = pi + 1.0/(float)(n*n);
+            }
+        }
+    }
+
+    return pi;
+}
+
+export int main() {
+    printFloat(computePi());
+    printNewlines(1);
+
+    return 0;
+}

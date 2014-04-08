@@ -1,0 +1,10 @@
+extern void printInt(int val);
+
+extern int[n] foo;
+
+export int main() {
+    printInt(foo[0]);
+    printInt(foo[1]);
+    printInt(foo[2]);
+    return 0;
+}

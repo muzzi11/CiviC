@@ -1,0 +1,4 @@
+void bool_float_arrays(){
+  bool[2] b = [true,false];
+  float[3] f = [1.0, 2.2, 3.14];
+}

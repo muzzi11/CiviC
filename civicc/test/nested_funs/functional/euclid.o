@@ -1,0 +1,117 @@
+main:
+	esr 0
+	isrg
+	isrg
+	iloadc 0
+	iloadc 1
+	jsr 2 euclid
+	jsr 1
+	isrg
+	iloadc_1
+	jsr 2
+	isrg
+	isrg
+	iloadc 2
+	iloadc 2
+	jsr 2 euclid
+	jsr 1
+	isrg
+	iloadc_1
+	jsr 2
+	isrg
+	isrg
+	iloadc 3
+	iloadc 4
+	jsr 2 euclid
+	jsr 1
+	isrg
+	iloadc_1
+	jsr 2
+	isrg
+	isrg
+	iloadc 5
+	iloadc 6
+	jsr 2 euclid
+	jsr 1
+	isrg
+	iloadc_1
+	jsr 2
+	isrg
+	isrg
+	iloadc 7
+	iloadc 8
+	jsr 2 euclid
+	jsr 1
+	isrg
+	iloadc_1
+	jsr 2
+	iloadc_0
+	ireturn
+euclid:
+	esr 1
+0_do_while:
+	isrl
+	jsr 0 euclid__findNextPair
+	iload_0
+	iloadc_0
+	ine
+	iload_1
+	iloadc_0
+	ine
+	iload_0
+	iloadc_0
+	ine
+	branch_f 1_false_expr
+	iload_1
+	iloadc_0
+	ine
+	jump 1_end
+1_false_expr:
+	bloadc_f
+1_end:
+branch_t 0_do_while
+	iload_0
+	iloadc_0
+	ieq
+	branch_f 2_else
+	iload_1
+	istoren 1 2
+	jump 2_end
+2_else:
+	iload_0
+	istoren 1 2
+2_end:
+	iloadn 1 2
+	ireturn
+euclid__findNextPair:
+	esr 0
+	iload_0
+	iload_1
+	igt
+	branch_f 3_else
+	iload_0
+	iload_1
+	irem
+	istoren 0 0
+	jump 3_end
+3_else:
+	iload_1
+	iload_0
+	irem
+	istoren 0 1
+3_end:
+	return
+
+; globals:
+.const int 45
+.const int 10
+.const int 13
+.const int 37
+.const int 600
+.const int 20
+.const int 100
+.const int 624129
+.const int 2061517
+.import "printInt" void int
+.import "printNewlines" void int
+.export "main" int main

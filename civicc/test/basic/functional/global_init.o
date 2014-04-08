@@ -1,0 +1,18 @@
+main:
+	esr 0
+	isrg
+	iloadg 1
+	jsr 1
+	iloadc_0
+	ireturn
+__init:
+	esr 0
+	iloadc 0
+	istoreg 1
+	return
+
+; globals:
+.const int 10
+.global int
+.import "printInt" void int
+.export "main" int main

@@ -1,0 +1,41 @@
+/*
+ *  matrix.c
+ *  
+ *
+ *  Created by Andrew on 2/5/11.
+ *  Copyright 2011 UvA. All rights reserved.
+ *
+ */
+
+extern void printInt( int val);
+extern void printFloat( float val);
+
+extern int scanInt( );
+extern float scanFloat( );
+
+extern void printSpaces( int num);
+extern void printNewlines( int num);
+
+export int main()
+{
+	int[5,5] matrix;
+
+	for (int i = 0, 5) 
+	{
+		for (int j = 0, 5)
+			matrix[i,j]=j;
+	}
+	
+	for (int i = 0, 5) 
+	{
+		for (int j = 0, 5)
+        {
+			printInt(matrix[i,j]);
+            printSpaces(3);
+        }
+        printNewlines(1);
+	}
+		
+	return 0;
+}
+

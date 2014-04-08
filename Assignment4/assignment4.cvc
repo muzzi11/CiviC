@@ -2,8 +2,6 @@
 Created by Jos Bonsink & Mustafa Karaalioglu
 */
 
-#import "civic.h"
-
 extern void printInt( int val);
 extern void printFloat( float val);
 extern int scanInt( );

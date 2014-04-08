@@ -1,0 +1,5 @@
+extern void vfoo();
+extern bool bfoo();
+extern int ifoo();
+extern float ffoo();
+extern int bar(int arg1, float arg2);

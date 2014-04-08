@@ -1,0 +1,95 @@
+// extern function
+extern void printInt(int val);
+
+// extern variable
+extern int ext;
+
+// static functions with all possible return types
+bool  bfoo() { return true; }
+int   ifoo() { return 1; }
+float ffoo() { return 1.0; }
+void  vfoo() {}
+
+// function with parameters
+int bar(int a, float b) {
+    return a + (int)b;  // typecast
+}
+void baz(bool a) {}
+
+// exported function
+export int main() {
+    // regular vardec
+    bool uninitialized;
+    int i;
+    int a;
+    int b;
+    int c;
+
+    // initialized vardec
+    float initialized = 2.5;
+
+    uninitialized = false;  // assignment
+    vfoo();                 // funcall
+
+    // if-statement
+    if (bfoo()) {
+        i = 1;
+    }
+
+    if (bfoo())
+        i = 1;
+
+    // if-else statement
+    if (bfoo()) {
+        i = 2;
+    } else {
+        i = 3;
+    }
+
+    if (bfoo())
+        i = 2;
+    else
+        i = 3;
+
+    if (bfoo())
+        i = 2;
+    else if (bfoo())
+        i = 3;
+    else
+        i = 4;
+
+    // while-loop
+    while (bfoo()) {
+        vfoo();
+    }
+
+    while (bfoo())
+        vfoo();
+
+    // do-while-loop
+    do {
+        vfoo();
+    } while (bfoo());
+
+    do vfoo(); while (bfoo());
+
+    // for-loop
+    for (int i = 0, 10) {
+        vfoo();
+    }
+
+    for (int i = 0, 10, 2) {
+        vfoo();
+    }
+
+    for (int i = a, b, c) baz((bool)i);
+
+    // expressions (check precedences by hand!)
+    i = a + (b * c % i) / c - -10;
+    if (i < 0 || i > 100)
+        if (i >= 0 && i <= 100 || i != 0 && i != 100)
+            i = -i;
+
+    // return statement
+    return 0;
+}

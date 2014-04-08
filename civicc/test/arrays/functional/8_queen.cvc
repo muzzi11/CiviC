@@ -1,0 +1,82 @@
+/*
+ *  quene.c
+ *
+ *
+ *  Created by Andrew on 2/5/11.
+ *  Copyright 2011 UvA. All rights reserved.
+ *
+ */
+
+extern void printInt( int val);
+extern void printFloat( float val);
+
+extern int scanInt( );
+extern float scanFloat( );
+
+extern void printSpaces( int num);
+extern void printNewlines( int num);
+
+int[8] x;
+
+int abs_sub(int i,int j)
+{
+	int k;
+	if(i>=j)
+		k=i-j;
+	else
+		k=j-i;
+	return k;
+}
+
+void print ()
+{
+	int i;
+	int j;
+	for (int i=0,8)
+	{
+		for (int j=0,8)
+		{
+			if (j==x[i])
+			{
+				printInt(i*10+j);
+				printSpaces(3);
+			}
+		}
+	}
+		printNewlines(1);
+
+}
+
+/* tests, whether (ix, iy) is beaten by queens 0...(iy-1) */
+int is_free (int ix, int iy)
+{
+	int i;
+	int flag=1;
+	for (int i=0,iy)
+		if ((x[i]==ix) || (abs_sub(x[i],ix)==abs_sub(i,iy)))
+			flag= 0;
+	return flag;
+}
+
+/* tries to place queen n on row n */
+void try (int n)
+{
+	int i;
+	if (n==8) print();
+	else
+	{
+		for (int i=0,8)
+			if (is_free(i,n)==1)
+			{
+				x[n]=i;
+				try (n+1);
+			}
+	}
+}
+
+export int main()
+{
+
+	try(0);
+	return 0;
+}
