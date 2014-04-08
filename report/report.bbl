@@ -1,0 +1,19 @@
+\begin{thebibliography}{1}
+
+\bibitem{dijkstrashunting}
+Dr.~E.W. Dijkstra.
+\newblock An algol 60 translator for the x1, 1961.
+\newblock [Online; accessed 2-April-2014].
+
+\bibitem{paakki1995attribute}
+Jukka Paakki.
+\newblock Attribute grammar paradigms—a high-level methodology in language
+  implementation.
+\newblock {\em ACM Computing Surveys (CSUR)}, 27(2):196--255, 1995.
+
+\bibitem{richards1981bcpl}
+Martin Richards and Colin Whitby-Strevens.
+\newblock {\em BCPL: the language and its compiler}.
+\newblock Cambridge University Press, 1981.
+
+\end{thebibliography}
