@@ -1,23 +1,6 @@
-int intGlobal = 1+3;
-float fl=1337.0;
-
-// comment // /// /////////
-/////////
-void test(int loel)
-{
-}
-
-/* multi line comment
-comming in
-*/
-export int main() // comment after
-{
-	bool /* inline comment */ innerFunction()
-	{
-		return !true;
-	}
-	
-	innerFunction();
-	
-	return 0;
-}
+ extern int n;
+ 
+ void foo()
+ {
+	n = n;
+ }

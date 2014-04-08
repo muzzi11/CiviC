@@ -1,6 +1,7 @@
 #include <cctype>
 #include <algorithm>
 #include <sstream>
+#include <iostream>
 
 #include "tokenizer.h"
 
@@ -17,7 +18,7 @@ Tokenizer::Tokenizer(std::istream& istream) :
 
 bool Tokenizer::GetNextToken(Token& token)
 {
-	if(!istream.good()) return false;
+	if(!istream.good() && linePos >= line.length()) return false;
 
 	bool ignore = false;
 	for(;;)
@@ -109,7 +110,7 @@ void Tokenizer::TokenizeNumber(Token& token)
 	size_t end = line.find_first_not_of(numberPattern, linePos);
 	std::stringstream sstream;
 
-	if(line[end] == '.')
+	if(end != std::string::npos && line[end] == '.')
 	{
 		end = line.find_first_not_of(numberPattern, end + 1);
 		token.readString = line.substr(linePos, end - linePos);

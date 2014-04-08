@@ -1,6 +1,6 @@
 Program		=>	[Declaration]+
 
-Declaration	=>	extern Dec | export Def | Def
+Declaration	=>	extern Dec | export Def
 
 Dec			=> 	Type Id FunHeader FunDec
 			| 	Type ArrayId Id GlobalDec
@@ -17,7 +17,8 @@ FunDec		=>	;
 GlobalDec	=>	;
 
 Def			=>	Export Type Id FunHeader FunDef
-			| 	Export Type ArrayExpr ID AssignOpt GlobalDef
+			|	Export Type Id AssignOpt GlobalDef
+			| 	Export Type ArrayExpr Id AssignOpt GlobalDef
 			|	Export void FunHeader FunDef
 
 Export		=>	export | $
@@ -28,20 +29,33 @@ FunDef		=>	{ FunBody }
 
 Type		=>	bool | int | float
 
-FunBody		=>	VarDecs LocalFunDef Statement Return
+FunBody		=>	Locals Statements Return
 
-LocalFunDef	=>	Type Id FunHeader { FunBody } LocalFunDef | $
+Locals		=>	Type Id LocalFun LocalFuns
+			|	void Id LocalFun LocalFuns
+			|	Type Id AssignOpts ; Locals
+			|	Type ArrayExpr Id AssignOpts ; Locals
+			|	$
+			
+LocalFun	=>	FunHeader { FunBody }
 
-VarDecs		=>	Type ArrayExpr Id AssignOpts ; VarDecs | $
+LocalFuns	=>	Type Id LocalFun LocalFuns
+			|	void Id LocalFun LocalFuns
+			|	$
 
-ArrayExpr	=>	[ Expr Exprs ] | $
+LocalVars	=>	Type Id AssignOpts ; LocalVars
+			|	Type
+
+ArrayExpr	=>	[ Expr Exprs ]
 
 ArrayId		=>	[ Id Ids ] | $
 
-Ids			=>	, Id | $
+Ids			=>	, Id Ids | $
 
-Statement	=>	Id ArrayExpr Assign ;	
-			|	Id ( ArrayExpr ) ;
+Statement	=>	Id ArrayExpr Assign ;
+			|	Id Assign ;
+			|	Id ( ) ;
+			|	Id ( Expr Exprs ) ;
 			|	if ( Expr ) Block ElseBlock
 			|	while ( Expr ) Block
 			|	do Block while ( Expr ) ;
@@ -51,6 +65,8 @@ Step		=>	, Expr | $
 
 Block		=>	{ Statements } | Statement
 
+ElseBlock	=>	else Block | $
+
 Statements	=>	Statement Statements | $
 
 Return		=> 	return Expr ; | $
@@ -59,17 +75,18 @@ Assign		=> 	= Expr
 
 AssignOpt	=> 	Assign | $
 
-Expr		=>	( Expr ) ExprRest
-			|	MonOp Expr ExprRest
-			|	( Type ) Expr ExprRest
-			|	Id ( ArrayExpr ) ExprRest
-			|	Id ArrayExpr ExprRest
-			|	Literal ExprRest
-			|	[ Expr Exprs ] ExprRest
+Expr		=>	( Expr )
+			|	Expr BinOp Expr
+			|	MonOp Expr
+			|	( Type ) Expr
+			|	Id ( Args )
+			|	Id ArrayExpr
+			|	Literal
+			|	[ Expr Exprs ]
 			
 Exprs		=>	, Expr Exprs | $
-			
-ExprRest	=>	BinOp Expr ExprRest | $
+
+Args		=>	Expr Exprs | $
 
 BinOp		=>	ArithOp | LogicOp | RelOp
 

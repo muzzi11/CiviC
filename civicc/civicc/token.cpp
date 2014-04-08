@@ -1,3 +1,5 @@
+#include <unordered_map>
+
 #include "token.h"
 
 
@@ -35,56 +37,61 @@ bool Token::operator!=(ReservedSymbol symbol) const
 
 ReservedWord GetReservedWord(const std::string& str)
 {
-	ReservedWord word;
+	static const std::unordered_map<std::string, ReservedWord> map(
+	{
+		{ "if", ReservedWord::If },
+		{ "then", ReservedWord::Then },
+		{ "else", ReservedWord::Else },
+		{ "for", ReservedWord::For },
+		{ "do", ReservedWord::Do },
+		{ "while", ReservedWord::While },
+		{ "return", ReservedWord::Return },
+		{ "export", ReservedWord::Export },
+		{ "extern", ReservedWord::Extern },
+		{ "true", ReservedWord::True },
+		{ "false", ReservedWord::False },
+		{ "bool", ReservedWord::Bool },
+		{ "int", ReservedWord::Int },
+		{ "float", ReservedWord::Float },
+		{ "void", ReservedWord::Void },
+	});
 
-	if(str.compare("if") == 0) word = ReservedWord::If;
-	else if(str.compare("then") == 0) word = ReservedWord::Then;
-	else if(str.compare("else") == 0) word = ReservedWord::Else;
-	else if(str.compare("for") == 0) word = ReservedWord::For;
-	else if(str.compare("do") == 0) word = ReservedWord::Do;
-	else if(str.compare("while") == 0) word = ReservedWord::While;
-	else if(str.compare("return") == 0) word = ReservedWord::Return;
-	else if(str.compare("export") == 0) word = ReservedWord::Export;
-	else if(str.compare("extern") == 0) word = ReservedWord::Extern;
-	else if(str.compare("true") == 0) word = ReservedWord::True;
-	else if(str.compare("false") == 0) word = ReservedWord::False;
-	else if(str.compare("bool") == 0) word = ReservedWord::Bool;
-	else if(str.compare("int") == 0) word = ReservedWord::Int;
-	else if(str.compare("float") == 0) word = ReservedWord::Float;
-	else if(str.compare("void") == 0) word = ReservedWord::Void;
-	else word = ReservedWord::Undefined;
-
-	return word;
+	return (map.count(str) > 0) ? map.at(str) : ReservedWord::Undefined;
 }
 
 ReservedSymbol GetReservedSymbol(const std::string& str, size_t pos)
 {
-	ReservedSymbol symbol;
+	static const std::unordered_map<std::string, ReservedSymbol> map(
+	{
+		{ "==", ReservedSymbol::Equals },
+		{ "!=", ReservedSymbol::Unequals },
+		{ "<=", ReservedSymbol::LessEqual },
+		{ ">=", ReservedSymbol::MoreEqual },
+		{ "<", ReservedSymbol::Less },
+		{ ">", ReservedSymbol::More },
+		{ "&&", ReservedSymbol::And },
+		{ "||", ReservedSymbol::Or },
+		{ "!", ReservedSymbol::Not },
+		{ "(", ReservedSymbol::ParenthesesL },
+		{ ")", ReservedSymbol::ParenthesesR },
+		{ "[", ReservedSymbol::BracketL },
+		{ "]", ReservedSymbol::BracketR },
+		{ "{", ReservedSymbol::BraceL },
+		{ "}", ReservedSymbol::BraceR },
+		{ "=", ReservedSymbol::Assign },
+		{ "+", ReservedSymbol::Plus },
+		{ "-", ReservedSymbol::Minus },
+		{ "*", ReservedSymbol::Multiply },
+		{ "/", ReservedSymbol::Divide },
+		{ "%", ReservedSymbol::Modulo },
+		{ ",", ReservedSymbol::Comma },
+		{ ";", ReservedSymbol::Semicolon },
+	});
 
-	if(str.compare(pos, 2, "==") == 0) symbol = ReservedSymbol::Equals;
-	else if(str.compare(pos, 2, "!=") == 0) symbol = ReservedSymbol::Unequals;
-	else if(str.compare(pos, 2, "<=") == 0) symbol = ReservedSymbol::LessEqual;
-	else if(str.compare(pos, 2, ">=") == 0) symbol = ReservedSymbol::MoreEqual;
-	else if(str.compare(pos, 1, "<") == 0) symbol = ReservedSymbol::Less;
-	else if(str.compare(pos, 1, ">") == 0) symbol = ReservedSymbol::More;
-	else if(str.compare(pos, 2, "&&") == 0) symbol = ReservedSymbol::And;
-	else if(str.compare(pos, 2, "||") == 0) symbol = ReservedSymbol::Or;
-	else if(str.compare(pos, 1, "!") == 0) symbol = ReservedSymbol::Not;
-	else if(str.compare(pos, 1, "(") == 0) symbol = ReservedSymbol::ParenthesesL;
-	else if(str.compare(pos, 1, ")") == 0) symbol = ReservedSymbol::ParenthesesR;
-	else if(str.compare(pos, 1, "[") == 0) symbol = ReservedSymbol::BracketL;
-	else if(str.compare(pos, 1, "]") == 0) symbol = ReservedSymbol::BracketR;
-	else if(str.compare(pos, 1, "{") == 0) symbol = ReservedSymbol::BraceL;
-	else if(str.compare(pos, 1, "}") == 0) symbol = ReservedSymbol::BraceR;
-	else if(str.compare(pos, 1, "=") == 0) symbol = ReservedSymbol::Assign;
-	else if(str.compare(pos, 1, "+") == 0) symbol = ReservedSymbol::Plus;
-	else if(str.compare(pos, 1, "-") == 0) symbol = ReservedSymbol::Minus;
-	else if(str.compare(pos, 1, "*") == 0) symbol = ReservedSymbol::Multiply;
-	else if(str.compare(pos, 1, "/") == 0) symbol = ReservedSymbol::Divide;
-	else if(str.compare(pos, 1, "%") == 0) symbol = ReservedSymbol::Modulo;
-	else if(str.compare(pos, 1, ",") == 0) symbol = ReservedSymbol::Comma;
-	else if(str.compare(pos, 1, ";") == 0) symbol = ReservedSymbol::Semicolon;
-	else symbol = ReservedSymbol::Undefined;
+	const std::string a = str.substr(pos, 2);
+	const std::string b = str.substr(pos, 1);
 
-	return symbol;
+	if(map.count(a) > 0) return map.at(a);
+
+	return (map.count(b) > 0) ? map.at(b) : ReservedSymbol::Undefined;
 }

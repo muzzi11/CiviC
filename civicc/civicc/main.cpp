@@ -3,11 +3,21 @@
 #include <vector>
 
 #include "tokenizer.h"
-
-bool scanner(const char* str);
+#include "parser.h"
+#include "instruction.h"
+#include "node.h"
+#include "traverse.h"
+#include "symboltable.h"
+#include "seperation.h"
+#include "replace_boolops.h"
+#include "analysis.h"
+#include "assembly.h"
+#include "nested_func_renaming.h"
+#include "replace_while.h"
+#include "global_getset.h"
 
 int main(int argc, char* argv[])
-{
+{		
 	if(argc < 2)
 	{
 		std::cout << "No input files suplied.\n";
@@ -20,127 +30,49 @@ int main(int argc, char* argv[])
 		Tokenizer tokenizer(file);
 		Token token;
 		std::vector<Token> tokens;
+		Parser parser(tokens);
+		AssemblyGenerator assemblyGenerator;
 
 		if(file.is_open())
 		{
 			while(tokenizer.GetNextToken(token))
 			{
 				tokens.push_back(token);
-				std::cout << token.readString << "\n";
+				//std::cout << token.readString << "\n";
 			}
 
 			std::cout << "\nToken count: " << tokens.size() << "\n";
 
 			file.close();
 		}
-	}
 
-	std::string word;
-	for(;;)
-	{
-		std::cin >> word;
-		std::cout << scanner(word.c_str()) << "\n";
+		try
+		{
+			auto root = std::make_shared<Nodes::Root>();
+			parser.ParseProgram(root);
+
+			SeperateDecAndInit(root);
+			std::cout << TreeToJSON(root) << "\n";
+
+			auto errors = Analyzer().Analyse(root);
+			std::cout << errors;
+			if (errors.size() > 0) return 0;
+
+			ReplaceBooleanOperators(root);
+			ReplaceWhileLoops(root);
+			RenameNestedFunctions(root);
+			CreateGettersSetters(root);
+
+			std::cout << TreeToJSON(root) << "\n";
+			std::cout << "-------------------------------------\n";
+			std::cout << "Assembly\n";
+			std::cout << "-------------------------------------\n";
+			std::cout << assemblyGenerator.Generate(root) << "\n";
+		}
+		catch(ParseException e)
+		{
+			std::cout << e.what();
+		}
 	}
 	return 0;
-}
-/*
-Assignment 12
-
-
-bool Start()
-{
-	return Expr() && NextToken() == eof();
-}
-
-bool Expr()
-{
-	return Term() && ExprP();
-}
-
-bool ExprP()
-{
-	token = nextToken();
-	
-	if(token == plus) return Term() && ExprP();
-	
-	ungetToken(token);
-	return true;
-}
-
-bool Term()
-{
-	token = nextToken();
-	
-	if(token == minus) return Term();
-	else return Suffix();
-}
-
-bool Suffix()
-{
-	return Identifier() && SuffixP();
-}
-
-bool SuffixP()
-{
-	token = nextToken();
-
-	switch(token)
-	{
-	case minus:
-		return SuffixPM();
-	case plus:
-		return SuffixPP();
-	default:
-		ungetToken(token);
-		return true;
-	}
-}
-
-bool SuffixPM()
-{
-	token = nextToken();
-	if(token == minus) return SuffixP();
-	
-	return false;
-}
-
-bool SuffixPP()
-{
-	token = nextToken();
-	if(token == plus) return SuffixP();
-
-	return false;
-}
-*/
-
-bool scanner(const char* word)
-{
-	int pos = 0;
-	int len = strlen(word);
-
-state_a:
-	if(len == 0) return true;
-	if(word[pos] == 'a' || word[pos] == 'b')
-	{
-		pos++;
-		goto state_b;
-	}
-	else
-	{
-		return false;
-	}
-
-state_b:
-	if(word[pos++] == 'c') goto state_c;
-	else return false;
-state_c:
-	if(pos == len) return true;
-	
-	if(word[pos] == 'a' || word[pos] == 'b')
-	{
-		pos++;
-		goto state_b;
-	}
-
-	return false;
 }

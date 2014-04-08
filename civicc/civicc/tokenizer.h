@@ -5,6 +5,15 @@
 
 class Tokenizer
 {
+public:
+	Tokenizer(std::istream& istream);
+	Tokenizer(const Tokenizer&) = delete;
+	Tokenizer(Tokenizer&&) = delete;
+	Tokenizer& operator=(const Tokenizer&) = delete;
+	Tokenizer& operator=(Tokenizer&&) = delete;
+
+	bool GetNextToken(Token& token);
+
 private:
 	size_t lineNumber, linePos;
 	std::string line;
@@ -16,13 +25,4 @@ private:
 	void TokenizeWord(Token& token);
 	void TokenizeNumber(Token& token);
 	void TokenizeSymbol(Token& token);
-
-public:
-	Tokenizer(std::istream& istream);
-	Tokenizer(const Tokenizer&) = delete;
-	Tokenizer(Tokenizer&&) = delete;
-	Tokenizer& operator=(const Tokenizer&) = delete;
-	Tokenizer& operator=(Tokenizer&&) = delete;
-
-	bool GetNextToken(Token& token);
 };

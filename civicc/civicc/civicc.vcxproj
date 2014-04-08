@@ -76,15 +76,39 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="analysis.cpp" />
+    <ClCompile Include="array_reduction.cpp" />
+    <ClCompile Include="assembly.cpp" />
+    <ClCompile Include="global_getset.cpp" />
+    <ClCompile Include="Instruction.cpp" />
+    <ClCompile Include="nested_func_renaming.cpp" />
+    <ClCompile Include="replace_boolops.cpp" />
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="node.cpp" />
     <ClCompile Include="parser.cpp" />
+    <ClCompile Include="replace_while.cpp" />
+    <ClCompile Include="symboltable.cpp" />
+    <ClCompile Include="seperation.cpp" />
     <ClCompile Include="token.cpp" />
     <ClCompile Include="tokenizer.cpp" />
+    <ClCompile Include="traverse.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="analysis.h" />
+    <ClInclude Include="array_reduction.h" />
+    <ClInclude Include="assembly.h" />
+    <ClInclude Include="global_getset.h" />
+    <ClInclude Include="instruction.h" />
+    <ClInclude Include="nested_func_renaming.h" />
+    <ClInclude Include="replace_boolops.h" />
+    <ClInclude Include="node.h" />
     <ClInclude Include="parser.h" />
+    <ClInclude Include="replace_while.h" />
+    <ClInclude Include="symboltable.h" />
+    <ClInclude Include="seperation.h" />
     <ClInclude Include="token.h" />
     <ClInclude Include="tokenizer.h" />
+    <ClInclude Include="traverse.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="test.cvc" />
