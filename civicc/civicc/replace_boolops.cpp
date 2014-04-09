@@ -74,7 +74,7 @@ void ReplaceBooleanOperators(NodePtr root)
 				auto unequal = std::make_shared<BinaryOp>(Operator::NotEqual);
 				unequal->children.push_back(cast->children[0]);
 				unequal->children.push_back(std::make_shared<Literal>(0));
-				unequal->type = cast->type;
+				unequal->type = cast->castFrom;
 				return unequal;
 			}
 			else if(cast->castFrom == Type::Float)
@@ -82,7 +82,7 @@ void ReplaceBooleanOperators(NodePtr root)
 				auto unequal = std::make_shared<BinaryOp>(Operator::NotEqual);
 				unequal->children.push_back(cast->children[0]);
 				unequal->children.push_back(std::make_shared<Literal>(0.0f));
-				unequal->type = cast->type;
+				unequal->type = cast->castFrom;
 				return unequal;
 			}
 		}
