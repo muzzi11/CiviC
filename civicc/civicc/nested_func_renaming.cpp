@@ -1,5 +1,3 @@
-#include <iostream>
-
 #include "nested_func_renaming.h"
 #include "traverse.h"
 
@@ -7,23 +5,17 @@ using namespace Nodes;
 
 void RenameNestedFunctions(NodePtr root)
 {
-	for (auto child : root->children)
+	TraverseBreadth<FunctionDef>(root, [](std::shared_ptr<FunctionDef> funcDef, NodePtr parent)
 	{
-		auto topFuncDef = StaticCast<FunctionDef>(child);
-		if (!topFuncDef) continue;
+		auto outerFun = StaticCast<FunctionDef>(parent);
+		if(!outerFun) return;
 
-		ReplaceBreadth<FunctionDef>(child, [&](std::shared_ptr<FunctionDef> funcDef, std::shared_ptr<FunctionDef> parent) -> NodePtr
-		{
-			auto newName = parent->header.name + "__" + funcDef->header.name;
-			
-			Replace<Call>(child, [&](std::shared_ptr<Call> call) -> NodePtr
-			{
-				if (call->name.compare(funcDef->header.name) == 0)
-					call->name = newName;
-				return call;
-			});
-			funcDef->header.name = newName;
-			return funcDef;
-		});				
-	}		
+		funcDef->header.name = "_F_" + outerFun->header.name + "_" + funcDef->header.name;
+	});
+
+	TraverseBreadth<Call>(root, [](std::shared_ptr<Call> call, NodePtr parent)
+	{
+		auto funDef = StaticCast<FunctionDef>(call->dec);
+		if(funDef) call->name = funDef->header.name;
+	});
 }
