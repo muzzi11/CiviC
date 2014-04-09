@@ -401,7 +401,7 @@ void Analyzer::TypeCheckConditional(Nodes::NodePtr node)
 	if (whileLoop) TypeCheckExpression(whileLoop->children.front(), Nodes::Type::Bool);
 
 	auto doWhile = Nodes::StaticCast<Nodes::DoWhile>(node);
-	if (doWhile) TypeCheckExpression(doWhile->children.front(), Nodes::Type::Bool);
+	if (doWhile) TypeCheckExpression(doWhile->children.back(), Nodes::Type::Bool);
 
 	auto ifStatement = Nodes::StaticCast<Nodes::If>(node);
 	if (ifStatement) TypeCheckExpression(ifStatement->children.front(), Nodes::Type::Bool);
