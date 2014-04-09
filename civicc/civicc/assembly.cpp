@@ -323,6 +323,10 @@ std::string AssemblyGenerator::Expression(NodePtr root)
 				}) - params.begin();
 				int frame = idFrameTable[id] - functionNestingTable[def];
 				bool sameScope = frame == 0;
+				TraverseNot<FunctionDef>(def, [&](NodePtr child, NodePtr)
+				{
+					if(child == id) sameScope = true;
+				});
 
 				if(sameScope) sstream << '\t' << VarInstr::LoadLocal(type, index) << '\n';
 				else sstream << '\t' << VarInstr::LoadRelative(type, frame, index) << '\n';
