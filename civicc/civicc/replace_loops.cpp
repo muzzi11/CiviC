@@ -27,7 +27,7 @@ void ReplaceForLoops(NodePtr root)
 		assign->dec = forLoop->lower;
 		assign->children.push_back(increment);
 		increment->children.push_back(lowerId);
-		increment->children.push_back(upperId);
+		increment->children.push_back(stepId);
 
 		stepId->type = lowerId->type = upperId->type = Type::Int;
 		stepId->dec = forLoop->step;
