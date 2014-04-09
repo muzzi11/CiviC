@@ -16,9 +16,18 @@ void ReplaceForLoops(NodePtr root)
 		auto stepOp = std::make_shared<BinaryOp>(Operator::More);
 		auto lessOp = std::make_shared<BinaryOp>(Operator::Less);
 		auto moreOp = std::make_shared<BinaryOp>(Operator::More);
+		auto assign = std::make_shared<Assignment>(forLoop->lower->var.name);
+		auto increment = std::make_shared<BinaryOp>(Operator::Add);
 
 		whileLoop->children.push_back(condition);
 		whileLoop->children.insert(whileLoop->children.end(), forLoop->children.begin(), forLoop->children.end());
+		whileLoop->children.push_back(assign);
+
+		assign->type = increment->type = Type::Int;
+		assign->dec = forLoop->lower;
+		assign->children.push_back(increment);
+		increment->children.push_back(lowerId);
+		increment->children.push_back(upperId);
 
 		stepId->type = lowerId->type = upperId->type = Type::Int;
 		stepId->dec = forLoop->step;
