@@ -50,7 +50,7 @@ std::string AssemblyGenerator::Generate(NodePtr root)
 void AssemblyGenerator::BuildTables(Nodes::NodePtr root)
 {
 	int frame = 0, index = 0;
-	NodePtr prev = root;
+	NodePtr prev = root, prevParent = nullptr;
 	
 	NodePtr curDef = nullptr;
 	TraverseBreadth(root, [&](NodePtr node, NodePtr parent)
@@ -65,8 +65,16 @@ void AssemblyGenerator::BuildTables(Nodes::NodePtr root)
 				prev = parent;
 			}
 			
-			index = funDef->header.params.size();
 			functionNestingTable[funDef] = frame;
+		}
+		auto parentFun = StaticCast<FunctionDef>(parent);
+		if(parentFun)
+		{
+			if(prevParent != parentFun)
+			{
+				index = parentFun->header.params.size();
+				prevParent = parentFun;
+			}
 		}
 
 		auto funDec = StaticCast<FunctionDec>(node);
