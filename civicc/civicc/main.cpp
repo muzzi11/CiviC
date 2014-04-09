@@ -14,7 +14,7 @@
 #include "analysis.h"
 #include "assembly.h"
 #include "nested_func_renaming.h"
-#include "replace_while.h"
+#include "replace_loops.h"
 #include "global_getset.h"
 
 int main(int argc, char* argv[])
@@ -77,7 +77,7 @@ int main(int argc, char* argv[])
 		if(errors.size() > 0) return -1;
 
 		ReplaceBooleanOperators(root);
-		ReplaceWhileLoops(root);
+		ReplaceLoops(root);
 		RenameNestedFunctions(root);
 		CreateGettersSetters(root);
 

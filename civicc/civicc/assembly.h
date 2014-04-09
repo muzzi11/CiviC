@@ -39,5 +39,4 @@ private:
 	std::string ArrayDec(Nodes::NodePtr root);
 	std::string IfElse(Nodes::NodePtr root);
 	std::string DoWhileLoop(Nodes::NodePtr root);
-	std::string ForLoop(Nodes::NodePtr root);
 };

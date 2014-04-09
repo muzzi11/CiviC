@@ -104,14 +104,12 @@ void SeperateForLoopInduction(NodePtr root)
 		auto stepVar = std::make_shared<VarDec>();
 		auto stepAss = std::make_shared<Assignment>("");
 
-		lowerVar->immutable = true;
-		upperVar->immutable = true;
-		upperVar->var.type = Type::Int;
+		lowerVar->var.type = upperVar->var.type = stepVar->var.type = Type::Int;
+		lowerVar->immutable = upperVar->immutable = stepVar->immutable = true;
+
 		upperVar->var.name = "_U" + lowerVar->var.name;
 		upperAss->children.push_back(forLoop->children[2]);
 		upperAss->name = upperVar->var.name;
-		stepVar->immutable = true;
-		stepVar->var.type = Type::Int;
 		stepVar->var.name = "_S" + lowerVar->var.name;
 		stepAss->children.push_back(forLoop->children[3]);
 		stepAss->name = stepVar->var.name;
