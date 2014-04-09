@@ -3,6 +3,7 @@
 #include <algorithm>
 #include <sstream>
 #include <iostream>
+#include <climits>
 
 #include "tokenizer.h"
 
@@ -124,7 +125,10 @@ void Tokenizer::TokenizeNumber(Token& token)
 		token.readString = line.substr(linePos, end - linePos);
 		token.type = TokenType::IntType;
 		sstream.str(token.readString);
-		sstream >> token.intValue;
+		unsigned long large;
+		sstream >> large;
+		if(large > INT_MAX || token.readString.length() > 10) throw token.line;
+		token.intValue = (int)large;
 	}
 
 	linePos = end;
