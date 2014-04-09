@@ -7,3 +7,4 @@
 \contentsline {subsection}{\numberline {4.2}Symbol table}{7}{subsection.4.2}
 \contentsline {subsection}{\numberline {4.3}Analysis}{8}{subsection.4.3}
 \contentsline {section}{\numberline {5}Code generation}{9}{section.5}
+\contentsline {section}{\numberline {6}Conclusion}{9}{section.6}

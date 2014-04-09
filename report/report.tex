@@ -177,7 +177,7 @@ This technique is heavily used to create tree traversals for different node type
 
 \subsection{Symbol table}
 
-To perform context analysis the compiler has to derive information about the various entities manipulated by the program being translated. It must discover and store many distinct kinds of information. These facts have been recorded directly in the AST. For example the AST contains information about function parameter types and the return type of functions. The advantage of this approach is that it uses a single representation for the code being compiled. The disadvantage of this approach is that a lot of tree traversals have to be used to find some specific information. To eliminate this inefficiency, we have added pointers to identifier nodes to link back to the corresponding declaration. We have achieved this by using a symbol table to match an identifier with the correct declaration.
+To perform context analysis the compiler has to derive information about the various entities manipulated by the program being translated. It must discover and store many distinct kinds of information. These facts have been recorded directly into the AST. For example the AST contains information about function parameter types and the return type of functions. The advantage of this approach is that it uses a single representation for the code being compiled. The disadvantage of this approach is that a lot of tree traversals have to be used to find some specific information. To eliminate this inefficiency, we have added pointers to identifier nodes to link back to the corresponding declaration. We have achieved this by using a symbol table to match an identifier with the correct declaration.
 
 Since Civic allows a program to declare names at multiple levels, one symbol table is not enough. We need a sheaf of tables. A new scope is initialized by the following code:
 
@@ -227,6 +227,14 @@ class Record
 When an identifier cannot be found in the table of the current level or tables of higher levels, we can conclude that it does not exist. When a record of an identifier can be found, the analyser has access to a lot of information like the type of the identifier. Thus enabling type checking. The analyser does not only check for errors but also prepares the AST for the assembler. Additional information is added to the AST like operator types. 
 
 \section{Code generation}
+
+Before the code generation process is started, tables are made for all the different nodes to map either their frame or variable index. This way the required information can easily be retrieved during node traversal. After the table generation has been completed, the AST is traversed breadth-first for all function definitions and statements. Expressions are traversed depth-first.
+
+\section{Conclusion}
+
+Writing a compiler from scratch is a great learning experience, but something that should only be done once in a lifetime. Writing a correct parser and generating an AST is not only a lot of work, but is also hard to engineer well. 
+The templated node system for the AST made it a lot easier to write traversals to modify, replace or add nodes. With built-in type-safety and memory management the amount of programming errors was most likely reduced significantly.
+Unfortunately the compiler is not perfect, as it is lacking support for arrays and in some occasions generates the wrong assembly.
 
 \newpage
 
