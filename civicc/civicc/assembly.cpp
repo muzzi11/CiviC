@@ -236,7 +236,11 @@ std::string AssemblyGenerator::Expression(NodePtr root)
 
 	TraverseDepth(root, [&](NodePtr node, NodePtr parent)
 	{
-		if(parent && parent->IsFamily<Call>()) return;
+		if(parent)
+		{
+			if(parent->IsFamily<Call>()) return;
+			if(parent->IsFamily<Ternary>()) return;
+		}
 
 		auto literal = StaticCast<Literal>(node);
 		if(literal)
