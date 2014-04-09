@@ -254,13 +254,6 @@ std::string AssemblyGenerator::Expression(NodePtr root)
 		auto literal = StaticCast<Literal>(node);
 		if(literal)
 		{
-			bool inTernary = true;
-			TraverseNot<Ternary>(root, [&](NodePtr child, NodePtr)
-			{
-				if(child == literal) inTernary = false;
-			});
-			if(inTernary) return;
-
 			if(!parent || parent && !parent->IsFamily<Ternary>())
 			{
 				if(literal->type == Type::Int) sstream << '\t' << VarInstr::LoadConstant(literal->intValue) << '\n';
@@ -309,13 +302,6 @@ std::string AssemblyGenerator::Expression(NodePtr root)
 		auto id = StaticCast<Identifier>(node);
 		if(id)
 		{
-			bool inTernary = true;
-			TraverseNot<Ternary>(root, [&](NodePtr child, NodePtr)
-			{
-				if(child == id) inTernary = false;
-			});
-			if(inTernary) return;
-
 			Instr::Type type = NodeTypeToInstrType(id->type);
 
 			if(id->dec->IsFamily<VarDec>())
