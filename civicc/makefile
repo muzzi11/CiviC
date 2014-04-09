@@ -14,5 +14,5 @@ $(OBJECTS): $(HEADERS) $(SOURCES)
 	$(CC) -c -I/civicc/ $(SOURCES)
 
 clean:
-	rm -rf *.o $(TARGET)
+	rm -rf *.o *.out $(TARGET)
 
