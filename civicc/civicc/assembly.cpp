@@ -171,7 +171,7 @@ std::string AssemblyGenerator::Assign(std::shared_ptr<Assignment> root)
 		bool sameScope = frame == 0;
 
 		if(sameScope) sstream << '\t' << VarInstr::StoreLocal(type, index) << '\n';
-		else sstream << '\t' << VarInstr::StoreRelative(type, functionNestingTable[def], index) << '\n';
+		else sstream << '\t' << VarInstr::StoreRelative(type, frame, index) << '\n';
 	}
 	else
 	{
@@ -254,6 +254,13 @@ std::string AssemblyGenerator::Expression(NodePtr root)
 		auto literal = StaticCast<Literal>(node);
 		if(literal)
 		{
+			bool inTernary = true;
+			TraverseNot<Ternary>(root, [&](NodePtr child, NodePtr)
+			{
+				if(child == literal) inTernary = false;
+			});
+			if(inTernary) return;
+
 			if(!parent || parent && !parent->IsFamily<Ternary>())
 			{
 				if(literal->type == Type::Int) sstream << '\t' << VarInstr::LoadConstant(literal->intValue) << '\n';
@@ -302,6 +309,13 @@ std::string AssemblyGenerator::Expression(NodePtr root)
 		auto id = StaticCast<Identifier>(node);
 		if(id)
 		{
+			bool inTernary = true;
+			TraverseNot<Ternary>(root, [&](NodePtr child, NodePtr)
+			{
+				if(child == id) inTernary = false;
+			});
+			if(inTernary) return;
+
 			Instr::Type type = NodeTypeToInstrType(id->type);
 
 			if(id->dec->IsFamily<VarDec>())
@@ -321,11 +335,15 @@ std::string AssemblyGenerator::Expression(NodePtr root)
 				{
 					return p.name == id->name;
 				}) - params.begin();
-				int frame = idFrameTable[root] - functionNestingTable[def];
+				int frame = idFrameTable[id] - functionNestingTable[def];
 				bool sameScope = frame == 0;
+				TraverseNot<FunctionDef>(def, [&](NodePtr child, NodePtr)
+				{
+					if(child == id) sameScope = true;
+				});
 
 				if(sameScope) sstream << '\t' << VarInstr::LoadLocal(type, index) << '\n';
-				else sstream << '\t' << VarInstr::LoadRelative(type, functionNestingTable[def], index) << '\n';
+				else sstream << '\t' << VarInstr::LoadRelative(type, frame, index) << '\n';
 			}
 			else
 			{
@@ -419,7 +437,7 @@ std::string AssemblyGenerator::DoWhileLoop(NodePtr root)
 		sstream << label.str() << ":\n";
 		for(size_t i = 0; i < doWhile->children.size() - 1; ++i) sstream << Statements(doWhile->children[i]);
 		sstream << Expression(doWhile->children.back());
-		sstream << CntrlFlwInstr::Branch(true, label.str()) << '\n';
+		sstream << '\t' << CntrlFlwInstr::Branch(true, label.str()) << '\n';
 	}
 
 	return sstream.str();
