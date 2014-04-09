@@ -75,8 +75,8 @@ void AssemblyGenerator::BuildTables(Nodes::NodePtr root)
 		{
 			std::string import = ".import \"" + funDec->header.name + "\" " + TypeToString(funDec->header.returnType);
 			for(const auto& param : funDec->header.params) import += " " + TypeToString(param.type);
+			importIndex[node] = imports.size();
 			imports.push_back(import);
-			importIndex[node] = importIndex.size();
 		}
 
 		if(node->IsFamily<GlobalDec>() || node->IsFamily<GlobalDef>()) globalIndexTable[node] = globalIndexTable.size();

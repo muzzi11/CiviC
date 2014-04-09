@@ -28,7 +28,7 @@ function check_output {
 
     total_tests=$((total_tests+1))
     printf "%-${ALIGN}s " $file:
-
+    
     if $CIVCC $CGLAGS -o tmp.s $file > tmp.out 2>&1 &&
        $CIVAS tmp.s -o tmp.o > tmp.out 2>&1 &&
        $CIVVM tmp.o > tmp.out 2>&1 &&
