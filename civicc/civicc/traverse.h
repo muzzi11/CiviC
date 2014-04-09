@@ -54,7 +54,8 @@ void TraverseNot(Nodes::NodePtr root, std::function<void(Nodes::NodePtr, Nodes::
 		i = 0;
 		while(i < root->children.size())
 		{
-			if(root->children[i]->Family() != T::Family()) TraverseNot<T>(root->children[i++], func, root);
+			if(root->children[i]->Family() != T::Family()) TraverseNot<T>(root->children[i], func, root);
+			i++;
 		}
 	}
 }

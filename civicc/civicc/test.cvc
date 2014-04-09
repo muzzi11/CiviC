@@ -1,30 +1,39 @@
 extern void printInt(int val);
 extern void printNewlines(int num);
 
-int next_prime(int p) {
-    bool is_prime;
-
-    do {
-        p = p + 1;
-        is_prime = true;
-
-        for (int i = 2, p) {
-            if (p % i == 0)
-                is_prime = false;
+void foo() {
+    void bar() {
+        void bar() {
+            printInt(1);
+            foobar();  // isrn 1
         }
-    } while(!is_prime);
 
-    return p;
+        printInt(2);
+        bar();     // isrl
+        baz();     // isrg
+        foobar();  // isr
+    }
+
+    void foobar() {}
+
+    printInt(3);    // isrg
+    bar();          // isrl
+    baz();          // isrg
+}
+
+void bar() {
+    printInt(4);
+}
+
+void baz() {
+    printInt(5);
+    bar();
 }
 
 export int main() {
-    int p = 2;
-
-    for (int i = 0, 25) {
-        printInt(p);
-        printNewlines(1);
-        p = next_prime(p);
-    }
-
+    foo();
+    bar();
+    baz();
+    printNewlines(1);
     return 0;
 }
