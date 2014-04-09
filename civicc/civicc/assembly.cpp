@@ -321,7 +321,7 @@ std::string AssemblyGenerator::Expression(NodePtr root)
 				{
 					return p.name == id->name;
 				}) - params.begin();
-				int frame = idFrameTable[id] - functionNestingTable[def] - 1;
+				int frame = idFrameTable[id] - functionNestingTable[def];
 				bool sameScope = frame == 0;
 
 				if(sameScope) sstream << '\t' << VarInstr::LoadLocal(type, index) << '\n';
