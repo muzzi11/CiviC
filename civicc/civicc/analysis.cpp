@@ -398,13 +398,13 @@ void Analyzer::TypeCheckCast(Nodes::NodePtr node)
 void Analyzer::TypeCheckConditional(Nodes::NodePtr node)
 {
 	auto whileLoop = Nodes::StaticCast<Nodes::While>(node);
-	if (whileLoop) TypeCheckExpression(whileLoop->children.back(), Nodes::Type::Bool);
+	if (whileLoop) TypeCheckExpression(whileLoop->children.front(), Nodes::Type::Bool);
 
 	auto doWhile = Nodes::StaticCast<Nodes::DoWhile>(node);
-	if (doWhile) TypeCheckExpression(doWhile->children.back(), Nodes::Type::Bool);
+	if (doWhile) TypeCheckExpression(doWhile->children.front(), Nodes::Type::Bool);
 
 	auto ifStatement = Nodes::StaticCast<Nodes::If>(node);
-	if (ifStatement) TypeCheckExpression(ifStatement->children.back(), Nodes::Type::Bool);
+	if (ifStatement) TypeCheckExpression(ifStatement->children.front(), Nodes::Type::Bool);
 }
 
 void Analyzer::TypeCheckExpression(Nodes::NodePtr node, Nodes::Type type)
