@@ -249,8 +249,6 @@ std::string AssemblyGenerator::Expression(NodePtr root)
 		{
 			if(parent->IsFamily<Call>()) return;
 			if(parent->IsFamily<Ternary>()) return;
-			if(parent->IsFamily<UnaryOp>()) return;
-			if(parent->IsFamily<BinaryOp>()) return;
 		}
 
 		auto literal = StaticCast<Literal>(node);
@@ -265,18 +263,10 @@ std::string AssemblyGenerator::Expression(NodePtr root)
 		}
 
 		auto unOp = StaticCast<UnaryOp>(node);
-		if(unOp)
-		{
-			for(auto child : unOp->children) Expression(child);
-			sstream << '\t' << arithOpMap[unOp->op](NodeTypeToInstrType(unOp->type)) << '\n';
-		}
+		if(unOp) sstream << '\t' << arithOpMap[unOp->op](NodeTypeToInstrType(unOp->type)) << '\n';
 
 		auto binOp = StaticCast<BinaryOp>(node);
-		if(binOp)
-		{
-			for(auto child : binOp->children) Expression(child);
-			sstream << '\t' << arithOpMap[binOp->op](NodeTypeToInstrType(binOp->type)) << '\n';
-		}
+		if(binOp) sstream << '\t' << arithOpMap[binOp->op](NodeTypeToInstrType(binOp->type)) << '\n';
 
 		auto call = StaticCast<Call>(node);
 		if(call) sstream << FunCall(call, true);
