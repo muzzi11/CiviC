@@ -79,7 +79,11 @@ void AssemblyGenerator::BuildTables(Nodes::NodePtr root)
 			imports.push_back(import);
 		}
 
-		if(node->IsFamily<GlobalDec>() || node->IsFamily<GlobalDef>()) globalIndexTable[node] = globalIndexTable.size();
+		if(node->IsFamily<GlobalDec>() || node->IsFamily<GlobalDef>())
+		{
+			int index = (int)globalIndexTable.size();
+			globalIndexTable[node] = index;
+		}
 		if(node->IsFamily<VarDec>()) localTable[node] = { frame, index++ };
 		if(node->IsFamily<Assignment>()) assignFrameTable[node] = frame;
 		if(node->IsFamily<Identifier>()) idFrameTable[node] = frame;
