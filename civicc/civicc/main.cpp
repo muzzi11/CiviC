@@ -44,7 +44,12 @@ int main(int argc, char* argv[])
 
 		if(file.is_open())
 		{
-			while(tokenizer.GetNextToken(token)) tokens.push_back(token);
+			try{ while(tokenizer.GetNextToken(token)) tokens.push_back(token); }
+			catch(int line)
+			{
+				std::cout << "Integer value out of range at line " << line << "\n";
+				return -1;
+			}
 			file.close();
 		}
 
