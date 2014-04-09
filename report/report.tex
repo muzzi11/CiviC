@@ -179,7 +179,7 @@ This technique is heavily used to create tree traversals for different node type
 
 To perform context analysis the compiler has to derive information about the various entities manipulated by the program being translated. It must discover and store many distinct kinds of information. These facts have been recorded directly in the AST. For example the AST contains information about function parameter types and the return type of functions. The advantage of this approach is that it uses a single representation for the code being compiled. The disadvantage of this approach is that a lot of tree traversals have to be used to find some specific information. To eliminate this inefficiency, we have added pointers to identifier nodes to link back to the corresponding declaration. We have achieved this by using a symbol table to match an identifier with the correct declaration.
 
-Since Civic allows a program to declare names at multiple levels, we need to create a symbol table for each scope. A new scope is initialized by the following code:
+Since Civic allows a program to declare names at multiple levels, one symbol table is not enough. We need a sheaf of tables. A new scope is initialized by the following code:
 
 \begin{lstlisting}
 void SymbolTable::Sheaf::InitializeScope()
@@ -193,18 +193,40 @@ void SymbolTable::Sheaf::InitializeScope()
 }
 \end{lstlisting}
 
-The symbol table is built during a single pass of the AST tree. The first items that are inserted in the level zero symbol table are the global declarations and definitions. As these should be accessible throughout the entire file. When entering a new scope function declarations and definitions.  
+The symbol table is built during a single pass of the AST. The first items that are inserted in the level zero symbol table are the global declarations and definitions. As these should be accessible throughout the entire file. A new scope is created when a function definition is encountered. The functions arguments are the first items to be added to the table. The function body contains variable declarations and possibly more function definitions. Before traversing into the bodies of the inner functions, every function definition has to be added to the current table. Since inner functions should be able to call each other, they have to be able to find each others records in the symbol table. Finally the variable decelerations are added before traversing into inner functions and thus creating new symbol tables. A scope can be finalized by the following code:
+
+\begin{lstlisting}
+void SymbolTable::Sheaf::FinalizeScope()
+{
+	if (level > 0) --level;
+}
+\end{lstlisting}
 
 \subsection{Analysis}
 
+The context analysis is performed along side the creation of the symbol table. Checks are implemented to prevent all illegal statements. We chose to do almost al the checks during one pass to make use of the symbol table. The symbol contains records for every function and variable that can be accessed in the current scope. Each record contains information about the item in question. A records looks like this:
 
-\section{The Procedure Abstraction}
+\begin{lstlisting}
+class Record
+	{
+	public:
+		Record() { }
+		Record(bool immutable, Nodes::Type node, Nodes::NodePtr ptr) : immutable(immutable), initialized(false), type(node), decPtr(ptr) { }
 
-\section{Code Shape}
+		bool immutable;
+		bool initialized;
+		Nodes::Type type;
+		Nodes::NodePtr decPtr;
+		std::vector<Nodes::Param> params;
 
-\section{Optimizations}
+		std::vector<int> arrayDimensions;
+		std::vector<std::string> dim;
+	};
+\end{lstlisting}
 
-\section{Instruction Selection}
+When an identifier cannot be found in the table of the current level or tables of higher levels, we can conclude that it does not exist. When a record of an identifier can be found, the analyser has access to a lot of information like the type of the identifier. Thus enabling type checking. The analyser does not only check for errors but also prepares the AST for the assembler. Additional information is added to the AST like operator types. 
+
+\section{Code generation}
 
 \newpage
 

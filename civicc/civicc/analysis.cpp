@@ -37,8 +37,8 @@ void Analyzer::BuildTable(Nodes::NodePtr root)
 
 	for (auto child : root->children)
 	{
-		InsertFuncBody(child);
 		InsertVarDec(child);
+		InsertFuncBody(child);
 
 		LookUpCall(child);
 		LookUpAssignment(child);
