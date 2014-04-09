@@ -593,6 +593,9 @@ void Analyzer::CheckReturnStatements(Nodes::NodePtr root)
 
 Nodes::Type Analyzer::GetType(Nodes::NodePtr node)
 {
+	auto binOp = Nodes::StaticCast<Nodes::BinaryOp>(node);
+	if (binOp && isBoolOp(node)) return Nodes::Type::Bool;
+
 	auto lit = Nodes::StaticCast<Nodes::Literal>(node);
 	if (lit) return lit->type;
 
