@@ -321,7 +321,7 @@ std::string AssemblyGenerator::Expression(NodePtr root)
 				{
 					return p.name == id->name;
 				}) - params.begin();
-				int frame = idFrameTable[id] - functionNestingTable[def];
+				int frame = idFrameTable[id] - functionNestingTable[def] - 1;
 				bool sameScope = frame == 0;
 
 				if(sameScope) sstream << '\t' << VarInstr::LoadLocal(type, index) << '\n';
@@ -419,7 +419,7 @@ std::string AssemblyGenerator::DoWhileLoop(NodePtr root)
 		sstream << label.str() << ":\n";
 		for(size_t i = 0; i < doWhile->children.size() - 1; ++i) sstream << Statements(doWhile->children[i]);
 		sstream << Expression(doWhile->children.back());
-		sstream << CntrlFlwInstr::Branch(true, label.str()) << '\n';
+		sstream << '\t' << CntrlFlwInstr::Branch(true, label.str()) << '\n';
 	}
 
 	return sstream.str();
