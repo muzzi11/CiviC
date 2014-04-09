@@ -171,7 +171,7 @@ std::string AssemblyGenerator::Assign(std::shared_ptr<Assignment> root)
 		bool sameScope = frame == 0;
 
 		if(sameScope) sstream << '\t' << VarInstr::StoreLocal(type, index) << '\n';
-		else sstream << '\t' << VarInstr::StoreRelative(type, functionNestingTable[def], index) << '\n';
+		else sstream << '\t' << VarInstr::StoreRelative(type, frame, index) << '\n';
 	}
 	else
 	{
@@ -321,11 +321,11 @@ std::string AssemblyGenerator::Expression(NodePtr root)
 				{
 					return p.name == id->name;
 				}) - params.begin();
-				int frame = idFrameTable[root] - functionNestingTable[def];
+				int frame = idFrameTable[id] - functionNestingTable[def];
 				bool sameScope = frame == 0;
 
 				if(sameScope) sstream << '\t' << VarInstr::LoadLocal(type, index) << '\n';
-				else sstream << '\t' << VarInstr::LoadRelative(type, functionNestingTable[def], index) << '\n';
+				else sstream << '\t' << VarInstr::LoadRelative(type, frame, index) << '\n';
 			}
 			else
 			{
