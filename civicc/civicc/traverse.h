@@ -39,6 +39,26 @@ void TraverseDepth(Nodes::NodePtr root, std::function<void(std::shared_ptr<T>, N
 	}
 }
 
+template<class T>
+void TraverseNot(Nodes::NodePtr root, std::function<void(Nodes::NodePtr, Nodes::NodePtr)> func, Nodes::NodePtr parent = nullptr)
+{
+	if(root)
+	{
+		if(!(root->Family() & T::Family()) && parent == nullptr) func(root, parent);
+		size_t i = 0;
+		while(i < root->children.size())
+		{
+			auto child = root->children[i++];
+			if(child->Family() != T::Family()) func(child, root);
+		}
+		i = 0;
+		while(i < root->children.size())
+		{
+			if(root->children[i]->Family() != T::Family()) TraverseBreadth(root->children[i++], func, root);
+		}
+	}
+}
+
 void TraverseBreadth(Nodes::NodePtr root, std::function<void(Nodes::NodePtr, Nodes::NodePtr)> func, Nodes::NodePtr parent = nullptr);
 void TraverseDepth(Nodes::NodePtr root, std::function<void(Nodes::NodePtr, Nodes::NodePtr)> func, Nodes::NodePtr parent = nullptr);
 

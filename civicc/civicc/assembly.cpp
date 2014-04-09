@@ -95,6 +95,7 @@ void AssemblyGenerator::BuildTables(Nodes::NodePtr root)
 
 std::string AssemblyGenerator::FunDef(std::shared_ptr<FunctionDef> root)
 {
+	int varCount = 0;
 	std::stringstream sstream;
 
 	if(root->exp)
@@ -106,9 +107,10 @@ std::string AssemblyGenerator::FunDef(std::shared_ptr<FunctionDef> root)
 	}
 
 	sstream << root->header.name << ":\n";
-	int varCount = std::count_if(root->children.begin(), root->children.end(), [](NodePtr node)
+
+	TraverseNot<FunctionDef>(root, [&](NodePtr node, NodePtr parent)
 	{
-		return node->IsFamily<VarDec>();
+		if(node->IsFamily<VarDec>()) varCount++;
 	});
 	sstream << '\t' << CntrlFlwInstr::EnterSub(varCount) << "\n";
 
