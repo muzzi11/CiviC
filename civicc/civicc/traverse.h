@@ -21,7 +21,7 @@ void TraverseBreadth(Nodes::NodePtr root, std::function<void(std::shared_ptr<T>,
 			if(child->Family() == T::Family()) func(std::static_pointer_cast<T>(child), root);
 		}
 		i = 0;
-		while(i < root->children.size()) TraverseBreadth(root->children[i++], func, root);
+		while(i < root->children.size()) TraverseBreadth<T>(root->children[i++], func, root);
 	}
 }
 
@@ -31,7 +31,7 @@ void TraverseDepth(Nodes::NodePtr root, std::function<void(std::shared_ptr<T>, N
 	if(root)
 	{
 		size_t i = 0;
-		while(i < root->children.size()) TraverseDepth(root->children[i++], func, root);
+		while(i < root->children.size()) TraverseDepth<T>(root->children[i++], func, root);
 		if(root->Family() & T::Family())
 		{
 			func(std::static_pointer_cast<T>(root), parent);
@@ -54,7 +54,7 @@ void TraverseNot(Nodes::NodePtr root, std::function<void(Nodes::NodePtr, Nodes::
 		i = 0;
 		while(i < root->children.size())
 		{
-			if(root->children[i]->Family() != T::Family()) TraverseBreadth(root->children[i++], func, root);
+			if(root->children[i]->Family() != T::Family()) TraverseNot<T>(root->children[i++], func, root);
 		}
 	}
 }
