@@ -91,7 +91,10 @@ int main(int argc, char* argv[])
 			std::cout << assembly << "\n";
 		}
 
-		if(outputFilename.empty()) std::cout << assembly;
+		if(outputFilename.empty())
+		{
+			if(!verbose)std::cout << assembly;
+		}
 		else
 		{
 			std::ofstream output(outputFilename, std::ios::out | std::ios::trunc);

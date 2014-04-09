@@ -38,7 +38,7 @@ void SeperateVarDecFromInit(NodePtr root)
 void SeperateGlobalDefFromInit(NodePtr root)
 {
 	auto init = std::make_shared<FunctionDef>();
-	init->exp = false;
+	init->exp = true;
 	init->header.name = "__init";
 	init->header.returnType = Type::Void;
 
