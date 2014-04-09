@@ -2,7 +2,7 @@ foo:
 	esr 0
 	isrg
 	iloadc 0
-	jsr 1
+	jsre 1
 	isrl
 	jsr 0 foo__bar
 	isrg
@@ -12,13 +12,13 @@ bar:
 	esr 0
 	isrg
 	iloadc 1
-	jsr 1
+	jsre 1
 	return
 baz:
 	esr 0
 	isrg
 	iloadc 2
-	jsr 1
+	jsre 1
 	isrg
 	jsr 0 bar
 	return
@@ -32,14 +32,14 @@ main:
 	jsr 0 baz
 	isrg
 	iloadc_1
-	jsr 2
+	jsre 2
 	iloadc_0
 	ireturn
 foo__bar:
 	esr 0
 	isrg
 	iloadc 3
-	jsr 1
+	jsre 1
 	isrl
 	jsr 0 foo__bar
 	isrg
@@ -54,7 +54,7 @@ foo__bar__bar:
 	esr 0
 	isrg
 	iloadc_1
-	jsr 1
+	jsre 1
 	isrn 1
 	jsr 0 foo__foobar
 	return

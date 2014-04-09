@@ -9,66 +9,66 @@ main:
 	jsr 1 main__bar
 	isrg
 	iloadc_1
-	jsr 3
+	jsre 3
 	isrg
 	iloadn 1 1
-	jsr 1
+	jsre 1
 	isrg
 	iloadc 1
-	jsr 3
+	jsre 3
 	isrg
 	iloadn 1 1
 	jsr 1 baz
 	isrg
 	iloadc_1
-	jsr 3
+	jsre 3
 	isrg
 	iloadn 1 1
-	jsr 1
+	jsre 1
 	isrg
 	iloadc 1
-	jsr 3
+	jsre 3
 	isrg
 	iloadn 1 1
 	jsr 1 bor
 	isrg
 	iloadc_1
-	jsr 3
+	jsre 3
 	isrg
 	iloadn 1 1
-	jsr 1
+	jsre 1
 	isrg
 	iloadc 1
-	jsr 3
+	jsre 3
 	isrg
 	iloadc_1
-	jsr 3
+	jsre 3
 	isrg
 	iloadn 1 1
-	jsr 1
+	jsre 1
 	isrg
 	iloadc 1
-	jsr 3
+	jsre 3
 	isrg
 	iloadn 1 2
-	jsr 1
+	jsre 1
 	isrg
 	iloadc 1
-	jsr 3
+	jsre 3
 	isrl
 	jsr 0 main__biz
 	isrg
 	iloadn 1 1
-	jsr 1
+	jsre 1
 	isrg
 	iloadc 1
-	jsr 3
+	jsre 3
 	isrg
 	iloadn 1 2
-	jsr 1
+	jsre 1
 	isrg
 	iloadc 1
-	jsr 3
+	jsre 3
 	iloadc_0
 	ireturn
 baz:
@@ -87,10 +87,10 @@ main__bar:
 	istore 0
 	isrg
 	iload_0
-	jsr 1
+	jsre 1
 	isrg
 	iloadc_1
-	jsr 3
+	jsre 3
 	return
 main__boz:
 	esr 1
@@ -102,10 +102,10 @@ main__boz:
 	istore 0
 	isrg
 	iload_0
-	jsr 1
+	jsre 1
 	isrg
 	iloadc_1
-	jsr 3
+	jsre 3
 	return
 main__biz:
 	esr 0
@@ -118,7 +118,7 @@ baz__baz_inner:
 	istore 0
 	isrg
 	iload_0
-	jsr 1
+	jsre 1
 	return
 bor__baz_inner:
 	esr 0
@@ -129,7 +129,7 @@ bor__baz_inner__b:
 	esr 0
 	isrg
 	iloadc 5
-	jsr 1
+	jsre 1
 	return
 
 ; globals:

@@ -2,7 +2,7 @@ main:
 	esr 0
 	isrg
 	iloadg 1
-	jsr 1
+	jsre 1
 	iloadc_0
 	ireturn
 __init:

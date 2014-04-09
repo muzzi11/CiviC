@@ -6,22 +6,22 @@ main:
 	istore 1
 	isrg
 	iload_0
-	jsr 1
+	jsre 1
 	isrg
 	iloadc_1
-	jsr 2
+	jsre 2
 	isrg
 	iload_1
-	jsr 1
+	jsre 1
 	isrg
 	iloadc_1
-	jsr 2
+	jsre 2
 	isrg
 	iloadg 1
-	jsr 1
+	jsre 1
 	isrg
 	iloadc_1
-	jsr 2
+	jsre 2
 	iloadc_0
 	ireturn
 __init:

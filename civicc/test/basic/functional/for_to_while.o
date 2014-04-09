@@ -13,10 +13,10 @@ main:
 	branch_f 0_end_for
 	isrg
 	iload_0
-	jsr 1
+	jsre 1
 	isrg
 	iloadc_1
-	jsr 2
+	jsre 2
 	iload_0
 	iload_2
 	iadd
@@ -25,7 +25,7 @@ main:
 0_end_for:
 	isrg
 	iloadc_1
-	jsr 3
+	jsre 3
 	iloadc 0
 	istore 3
 	iloadc_0
@@ -40,10 +40,10 @@ main:
 	branch_f 1_end_for
 	isrg
 	iload_3
-	jsr 1
+	jsre 1
 	isrg
 	iloadc_1
-	jsr 2
+	jsre 2
 	iload_3
 	iload 5
 	iadd
@@ -52,7 +52,7 @@ main:
 1_end_for:
 	isrg
 	iloadc_1
-	jsr 3
+	jsre 3
 	iloadc_0
 	istore 6
 	iloadc 0
@@ -66,10 +66,10 @@ main:
 	branch_f 2_end_for
 	isrg
 	iload 6
-	jsr 1
+	jsre 1
 	isrg
 	iloadc_1
-	jsr 2
+	jsre 2
 	iload 6
 	iload 8
 	iadd
@@ -78,7 +78,7 @@ main:
 2_end_for:
 	isrg
 	iloadc_1
-	jsr 3
+	jsre 3
 	iloadc 2
 	istore 9
 	iloadc_0
@@ -93,10 +93,10 @@ main:
 	branch_f 3_end_for
 	isrg
 	iload 9
-	jsr 1
+	jsre 1
 	isrg
 	iloadc_1
-	jsr 2
+	jsre 2
 	iload 9
 	iload 11
 	iadd
@@ -127,16 +127,16 @@ main:
 	branch_f 5_end_for
 	isrg
 	iload 12
-	jsr 1
+	jsre 1
 	isrg
 	iloadc_1
-	jsr 2
+	jsre 2
 	isrg
 	iload 15
-	jsr 1
+	jsre 1
 	isrg
 	iloadc_1
-	jsr 2
+	jsre 2
 	iload 15
 	iload 17
 	iadd
@@ -145,7 +145,7 @@ main:
 5_end_for:
 	isrg
 	iloadc_1
-	jsr 3
+	jsre 3
 	iload 12
 	iload 14
 	iadd

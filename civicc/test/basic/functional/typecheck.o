@@ -44,10 +44,10 @@ fun:
 	istore 3
 	isrg
 	iload_3
-	jsr 1
+	jsre 1
 	isrg
 	iloadc_1
-	jsr 6
+	jsre 6
 	iload_0
 	iload_2
 	ilt
@@ -72,10 +72,10 @@ fun:
 	istore 3
 	isrg
 	iload_3
-	jsr 1
+	jsre 1
 	isrg
 	iloadc_1
-	jsr 6
+	jsre 6
 	iload_1
 	iload_3
 	ilt
@@ -114,10 +114,10 @@ bar:
 	istore 9
 	isrg
 	iload 9
-	jsr 1
+	jsre 1
 	isrg
 	iloadc_1
-	jsr 6
+	jsre 6
 	return
 main:
 	esr 0

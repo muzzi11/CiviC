@@ -73,10 +73,10 @@ main:
 	isrg
 	isrg
 	jsr 0 computePi
-	jsr 1
+	jsre 1
 	isrg
 	iloadc_1
-	jsr 2
+	jsre 2
 	iloadc_0
 	ireturn
 

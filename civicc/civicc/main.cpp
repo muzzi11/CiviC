@@ -58,7 +58,7 @@ int main(int argc, char* argv[])
 
 			auto errors = Analyzer().Analyse(root);
 			std::cout << errors;
-			if(errors.size() > 0) return 0;
+			if(errors.size() > 0) return -1;
 
 			ReplaceBooleanOperators(root);
 			ReplaceWhileLoops(root);
@@ -89,6 +89,7 @@ int main(int argc, char* argv[])
 		catch(ParseException e)
 		{
 			std::cout << e.what();
+			return -1;
 		}
 	}
 	return 0;

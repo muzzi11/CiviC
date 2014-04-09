@@ -25,10 +25,10 @@ main:
 	istore 1
 	isrg
 	iload_2
-	jsr 1
+	jsre 1
 	isrg
 	iloadc_1
-	jsr 2
+	jsre 2
 	iload_2
 	iload 4
 	iadd

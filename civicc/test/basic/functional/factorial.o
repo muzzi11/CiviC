@@ -41,26 +41,26 @@ main:
 	isrg
 	iloadc 0
 	jsr 1 fac
-	jsr 1
+	jsre 1
 	isrg
 	iloadc_1
-	jsr 2
+	jsre 2
 	isrg
 	isrg
 	iloadc 1
 	jsr 1 fac
-	jsr 1
+	jsre 1
 	isrg
 	iloadc_1
-	jsr 2
+	jsre 2
 	isrg
 	isrg
 	iloadc 2
 	jsr 1 fac
-	jsr 1
+	jsre 1
 	isrg
 	iloadc_1
-	jsr 2
+	jsre 2
 	iloadc_0
 	ireturn
 

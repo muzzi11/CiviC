@@ -5,46 +5,46 @@ main:
 	iloadc 0
 	iloadc 1
 	jsr 2 euclid
-	jsr 1
+	jsre 1
 	isrg
 	iloadc_1
-	jsr 2
+	jsre 2
 	isrg
 	isrg
 	iloadc 2
 	iloadc 2
 	jsr 2 euclid
-	jsr 1
+	jsre 1
 	isrg
 	iloadc_1
-	jsr 2
+	jsre 2
 	isrg
 	isrg
 	iloadc 3
 	iloadc 4
 	jsr 2 euclid
-	jsr 1
+	jsre 1
 	isrg
 	iloadc_1
-	jsr 2
+	jsre 2
 	isrg
 	isrg
 	iloadc 5
 	iloadc 6
 	jsr 2 euclid
-	jsr 1
+	jsre 1
 	isrg
 	iloadc_1
-	jsr 2
+	jsre 2
 	isrg
 	isrg
 	iloadc 7
 	iloadc 8
 	jsr 2 euclid
-	jsr 1
+	jsre 1
 	isrg
 	iloadc_1
-	jsr 2
+	jsre 2
 	iloadc_0
 	ireturn
 euclid:

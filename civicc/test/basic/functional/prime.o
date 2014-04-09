@@ -55,10 +55,10 @@ main:
 	branch_f 3_end_for
 	isrg
 	iload 4
-	jsr 1
+	jsre 1
 	isrg
 	iloadc_1
-	jsr 2
+	jsre 2
 	isrg
 	iload 4
 	jsr 1 next_prime
