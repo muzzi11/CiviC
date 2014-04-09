@@ -302,6 +302,13 @@ std::string AssemblyGenerator::Expression(NodePtr root)
 		auto id = StaticCast<Identifier>(node);
 		if(id)
 		{
+			bool inTernary = true;
+			TraverseNot<Ternary>(root, [&](NodePtr child, NodePtr)
+			{
+				if(child == id) inTernary = false;
+			});
+			if(inTernary) return;
+
 			Instr::Type type = NodeTypeToInstrType(id->type);
 
 			if(id->dec->IsFamily<VarDec>())
