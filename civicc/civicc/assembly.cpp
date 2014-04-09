@@ -274,8 +274,11 @@ std::string AssemblyGenerator::Expression(NodePtr root)
 		auto cast = StaticCast<Cast>(node);
 		if(cast)
 		{
-			if(cast->type == Type::Int) sstream << '\t' << CastInstr::Float2Int() << '\n';
-			else sstream << '\t' << CastInstr::Int2Float() << '\n';
+			if(cast->castFrom != cast->type)
+			{
+				if(cast->type == Type::Int) sstream << '\t' << CastInstr::Float2Int() << '\n';
+				else sstream << '\t' << CastInstr::Int2Float() << '\n';
+			}
 		}
 
 		auto ternary = StaticCast<Ternary>(node);
