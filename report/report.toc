@@ -6,7 +6,4 @@
 \contentsline {subsection}{\numberline {4.1}Intermediate Representation}{5}{subsection.4.1}
 \contentsline {subsection}{\numberline {4.2}Symbol table}{7}{subsection.4.2}
 \contentsline {subsection}{\numberline {4.3}Analysis}{8}{subsection.4.3}
-\contentsline {section}{\numberline {5}The Procedure Abstraction}{8}{section.5}
-\contentsline {section}{\numberline {6}Code Shape}{8}{section.6}
-\contentsline {section}{\numberline {7}Optimizations}{8}{section.7}
-\contentsline {section}{\numberline {8}Instruction Selection}{8}{section.8}
+\contentsline {section}{\numberline {5}Code generation}{9}{section.5}

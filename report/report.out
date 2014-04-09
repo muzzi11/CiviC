@@ -5,7 +5,4 @@
 \BOOKMARK [2][-]{subsection.4.1}{Intermediate Representation}{section.4}% 5
 \BOOKMARK [2][-]{subsection.4.2}{Symbol table}{section.4}% 6
 \BOOKMARK [2][-]{subsection.4.3}{Analysis}{section.4}% 7
-\BOOKMARK [1][-]{section.5}{The Procedure Abstraction}{}% 8
-\BOOKMARK [1][-]{section.6}{Code Shape}{}% 9
-\BOOKMARK [1][-]{section.7}{Optimizations}{}% 10
-\BOOKMARK [1][-]{section.8}{Instruction Selection}{}% 11
+\BOOKMARK [1][-]{section.5}{Code generation}{}% 8

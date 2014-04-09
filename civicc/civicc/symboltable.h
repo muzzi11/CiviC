@@ -24,7 +24,7 @@ namespace SymbolTable
 		std::vector<std::string> dim;
 	};
 	
-		class Table
+	class Table
 	{
 	public:
 		Table() { }
